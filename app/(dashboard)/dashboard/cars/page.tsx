@@ -2,69 +2,85 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogHeader } from "@/components/ui/dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Car as CarType } from "@/lib/db/schema";
+import { Car as CarType, Driver as DriverType } from "@/lib/db/schema";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { CarForm } from "./components/car-form";
 import { CarList } from "./components/car-list";
 
 export default function CarsPage() {
-  const [cars, setCars] = useState<CarType[]>([]);
+  const [cars, setCars] = useState<(CarType & { drivers: DriverType[] })[]>([]);
+  const [drivers, setDrivers] = useState<DriverType[]>([]);
   const [selectedCar, setSelectedCar] = useState<Partial<CarType> | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [open, setOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [alertMessage, setAlertMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchCars = async () => {
-      const response = await fetch("/api/cars");
-      const data = await response.json();
-      setCars(data);
-    };
-    fetchCars();
-  }, []);
-
-  const handleSave = async (car: Partial<CarType>) => {
-    if (selectedCar && selectedCar.id) {
-      // Update existing car
-      await fetch(`/api/cars/${selectedCar.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(car),
-      });
-      setAlertMessage("The car has been updated successfully.");
-    } else {
-      // Add new car
-      await fetch("/api/cars", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(car),
-      });
-      setAlertMessage("The car has been added successfully.");
-    }
-
-    // Refresh car list
-    setOpen(false);
-    const updatedCars = await fetch("/api/cars").then((res) => res.json());
-    setCars(updatedCars);
-    setSelectedCar(null);
-    autoHideAlert();
-  };
-
+  
   const handleDelete = async (id: number) => {
     await fetch(`/api/cars?id=${id}`, { method: "DELETE" });
     const updatedCars = await fetch("/api/cars").then((res) => res.json());
     setCars(updatedCars);
-    setAlertMessage("The car has been deleted successfully.");
-    autoHideAlert();
+    toast.success("Data successfully deleted");
   };
 
-  const autoHideAlert = () => {
-    setTimeout(() => {
-      setAlertMessage(null);
-    }, 5000);
+  useEffect(() => {
+    const fetchData = async () => {
+      const carsResponse = await fetch("/api/cars");
+      const driversResponse = await fetch("/api/drivers");
+      const carsWithAssignments = await fetch("/api/car-driver-assignments");
+
+      const carsData: CarType[] = await carsResponse.json();
+      const driversData: DriverType[] = await driversResponse.json();
+      const assignments = await carsWithAssignments.json();
+
+      // Map cars to include their assigned drivers
+      const carsWithDrivers = carsData.map((car) => ({
+        ...car,
+        drivers: assignments
+          .filter((assignment: { carId: number; driverId: number }) => assignment.carId === car.id)
+          .map((assignment: { carId: number; driverId: number }) =>
+            driversData.find((driver) => driver.id === assignment.driverId)
+          )
+          .filter(Boolean) as DriverType[], // Ensure valid drivers only
+      }));
+
+      setCars(carsWithDrivers);
+      setDrivers(driversData);
+    };
+
+    fetchData();
+  }, []);
+
+
+  const handleSave = async (car: Partial<CarType>, assignedDrivers: number[]) => {
+    try {
+    if (car.id) {
+      // Update existing car
+      await fetch("/api/cars", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ car, driverIds: assignedDrivers }),
+      });
+      toast.success("Data successfully saved");
+    } else {
+      // Create new car
+      await fetch("/api/cars", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ car, driverIds: assignedDrivers }),
+      });
+      toast.success("Data successfully created");
+    }
+
+    setOpen(false);
+    const updatedCars = await fetch("/api/cars").then((res) => res.json());
+    setCars(updatedCars);
+    setSelectedCar(null);
+  } catch (error) {
+    console.error(error);
+    toast.error("An error occurred while saving the car");
+  }
   };
 
   return (
@@ -84,26 +100,15 @@ export default function CarsPage() {
             </DialogHeader>
             <CarForm
               car={selectedCar}
+              drivers={drivers}
               onSave={handleSave}
               onClose={() => setOpen(false)}
             />
           </DialogContent>
         </Dialog>
       </header>
-      <CarList
-        cars={cars}
-        onEdit={(car: CarType) => {
-          setIsEditing(true);
-          setSelectedCar(car);
-          setOpen(true);
-        }}
-        onDelete={(id: number) => setDeleteId(id)}
-      />
       {deleteId !== null && (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <div />
-          </AlertDialogTrigger>
+        <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
@@ -115,22 +120,27 @@ export default function CarsPage() {
               <AlertDialogCancel onClick={() => setDeleteId(null)}>
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction onClick={() => {
-                handleDelete(deleteId);
-                setDeleteId(null);
-              }}>
+              <AlertDialogAction
+                onClick={() => {
+                  handleDelete(deleteId);
+                  setDeleteId(null);
+                }}
+              >
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       )}
-      {alertMessage && (
-        <Alert>
-          <AlertTitle>Success</AlertTitle>
-          <AlertDescription>{alertMessage}</AlertDescription>
-        </Alert>
-      )}
+      <CarList
+        cars={cars}
+        onEdit={(car) => {
+          setIsEditing(true);
+          setSelectedCar(car);
+          setOpen(true);
+        }}
+        onDelete={(id: number) => setDeleteId(id)}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { Toaster } from "react-hot-toast";
 import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
@@ -64,6 +65,7 @@ export default function LayoutDemo({
           </div>
         </div>
       </SidebarInset>
+      <Toaster position="top-center" reverseOrder={false} />
     </SidebarProvider>
   )
 }

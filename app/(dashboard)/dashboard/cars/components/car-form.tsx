@@ -1,22 +1,35 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Car as CarType } from "@/lib/db/schema";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Car as CarType, Driver as DriverType } from "@/lib/db/schema";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from 'date-fns';
 
 export function CarForm({
   car,
+  drivers,
   onSave,
   onClose,
 }: {
   car: Partial<CarType> | null;
-  onSave: (car: Partial<CarType>) => void;
+  drivers: DriverType[];
+  onSave: (car: Partial<CarType>, drivers: number[]) => void;
   onClose: () => void;
 }) {
   const [formData, setFormData] = useState<Partial<CarType>>({
@@ -30,6 +43,8 @@ export function CarForm({
     lastMaintenanceDate: "",
   });
 
+  const [selectedDrivers, setSelectedDrivers] = useState<number[]>([]);
+
   useEffect(() => {
     if (car) {
       setFormData(car);
@@ -42,13 +57,22 @@ export function CarForm({
 
   const handleDateChange = (date: Date | null) => {
     if (date) {
-      setFormData({ ...formData, lastMaintenanceDate: date.toISOString() });
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      setFormData({ ...formData, lastMaintenanceDate: formattedDate });
+    }
+  };
+
+  const handleDriverSelection = (driverId: number) => {
+    if (!selectedDrivers.includes(driverId)) {
+      setSelectedDrivers((prev) => [...prev, driverId]);
+    } else {
+      setSelectedDrivers((prev) => prev.filter((id) => id !== driverId));
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    onSave(formData, selectedDrivers); // Pass drivers as a separate argument
   };
 
   return (
@@ -108,7 +132,7 @@ export function CarForm({
             <CalendarIcon className="mr-2 h-4 w-4" />
             {formData.lastMaintenanceDate
               ? new Date(formData.lastMaintenanceDate).toLocaleDateString()
-              : <span>Select maintenance date</span>}
+              : "Select Maintenance Date"}
           </Button>
         </PopoverTrigger>
         <PopoverContent>
@@ -120,6 +144,35 @@ export function CarForm({
           />
         </PopoverContent>
       </Popover>
+      <div>
+        <h3 className="text-lg font-bold">Assign Drivers</h3>
+        <Select onValueChange={(value) => handleDriverSelection(Number(value))}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select Driver" />
+          </SelectTrigger>
+          <SelectContent>
+            {drivers.map((driver) => (
+              <SelectItem key={driver.id} value={driver.id.toString()}>
+                {driver.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <ul className="mt-2 space-y-1">
+          {selectedDrivers.map((driverId) => (
+            <li key={driverId} className="flex items-center justify-between">
+              <span>{drivers.find((driver) => driver.id === driverId)?.name}</span>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDriverSelection(driverId)}
+              >
+                Remove
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </div>
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onClose} type="button">
           Cancel

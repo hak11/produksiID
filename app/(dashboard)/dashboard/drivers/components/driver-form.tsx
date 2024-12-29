@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Driver } from "@/lib/db/schema";
 import { Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils";
+import { format } from 'date-fns';
 
 
 export function DriverForm({
@@ -38,9 +39,17 @@ export function DriverForm({
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleDateChange = (date: Date | null) => {
+  const handleBOD = (date: Date | null) => {
     if (date) {
-      setFormData({ ...formData, dateOfBirth: date.toISOString() }); // Ensure date is saved as a string
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      setFormData({ ...formData, dateOfBirth: formattedDate });
+    }
+  };
+
+  const handleHiredDate = (date: Date | null) => {
+    if (date) {
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      setFormData({ ...formData, hiredDate: formattedDate });
     }
   };
 
@@ -97,7 +106,29 @@ export function DriverForm({
           <Calendar
             mode="single"
             selected={formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined}
-            onSelect={(date) => handleDateChange(date ?? null)}
+            onSelect={(date) => handleBOD(date ?? null)}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant={"outline"}
+            className={cn(
+              "w-full justify-start text-left font-normal",
+              !formData.hiredDate && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {formData.hiredDate ? new Date(formData.hiredDate).toLocaleDateString() : <span>Select a hired date</span>}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent>
+          <Calendar
+            mode="single"
+            selected={formData.hiredDate ? new Date(formData.hiredDate) : undefined}
+            onSelect={(date) => handleHiredDate(date ?? null)}
             initialFocus
           />
         </PopoverContent>

@@ -1,6 +1,3 @@
-
-"use client";
-
 import React from "react";
 import {
   ColumnDef,
@@ -10,18 +7,25 @@ import {
 } from "@tanstack/react-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Car as CarType } from "@/lib/db/schema";
+
+interface Car {
+  id: number;
+  brand: string;
+  model: string;
+  licensePlate: string;
+  drivers: { id: number; name: string }[]; // Include driver details
+}
 
 export function CarList({
   cars,
   onEdit,
   onDelete,
 }: {
-  cars: CarType[];
-  onEdit: (car: CarType) => void;
+  cars: Car[];
+  onEdit: (car: Car) => void;
   onDelete: (id: number) => void;
 }) {
-  const columns: ColumnDef<CarType>[] = [
+  const columns: ColumnDef<Car>[] = [
     {
       accessorKey: "brand",
       header: "Brand",
@@ -31,16 +35,19 @@ export function CarList({
       header: "Model",
     },
     {
-      accessorKey: "year",
-      header: "Year",
-    },
-    {
       accessorKey: "licensePlate",
       header: "License Plate",
     },
     {
-      accessorKey: "color",
-      header: "Color",
+      id: "drivers",
+      header: "Drivers",
+      cell: ({ row }) => (
+        <ul>
+          {row.original.drivers.map((driver) => (
+            <li key={driver.id}>{driver.name}</li>
+          ))}
+        </ul>
+      ),
     },
     {
       id: "actions",

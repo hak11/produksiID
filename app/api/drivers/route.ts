@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       contactNumber: body.contactNumber,
       email: body.email,
       dateOfBirth: body.dateOfBirth,
+      hiredDate: body.hiredDate,
       address: body.address,
       status: body.status || 'active',
       createdAt: new Date(),
@@ -38,17 +39,24 @@ export async function POST(request: Request) {
 }
 
 // Update an existing driver
+
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
     const { id, ...updates } = body;
+
+    updates.updatedAt = new Date();
+    delete updates.createdAt;
+
     await db.update(drivers).set(updates).where(eq(drivers.id, id));
+
     return NextResponse.json({ message: "Driver updated successfully" });
   } catch (error) {
-    console.error("🚀 ~ PUT ~ error:", error)
+    console.error("🚀 ~ PUT ~ error:", error);
     return NextResponse.json({ error: "Failed to update driver" }, { status: 500 });
   }
 }
+
 
 // Delete a driver
 export async function DELETE(request: Request) {

@@ -106,11 +106,11 @@ const data = {
       items: [
         {
           title: "Driver",
-          url: "#",
+          url: "/dashboard/drivers",
         },
         {
           title: "Kendaraan",
-          url: "#",
+          url: "/dashboard/cars",
         },
         {
           title: "Supplier",

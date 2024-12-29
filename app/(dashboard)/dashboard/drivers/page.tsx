@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogHeader } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Driver } from "@/lib/db/schema";
 import { DriverForm } from "./components/driver-form";
 import { DriverList } from "./components/driver-list";
@@ -11,6 +13,7 @@ export default function DriversPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<Partial<Driver> | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -25,11 +28,12 @@ export default function DriversPage() {
   const handleSave = async (driver: Partial<Driver>) => {
     if (selectedDriver && selectedDriver.id) {
       // Update existing driver
-      await fetch(`/api/drivers/${selectedDriver.id}`, {
+      await fetch(`/api/drivers`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(driver),
       });
+      toast.success("Data successfully saved");
     } else {
       // Add new driver
       await fetch("/api/drivers", {
@@ -37,6 +41,7 @@ export default function DriversPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(driver),
       });
+      toast.success("Data successfully created");
     }
 
     // Refresh driver list
@@ -50,6 +55,7 @@ export default function DriversPage() {
     await fetch(`/api/drivers?id=${id}`, { method: "DELETE" });
     const updatedDrivers = await fetch("/api/drivers").then((res) => res.json());
     setDrivers(updatedDrivers);
+    toast.success("Data successfully deleted");
   };
 
   return (
@@ -75,6 +81,31 @@ export default function DriversPage() {
           </DialogContent>
         </Dialog>
       </header>
+      {deleteId !== null && (
+        <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this driver? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteId(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  handleDelete(deleteId);
+                  setDeleteId(null);
+                }}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
       <DriverList
         drivers={drivers}
         onEdit={(driver) => {
@@ -82,7 +113,7 @@ export default function DriversPage() {
           setSelectedDriver(driver);
           setOpen(true);
         }}
-        onDelete={handleDelete}
+        onDelete={(id: number) => setDeleteId(id)}
       />
     </div>
   );
