@@ -5,8 +5,49 @@ import {
   text,
   timestamp,
   integer,
+  date,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+
+export const drivers = pgTable('drivers', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  licenseNumber: varchar('license_number', { length: 50 }).notNull().unique(),
+  dateOfBirth: date('date_of_birth').notNull(),
+  contactNumber: varchar('contact_number', { length: 20 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  address: text('address').notNull(),
+  hiredDate: date('hired_date'),
+  status: varchar('status', { length: 20 }).notNull().default('active'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const cars = pgTable('cars', {
+  id: serial('id').primaryKey(),
+  brand: varchar('brand', { length: 50 }).notNull(),
+  model: varchar('model', { length: 50 }).notNull(),
+  year: integer('year').notNull(),
+  licensePlate: varchar('license_plate', { length: 20 }).notNull().unique(),
+  vin: varchar('vin', { length: 17 }).notNull().unique(),
+  color: varchar('color', { length: 20 }).notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('available'),
+  lastMaintenanceDate: date('last_maintenance_date'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const driver_car_assignments = pgTable('driver_car_assignments', {
+  id: serial('id').primaryKey(),
+  carId: integer('car_id')
+    .notNull()
+    .references(() => cars.id),
+  driverId: integer('driver_id')
+    .notNull()
+    .references(() => drivers.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
@@ -68,6 +109,26 @@ export const invitations = pgTable('invitations', {
   status: varchar('status', { length: 20 }).notNull().default('pending'),
 });
 
+
+export const driversRelations = relations(drivers, ({ many }) => ({
+  assignments: many(driver_car_assignments)
+}));
+
+export const carsRelations = relations(cars, ({ many }) => ({
+  assignments: many(driver_car_assignments)
+}));
+
+export const driver_car_assignmentsRelations = relations(driver_car_assignments, ({ one }) => ({
+  driver: one(drivers, {
+    fields: [driver_car_assignments.driverId],
+    references: [drivers.id],
+  }),
+  car: one(cars, {
+    fields: [driver_car_assignments.carId],
+    references: [cars.id],
+  })
+}));
+
 export const teamsRelations = relations(teams, ({ many }) => ({
   teamMembers: many(teamMembers),
   activityLogs: many(activityLogs),
@@ -122,6 +183,12 @@ export type ActivityLog = typeof activityLogs.$inferSelect;
 export type NewActivityLog = typeof activityLogs.$inferInsert;
 export type Invitation = typeof invitations.$inferSelect;
 export type NewInvitation = typeof invitations.$inferInsert;
+export type Driver = typeof drivers.$inferSelect;
+export type NewDriver = typeof drivers.$inferInsert;
+export type Car = typeof cars.$inferSelect;
+export type NewCar = typeof cars.$inferInsert;
+export type CarDriverAssignment = typeof driver_car_assignments.$inferSelect;
+export type NewCarDriverAssignment = typeof driver_car_assignments.$inferInsert;
 export type TeamDataWithMembers = Team & {
   teamMembers: (TeamMember & {
     user: Pick<User, 'id' | 'name' | 'email'>;

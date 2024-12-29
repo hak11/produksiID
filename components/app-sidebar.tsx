@@ -13,9 +13,10 @@ import {
   LineChart,
 } from "lucide-react"
 
+import Link from "next/link"
+
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +24,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import Image from "next/image"
 
 // This is sample data.
 const data = {
@@ -182,14 +184,34 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <Link className="flex items-center ml-auto" href="/dashboard">
+          <Image
+            src="/logo-produksi.png"
+            alt="Logo"
+            priority={false}
+            style={{ marginLeft: "-18px" }}
+            width={200}
+            height={40}
+          />
+        </Link>
+        {/* <Link href="/" className="flex items-center">
+          <Image
+            src="/logo-produksi.png"
+            alt="Logo"
+            priority={false}
+            style={{ marginLeft: "-18px" }}
+            width={200}
+            height={40}
+          />
+        </Link> */}
       </SidebarHeader>
+
       <SidebarContent>
         <NavMain items={data.navMainLogistic} groupName="Logistic" />
         {/* <NavMain items={data.navMainManufacture} groupName="Manufacture" /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

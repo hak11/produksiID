@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import {
   ArrowRight,
@@ -6,9 +8,13 @@ import {
   BrainCircuit,
   HandCoins,
 } from "lucide-react"
+import Header from "@/components/Header"
+
 
 export default function HomePage() {
   return (
+    <>
+    <Header />
     <main>
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -193,5 +199,6 @@ export default function HomePage() {
         </div>
       </section>
     </main>
+    </>
   )
 }

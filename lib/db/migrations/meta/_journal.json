@@ -8,6 +8,27 @@
       "when": 1726443359662,
       "tag": "0000_soft_the_anarchist",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1735391893110,
+      "tag": "0001_clumsy_weapon_omega",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1735392304227,
+      "tag": "0002_typical_gamma_corps",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1735455906126,
+      "tag": "0003_curved_thor",
+      "breakpoints": true
     }
   ]
 }
