@@ -7,7 +7,8 @@ import {
   integer,
   date,
   pgEnum,
-  unique
+  unique,
+  numeric
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -25,6 +26,19 @@ export const deliveryDriverRoleEnum = pgEnum('delivery_driver_role_enum', [
   'assistant', // Driver pendamping
   'backup',    // Driver cadangan
 ]);
+
+export const deliveryOrderItems = pgTable('delivery_order_items', {
+  id: serial('id').primaryKey(),
+  doId: integer('do_id')
+    .references(() => deliveryOrders.id)
+    .notNull(),
+  loadQty: numeric('load_qty').notNull(),
+  loadQtyActual: numeric('load_qty_actual'),
+  loadPerPrice: numeric('load_per_price').notNull(),
+  totalLoadPrice: numeric('total_load_price').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
 
 export const companies = pgTable('companies', {
   id: serial('id').primaryKey(),
@@ -54,6 +68,7 @@ export const companyRoles = pgTable(
 
 export const deliveryOrders = pgTable('delivery_orders', {
   id: serial('id').primaryKey(),
+  orderDate: date('order_date').notNull(),
   supplierId: integer('supplier_id')
     .references(() => companies.id)
     .notNull(),
@@ -65,6 +80,9 @@ export const deliveryOrders = pgTable('delivery_orders', {
     .notNull(),
   deliveryDate: date('delivery_date').notNull(),
   deliveryStatus: deliveryStatusEnum('delivery_status').notNull().default('pending'),
+  orderNumber: varchar('order_number', { length: 50 }).notNull().unique(),
+  deliveryAddress: text('delivery_address').notNull(),
+  deliveryAddressAttachment: text('delivery_address_attachment'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -182,6 +200,13 @@ export const invitations = pgTable('invitations', {
   invitedAt: timestamp('invited_at').notNull().defaultNow(),
   status: varchar('status', { length: 20 }).notNull().default('pending'),
 });
+
+export const deliveryOrderItemsRelations = relations(deliveryOrderItems, ({ one }) => ({
+  deliveryOrder: one(deliveryOrders, {
+    fields: [deliveryOrderItems.doId],
+    references: [deliveryOrders.id],
+  }),
+}));
 
 export const companiesRelations = relations(companies, ({ many }) => ({
   roles: many(companyRoles),
@@ -304,8 +329,12 @@ export type Car = typeof cars.$inferSelect;
 export type NewCar = typeof cars.$inferInsert;
 export type Company = typeof companies.$inferSelect;
 export type NewCompany = typeof companies.$inferInsert;
+export type DeliveryOrder = typeof deliveryOrders.$inferSelect;
+export type NewDeliveryOrder = typeof deliveryOrders.$inferInsert;
 export type CarDriverAssignment = typeof driver_car_assignments.$inferSelect;
 export type NewCarDriverAssignment = typeof driver_car_assignments.$inferInsert;
+export type DeliveryOrderItem = typeof deliveryOrderItems.$inferSelect;
+export type NewDeliveryOrderItem = typeof deliveryOrderItems.$inferInsert;
 export type TeamDataWithMembers = Team & {
   teamMembers: (TeamMember & {
     user: Pick<User, 'id' | 'name' | 'email'>;

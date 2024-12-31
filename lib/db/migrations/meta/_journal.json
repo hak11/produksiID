@@ -43,6 +43,13 @@
       "when": 1735629374883,
       "tag": "0005_conscious_glorian",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1735643353165,
+      "tag": "0006_daily_millenium_guard",
+      "breakpoints": true
     }
   ]
 }
