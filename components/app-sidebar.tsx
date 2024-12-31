@@ -83,21 +83,37 @@ const data = {
       ],
     },
     {
-      title: "Purchase Order",
+      title: "Invoice",
       url: "/purchase-order/history",
       icon: BookOpen,
       isActive: true,
       items: [
         {
           title: "List",
-          url: "/purchase-order/history",
+          url: "/invoices",
         },
         {
-          title: "Buat Order",
-          url: "/purchase-order/create",
+          title: "Buat Invoice",
+          url: "/invoices/create",
         },
       ],
     },
+    // {
+    //   title: "Purchase Order",
+    //   url: "/purchase-order/history",
+    //   icon: BookOpen,
+    //   isActive: true,
+    //   items: [
+    //     {
+    //       title: "List",
+    //       url: "/purchase-order/history",
+    //     },
+    //     {
+    //       title: "Buat Order",
+    //       url: "/purchase-order/create",
+    //     },
+    //   ],
+    // },
     {
       title: "Kelola",
       url: "#",
@@ -113,8 +129,8 @@ const data = {
           url: "/dashboard/cars",
         },
         {
-          title: "Supplier",
-          url: "#",
+          title: "Perusahaan (Sup/Cus)",
+          url: "/dashboard/company",
         },
       ],
     },

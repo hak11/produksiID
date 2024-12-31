@@ -99,14 +99,23 @@ export function DriverForm({
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString() : <span>Select a date of birth</span>}
+            {formData.dateOfBirth ? (
+              new Date(formData.dateOfBirth).toLocaleDateString()
+            ) : (
+              <span>Select a date of birth</span>
+            )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent>
+        <PopoverContent align="start" className=" w-auto p-0">
           <Calendar
             mode="single"
-            selected={formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined}
+            captionLayout="dropdown-buttons"
+            selected={
+              formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined
+            }
             onSelect={(date) => handleBOD(date ?? null)}
+            fromYear={1960}
+            toYear={2005}
             initialFocus
           />
         </PopoverContent>
@@ -121,14 +130,23 @@ export function DriverForm({
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {formData.hiredDate ? new Date(formData.hiredDate).toLocaleDateString() : <span>Select a hired date</span>}
+            {formData.hiredDate ? (
+              new Date(formData.hiredDate).toLocaleDateString()
+            ) : (
+              <span>Select a hired date</span>
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent>
           <Calendar
             mode="single"
-            selected={formData.hiredDate ? new Date(formData.hiredDate) : undefined}
+            captionLayout="dropdown-buttons"
+            selected={
+              formData.hiredDate ? new Date(formData.hiredDate) : undefined
+            }
             onSelect={(date) => handleHiredDate(date ?? null)}
+            fromYear={1960}
+            toYear={2024}
             initialFocus
           />
         </PopoverContent>
@@ -147,5 +165,5 @@ export function DriverForm({
         <Button type="submit">Save</Button>
       </div>
     </form>
-  );
+  )
 }

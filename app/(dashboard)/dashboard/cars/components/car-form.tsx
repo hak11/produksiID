@@ -138,8 +138,15 @@ export function CarForm({
         <PopoverContent>
           <Calendar
             mode="single"
-            selected={formData.lastMaintenanceDate ? new Date(formData.lastMaintenanceDate) : undefined}
+            captionLayout="dropdown-buttons"
+            selected={
+              formData.lastMaintenanceDate
+                ? new Date(formData.lastMaintenanceDate)
+                : undefined
+            }
             onSelect={(date) => handleDateChange(date ?? null)}
+            fromYear={1960}
+            toYear={2030}
             initialFocus
           />
         </PopoverContent>
@@ -161,7 +168,9 @@ export function CarForm({
         <ul className="mt-2 space-y-1">
           {selectedDrivers.map((driverId) => (
             <li key={driverId} className="flex items-center justify-between">
-              <span>{drivers.find((driver) => driver.id === driverId)?.name}</span>
+              <span>
+                {drivers.find((driver) => driver.id === driverId)?.name}
+              </span>
               <Button
                 variant="destructive"
                 size="sm"
@@ -180,5 +189,5 @@ export function CarForm({
         <Button type="submit">Save</Button>
       </div>
     </form>
-  );
+  )
 }

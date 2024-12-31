@@ -26,36 +26,49 @@ export default function DriversPage() {
   }, []);
 
   const handleSave = async (driver: Partial<Driver>) => {
-    if (selectedDriver && selectedDriver.id) {
-      // Update existing driver
-      await fetch(`/api/drivers`, {
-        method: "PUT",
+    try {
+      const isUpdate = selectedDriver && selectedDriver.id;
+      const url = "/api/drivers";
+      const method = isUpdate ? "PUT" : "POST";
+      const message = isUpdate ? "Data successfully saved" : "Data successfully created";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(driver),
       });
-      toast.success("Data successfully saved");
-    } else {
-      // Add new driver
-      await fetch("/api/drivers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(driver),
+
+      if (!response.ok) {
+        throw new Error(`Failed to ${isUpdate ? "update" : "create"} driver: ${response.statusText}`);
+      }
+
+      toast.success(message);
+
+      setOpen(false);
+      const updatedDrivers = await fetch(url).then((res) => {
+        if (!res.ok) throw new Error(`Failed to fetch drivers: ${res.statusText}`);
+        return res.json();
       });
-      toast.success("Data successfully created");
+      setDrivers(updatedDrivers);
+      setSelectedDriver(null);
+    } catch (error: any) {
+      console.error("Error in handleSave:", error);
+      toast.error(`Error: ${error.message || "Something went wrong"}`);
     }
 
-    // Refresh driver list
-    setOpen(false);
-    const updatedDrivers = await fetch("/api/drivers").then((res) => res.json());
-    setDrivers(updatedDrivers);
-    setSelectedDriver(null);
   };
 
   const handleDelete = async (id: number) => {
-    await fetch(`/api/drivers?id=${id}`, { method: "DELETE" });
-    const updatedDrivers = await fetch("/api/drivers").then((res) => res.json());
-    setDrivers(updatedDrivers);
-    toast.success("Data successfully deleted");
+    try {
+      await fetch(`/api/drivers?id=${id}`, { method: "DELETE" });
+      const updatedDrivers = await fetch("/api/drivers").then((res) => res.json());
+      setDrivers(updatedDrivers);
+      toast.success("Data successfully deleted");
+      setDeleteId(null)
+    } catch (error: any) {
+      console.error("Error in handleDelete:", error);
+      toast.error(`Error: ${error.message || "Something went wrong"}`);
+    }
   };
 
   return (
@@ -97,7 +110,6 @@ export default function DriversPage() {
               <AlertDialogAction
                 onClick={() => {
                   handleDelete(deleteId);
-                  setDeleteId(null);
                 }}
               >
                 Delete

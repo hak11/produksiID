@@ -18,10 +18,16 @@ export default function CarsPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   
   const handleDelete = async (id: number) => {
-    await fetch(`/api/cars?id=${id}`, { method: "DELETE" });
-    const updatedCars = await fetch("/api/cars").then((res) => res.json());
-    setCars(updatedCars);
-    toast.success("Data successfully deleted");
+    try {
+      await fetch(`/api/cars?id=${id}`, { method: "DELETE" });
+      const updatedCars = await fetch("/api/cars").then((res) => res.json());
+      setCars(updatedCars);
+      toast.success("Data successfully deleted");
+      setDeleteId(null)
+    } catch (error) {
+      console.error(error)
+      toast.error("An error occurred while saving the car")
+    }
   };
 
   useEffect(() => {
@@ -55,31 +61,43 @@ export default function CarsPage() {
 
   const handleSave = async (car: Partial<CarType>, assignedDrivers: number[]) => {
     try {
-    if (car.id) {
-      // Update existing car
-      await fetch("/api/cars", {
-        method: "PUT",
+      
+      const isUpdate = car.id
+      const url = "/api/cars"
+      const method = isUpdate ? "PUT" : "POST"
+      const message = isUpdate
+        ? "Data successfully saved"
+        : "Data successfully created"
+      
+      
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ car, driverIds: assignedDrivers }),
-      });
-      toast.success("Data successfully saved");
-    } else {
-      // Create new car
-      await fetch("/api/cars", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ car, driverIds: assignedDrivers }),
-      });
-      toast.success("Data successfully created");
-    }
+      })
 
-    setOpen(false);
-    const updatedCars = await fetch("/api/cars").then((res) => res.json());
-    setCars(updatedCars);
-    setSelectedCar(null);
+      
+      if (!response.ok) {
+        throw new Error(
+          `Failed to ${isUpdate ? "update" : "create"} driver: ${
+            response.statusText
+          }`
+        )
+      }
+
+      toast.success(message)
+
+      setOpen(false);
+      const updatedCars = await fetch(url).then((res) => {
+        if (!res.ok)
+          throw new Error(`Failed to fetch cars: ${res.statusText}`)
+        return res.json()
+      })
+      setCars(updatedCars);
+      setSelectedCar(null);
   } catch (error) {
-    console.error(error);
-    toast.error("An error occurred while saving the car");
+      console.error(error);
+      toast.error("An error occurred while saving the car");
   }
   };
 
@@ -123,7 +141,6 @@ export default function CarsPage() {
               <AlertDialogAction
                 onClick={() => {
                   handleDelete(deleteId);
-                  setDeleteId(null);
                 }}
               >
                 Delete
