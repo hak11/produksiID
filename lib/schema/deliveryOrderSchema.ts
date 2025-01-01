@@ -9,6 +9,10 @@ export const deliveryOrderSchema = z.object({
   deliveryDate: z.string(),
   deliveryStatus: z.enum(["pending", "in_progress", "completed", "canceled"]).default("pending"),
   deliveryAddress: z.string(),
+  deliveryDrivers: z.object({
+    main: z.number(),
+    assistant: z.number(),
+  }),
   items: z.array(z.object({
     loadQty: z.string(),
     loadPerPrice: z.string(),

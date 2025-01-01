@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
-import { deliveryOrders, deliveryOrderItems } from "@/lib/db/schema";
+import { deliveryOrders, deliveryOrderItems, cars, companies, deliveryOrderDrivers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET( request: Request, { params }: { params: { id: string } }) {
@@ -11,7 +11,7 @@ export async function GET( request: Request, { params }: { params: { id: string 
       return NextResponse.json({ error: "Do ID is required" }, { status: 400 });
     }
 
-    const companyDetail: any = await db
+    const doDetails: any = await db
       .select({
         id: deliveryOrders.id,
         orderDate: deliveryOrders.orderDate,
@@ -27,9 +27,11 @@ export async function GET( request: Request, { params }: { params: { id: string 
       .where(eq(deliveryOrders.id, Number(doID)))
       .limit(1);
 
-    if (!companyDetail.length) {
+    if (!doDetails.length) {
       return NextResponse.json({ error: "Company not found." }, { status: 404 });
     }
+
+    const doDetail = doDetails[0];
 
     const doItems = await db
       .select({
@@ -42,9 +44,47 @@ export async function GET( request: Request, { params }: { params: { id: string 
       .from(deliveryOrderItems)
       .where(eq(deliveryOrderItems.doId, Number(doID)));
 
-    companyDetail[0].items = doItems;
+  const supplier = await db
+    .select()
+    .from(companies)
+    .where(eq(companies.id, doDetail.supplierId))
+    .limit(1);
 
-    return NextResponse.json(companyDetail[0]);
+  const customer = await db
+    .select()
+    .from(companies)
+    .where(eq(companies.id, doDetail.customerId))
+    .limit(1);
+
+  const car = await db
+    .select()
+    .from(cars)
+    .where(eq(cars.id, doDetail.carId))
+    .limit(1);
+
+  const doDriver = await db
+    .select()
+    .from(deliveryOrderDrivers)
+    .where(eq(deliveryOrderDrivers.deliveryOrderId, doDetail.id))
+
+  const carDetail = car[0];
+
+  const doDriverReduce = doDriver.reduce((acc, curr) => {
+    acc[curr.role] = curr.driverId;
+    return acc;
+  }, {} as Record<string, number>);
+
+  doDetail.items = doItems;
+
+  const dataResponse = {
+    ...doDetail,
+    supplier: supplier[0] || {},
+    customer: customer[0] || {},
+    car: carDetail || { drivers: {} },
+    deliveryDrivers: doDriverReduce,
+  };
+
+  return NextResponse.json(dataResponse);
   } catch (error) {
     console.error("🚀 ~ GET (detail) ~ error:", error);
     return NextResponse.json({ error: "Failed to fetch company detail." }, { status: 500 });

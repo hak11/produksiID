@@ -6,7 +6,7 @@ import { DeliveryOrderForm } from "../components/delivery-order-form"
 import { DeliveryOrder } from "@/lib/db/schema"
 
 export default function CreateDeliveryOrderPage() {
-  const handleSave = async (deliveryOrder: Partial<DeliveryOrder>) => {
+  const handleSave = async (deliveryOrder: Partial<DeliveryOrder>, callback?: () => void) => {
     try {
       const response = await fetch("/api/delivery-order", {
         method: "POST",
@@ -19,6 +19,9 @@ export default function CreateDeliveryOrderPage() {
       }
 
       toast.success("Delivery order successfully created")
+      if (callback) {
+        callback()
+      }
       // You might want to redirect to the list page or clear the form here
     } catch (error) {
       console.error(error)

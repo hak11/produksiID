@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import { CalendarIcon, Plus, Trash, SaveAll } from 'lucide-react'
+import { CalendarIcon, Plus, Trash, SaveAll, Loader } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { DeliveryOrder, DeliveryOrderItem } from "@/lib/db/schema"
 import { deliveryOrderSchema, type DeliveryOrderFormValues } from "@/lib/schema/deliveryOrderSchema"
@@ -45,9 +45,9 @@ const formatCurrency = (value: string) => {
 }
 
 interface DeliveryOrderFormProps {
-  deliveryOrder?: Partial<DeliveryOrder & { items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[] }>
+  deliveryOrder?: Partial<DeliveryOrder & { items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[], deliveryDrivers: { main: number | null, assistant: number | null } }>
   isEdit?: boolean
-  onSave: (deliveryOrder: DeliveryOrderFormValues) => void
+  onSave: (deliveryOrder: DeliveryOrderFormValues, callback?: () => void) => void
   onClose?: () => void
 }
 
@@ -57,7 +57,7 @@ export function DeliveryOrderForm({
   onSave,
   onClose,
 }: DeliveryOrderFormProps) {
-  const { suppliers, customers, cars, isLoading, error } = useDeliveryData()
+  const { suppliers, customers, cars, drivers, isLoading, error } = useDeliveryData()
   
   const form = useForm<DeliveryOrderFormValues>({
     resolver: zodResolver(deliveryOrderSchema),
@@ -70,6 +70,10 @@ export function DeliveryOrderForm({
       deliveryDate: "",
       deliveryStatus: "pending",
       deliveryAddress: "",
+      deliveryDrivers: {
+        main: undefined,
+        assistant: undefined
+      },
       items: [
         {
           loadQty: "0",
@@ -108,6 +112,8 @@ export function DeliveryOrderForm({
       form.setValue("deliveryStatus", deliveryOrder.deliveryStatus || "pending")
       form.setValue("deliveryAddress", deliveryOrder.deliveryAddress || "")
       form.setValue("items", deliveryOrder.items || [])
+      form.setValue("deliveryDrivers.main", deliveryOrder.deliveryDrivers?.main || 0)
+      form.setValue("deliveryDrivers.assistant", deliveryOrder.deliveryDrivers?.assistant || 0)
     } else {
       generateOrderNumber()
       form.reset({
@@ -119,6 +125,10 @@ export function DeliveryOrderForm({
       deliveryDate: "",
       deliveryStatus: "pending",
       deliveryAddress: "",
+      deliveryDrivers: {
+        main: undefined,
+        assistant: undefined
+      },
       items: [
           {
             loadQty: "0",
@@ -165,12 +175,18 @@ export function DeliveryOrderForm({
     }
   }
 
-  if (isLoading) return <div>Loading...</div>
+  const submitForm = (formData: any) => {
+    onSave(formData, () => {
+      window.location.reload()
+    })
+  }
+
+  if (isLoading) return <div><Loader className="animate-spin" size={16} /> Loading...</div>
   if (error) return <div>Error: {error}</div>
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSave)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(submitForm)} className="space-y-8">
         <div className="flex gap-4">
           <div className="space-y-4 flex-1 border-2 border-gray-200 p-4 rounded-lg">
             <FormField
@@ -295,14 +311,13 @@ export function DeliveryOrderForm({
                   <FormLabel>Customer</FormLabel>
                   <Select
                     onValueChange={(value) => {
-                      console.log("🚀 ~ value:", value)
                       field.onChange(Number(value))
                     }}
                     value={field.value?.toString()}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Pilih Kendaraan" />
+                        <SelectValue placeholder="Pilih Customer" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -356,7 +371,6 @@ export function DeliveryOrderForm({
                   <FormLabel>Status Delivery</FormLabel>
                   <Select
                     onValueChange={(value) => {
-                    console.log("🚀 ~ value:", value)
                       form.setValue("deliveryStatus", value as DeliveryOrder["deliveryStatus"])
                     }}
                     value={field.value}
@@ -398,6 +412,73 @@ export function DeliveryOrderForm({
 
           <div className="flex-1">
             <div className="space-y-2 rounded-lg flex-1 border-2 border-gray-200 p-4">
+              <div className="flex justify-between gap-4">
+                <div className="flex-1">
+                  <FormField
+                    control={form.control}
+                    name="deliveryDrivers.main"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Pilih Driver (Utama)</FormLabel>
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(Number(value))
+                          }}
+                          value={field.value?.toString()}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Pilih Driver - Main" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {drivers.map((driver) => (
+                              <SelectItem key={driver.id} value={driver.id.toString()}>
+                                {driver.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex-1">
+                    <FormField
+                      control={form.control}
+                      name="deliveryDrivers.assistant"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Pilih Driver (assistant)</FormLabel>
+                          <Select
+                            onValueChange={(value) => {
+                              field.onChange(Number(value))
+                            }}
+                            value={field.value?.toString()}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Pilih Driver - Ass" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {drivers.map((driver) => (
+                              <SelectItem key={driver.id} value={driver.id.toString()}>
+                                {driver.name}
+                              </SelectItem>
+                            ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2 rounded-lg flex-1 border-2 border-gray-200 p-4 mt-4">
               <table className="min-w-full divide-y divide-gray-200 -mt-1.5">
                 <thead className="border-b">
                   <tr>

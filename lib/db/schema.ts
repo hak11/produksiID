@@ -335,6 +335,20 @@ export type CarDriverAssignment = typeof driver_car_assignments.$inferSelect;
 export type NewCarDriverAssignment = typeof driver_car_assignments.$inferInsert;
 export type DeliveryOrderItem = typeof deliveryOrderItems.$inferSelect;
 export type NewDeliveryOrderItem = typeof deliveryOrderItems.$inferInsert;
+export type DeliveryOrderDetailType = DeliveryOrder & {
+  supplierName: string
+  customerName: string
+  carInfo: string
+  items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[]
+}
+
+export type DetailDOType = DeliveryOrder & {
+  supplier: Company
+  customer: Company
+  car: (Car & { driver: Driver[] })
+  items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[]
+}
+
 export type TeamDataWithMembers = Team & {
   teamMembers: (TeamMember & {
     user: Pick<User, 'id' | 'name' | 'email'>;

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
-import { deliveryOrders, deliveryOrderItems, companies, cars } from "@/lib/db/schema";
+import { deliveryOrders, deliveryOrderItems, companies, cars, deliveryOrderDrivers } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 
 // Get all delivery orders
@@ -36,7 +36,7 @@ export async function GET() {
 // Create a new delivery order
 export async function POST(request: Request) {
   try {
-    const { items, ...deliveryOrderData } = await request.json();
+    const { items, deliveryDrivers,  ...deliveryOrderData } = await request.json();
 
     if (!deliveryOrderData) {
       return NextResponse.json(
@@ -60,6 +60,24 @@ export async function POST(request: Request) {
         );
       }
 
+      if (deliveryDrivers) {
+        if (deliveryDrivers.main) {
+          await tx.insert(deliveryOrderDrivers).values({
+            driverId: deliveryDrivers.main,
+            role: "main" ,
+            deliveryOrderId: insertedOrder.id,
+          });
+        }
+
+        if (deliveryDrivers.assistant) {
+          await tx.insert(deliveryOrderDrivers).values({
+            driverId: deliveryDrivers.assistant,
+            role: "assistant",
+            deliveryOrderId: insertedOrder.id,
+          });
+        }
+      }
+
       return insertedOrder;
     });
 
@@ -73,7 +91,7 @@ export async function POST(request: Request) {
 // Update an existing delivery order
 export async function PUT(request: Request) {
   try {
-    const { id, items, ...deliveryOrderData } = await request.json();
+    const { id, items, deliveryDrivers, ...deliveryOrderData } = await request.json();
 
     if (!id) {
       return NextResponse.json(
@@ -104,6 +122,25 @@ export async function PUT(request: Request) {
               doId: id,
             }))
           );
+        }
+      }
+
+      if (deliveryDrivers) {
+        await tx.delete(deliveryOrderDrivers).where(eq(deliveryOrderDrivers.deliveryOrderId, id));
+        if (deliveryDrivers.main) {
+          await tx.insert(deliveryOrderDrivers).values({
+            driverId: deliveryDrivers.main,
+            role: "main" ,
+            deliveryOrderId: id,
+          });
+        }
+
+        if (deliveryDrivers.assistant) {
+          await tx.insert(deliveryOrderDrivers).values({
+            driverId: deliveryDrivers.assistant,
+            role: "assistant",
+            deliveryOrderId: id,
+          });
         }
       }
 

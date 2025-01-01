@@ -41,11 +41,11 @@ export default function CreateDeliveryOrderPage({ params }: { params: Promise<{ 
 
 
   const fetchDetail = async (companyID: string) => {
-    const detailCompany = await fetch("/api/delivery-order/" + companyID).then((res) =>
+    const detailDO = await fetch("/api/delivery-order/" + companyID).then((res) =>
       res.json()
     )
 
-    setDeliveryOrder(detailCompany)
+    setDeliveryOrder(detailDO)
   }
 
   return (

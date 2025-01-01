@@ -18,12 +18,38 @@ import {
   DeliveryOrderListType,
 } from "./components/delivery-order-list"
 import Link from "next/link"
+// import { generateDeliveryOrderPDF } from "@/lib/generate/letter-do"
+
 
 export default function DeliveryOrdersPage() {
   const [deliveryOrders, setDeliveryOrders] = useState<DeliveryOrderListType[]>(
     []
   )
   const [deleteId, setDeleteId] = useState<number | null>(null)
+
+
+  const handleDownloadDO = async (id: number, callback: () => void) => {
+    const detailDO = await fetch("/api/delivery-order/" + id).then((res) =>
+      res.json()
+    )
+
+    console.log("🚀 ~ handleDownloadDO ~ detailDO:", detailDO)
+
+    // await new Promise((resolve) => setTimeout(resolve, 5000));
+    // const pdfBlob = generateDeliveryOrderPDF(detailDO)
+    // const blobUrl = URL.createObjectURL(pdfBlob);
+    // window.open(blobUrl, '_blank');
+
+
+    if (callback) {
+      callback()
+    }
+  
+    // const link = document.createElement('a')
+    // link.href = URL.createObjectURL(pdfBlob)
+    // link.download = `delivery-order-${formData.orderNumber}.pdf`
+    // link.click()
+  }
 
   const handleDelete = async (id: number) => {
     try {
@@ -89,6 +115,7 @@ export default function DeliveryOrdersPage() {
       )}
       <DeliveryOrderList
         deliveryOrders={deliveryOrders}
+        handleDownloadDO={handleDownloadDO}
         onDelete={(id: number) => setDeleteId(id)}
       />
     </div>

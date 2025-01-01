@@ -14,6 +14,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { Trash2, Edit, Building2Icon, PackageCheck } from 'lucide-react'
+import { Badge, BadgeProps } from "@/components/ui/badge";
 
 export type CompanyListType = {
   id: number
@@ -49,10 +51,22 @@ export function CompanyList({
       id: "roles",
       header: "Roles",
       cell: ({ row }) => (
-        <ul className="list-disc">
+        <ul className="space-y-2">
           {row.original.companyRoles.map((role) => (
-            <li key={role}>{role}</li>
-          ))}
+          <li key={role}>
+            <Badge
+              variant={role === "customer" ? "info" as BadgeProps["variant"] : "warning" as BadgeProps["variant"]}
+              className="items-center gap-2"
+            >
+              {role === "customer" ? (
+                <Building2Icon className="w-4 h-4" />
+              ) : (
+                <PackageCheck className="w-4 h-4" />
+              )}
+              <span>{role.charAt(0).toUpperCase() + role.slice(1)}</span>
+            </Badge>
+          </li>
+        ))}
         </ul>
       ),
     },
@@ -61,12 +75,14 @@ export function CompanyList({
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button onClick={() => onEdit(row.original.id)}>Edit</Button>
+          <Button variant={"outline"} onClick={() => onEdit(row.original.id)}>
+            <Edit />
+          </Button>
           <Button
             variant="destructive"
             onClick={() => onDelete(row.original.id)}
           >
-            Delete
+            <Trash2 />
           </Button>
         </div>
       ),

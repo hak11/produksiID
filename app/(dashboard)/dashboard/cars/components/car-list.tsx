@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Trash2, Edit } from 'lucide-react'
 
 interface Car {
   id: number;
@@ -54,9 +55,11 @@ export function CarList({
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button onClick={() => onEdit(row.original)}>Edit</Button>
+          <Button variant={"outline"} onClick={() => onEdit(row.original)}>
+            <Edit />
+          </Button>
           <Button variant="destructive" onClick={() => onDelete(row.original.id)}>
-            Delete
+            <Trash2 />
           </Button>
         </div>
       ),
