@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -49,9 +50,15 @@ export function CompanyForm({
     }
   }, [company, roles])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+    const handleChange = (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) => {
+      const { name, value } = e.target
+      setFormData({ ...formData, [name]: value })
+    }
+  
 
   const handleDateChange = (date: Date | null) => {
     if (date) {
@@ -79,13 +86,6 @@ export function CompanyForm({
         name="name"
         placeholder="Company Name"
         value={formData.name || ""}
-        onChange={handleChange}
-        required
-      />
-      <Input
-        name="address"
-        placeholder="Address"
-        value={formData.address || ""}
         onChange={handleChange}
         required
       />
@@ -123,7 +123,7 @@ export function CompanyForm({
             <CalendarIcon className="mr-2 h-4 w-4" />
             {formData.registeredDate
               ? new Date(formData.registeredDate).toLocaleDateString()
-              : "Select Registration Date"}
+              : "Pilih Tanggal Registration"}
           </Button>
         </PopoverTrigger>
         <PopoverContent>
@@ -142,6 +142,14 @@ export function CompanyForm({
           />
         </PopoverContent>
       </Popover>
+
+      <Textarea
+        name="address"
+        placeholder="Delivery Address"
+        value={formData.address || ""}
+        onChange={handleChange}
+        required
+      />
       <div>
         <h3 className="text-lg font-bold">Roles</h3>
         <div className="flex flex-wrap gap-4 mt-2">

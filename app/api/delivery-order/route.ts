@@ -95,6 +95,12 @@ export async function PUT(request: Request) {
           await tx.insert(deliveryOrderItems).values(
             items.map((item: any) => ({
               ...item,
+              loadQty: item.loadQty,
+              loadQtyActual: item.loadQtyActual,
+              loadPerPrice: item.loadPerPrice,
+              totalLoadPrice: item.totalLoadPrice,
+              createdAt: item.createdAt,
+              updatedAt: new Date(),
               doId: id,
             }))
           );

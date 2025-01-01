@@ -74,11 +74,11 @@ const data = {
       items: [
         {
           title: "List",
-          url: "/purchase-order/create",
+          url: "/dashboard/do",
         },
         {
           title: "Buat Surat Jalan",
-          url: "/purchase-order/create",
+          url: "/dashboard/do/create",
         },
       ],
     },

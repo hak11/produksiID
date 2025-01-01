@@ -132,7 +132,7 @@ export function CarForm({
             <CalendarIcon className="mr-2 h-4 w-4" />
             {formData.lastMaintenanceDate
               ? new Date(formData.lastMaintenanceDate).toLocaleDateString()
-              : "Select Maintenance Date"}
+              : "Pilih Tanggal Maintenance"}
           </Button>
         </PopoverTrigger>
         <PopoverContent>
@@ -155,7 +155,7 @@ export function CarForm({
         <h3 className="text-lg font-bold">Assign Drivers</h3>
         <Select onValueChange={(value) => handleDriverSelection(Number(value))}>
           <SelectTrigger>
-            <SelectValue placeholder="Select Driver" />
+            <SelectValue placeholder="Pilih Driver" />
           </SelectTrigger>
           <SelectContent>
             {drivers.map((driver) => (

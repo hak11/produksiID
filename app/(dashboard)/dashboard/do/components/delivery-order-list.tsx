@@ -1,4 +1,5 @@
 import React from "react"
+import Link from 'next/link';
 import {
   ColumnDef,
   flexRender,
@@ -24,11 +25,9 @@ export type DeliveryOrderListType = DeliveryOrder & {
 
 export function DeliveryOrderList({
   deliveryOrders,
-  onEdit,
   onDelete,
 }: {
   deliveryOrders: DeliveryOrderListType[]
-  onEdit: (deliveryOrderId: number) => void
   onDelete: (id: number) => void
 }) {
   const columns: ColumnDef<DeliveryOrderListType>[] = [
@@ -54,14 +53,14 @@ export function DeliveryOrderList({
     },
     {
       accessorKey: "orderDate",
-      header: "Order Date",
+      header: "Tanggal Order",
       cell: ({ row }) => (
         <span>{new Date(row.original.orderDate).toLocaleDateString()}</span>
       ),
     },
     {
       accessorKey: "deliveryDate",
-      header: "Delivery Date",
+      header: "Tanggal Kirim",
       cell: ({ row }) => (
         <span>{new Date(row.original.deliveryDate).toLocaleDateString()}</span>
       ),
@@ -75,7 +74,11 @@ export function DeliveryOrderList({
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex gap-2">
-          <Button onClick={() => onEdit(row.original.id)}>Edit</Button>
+          <Link href={`/dashboard/do/${row.original.id}`}>
+            <Button variant={"outline"}>
+              Edit
+            </Button>
+          </Link>
           <Button
             variant="destructive"
             onClick={() => onDelete(row.original.id)}

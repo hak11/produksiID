@@ -14,7 +14,7 @@ export async function GET() {
       .orderBy(desc(deliveryOrders.id))
       .limit(1);
 
-    return NextResponse.json(deliveryOrdersWithDetails);
+    return NextResponse.json(deliveryOrdersWithDetails[0]);
   } catch (error) {
     console.error("🚀 ~ GET ~ error:", error);
     return NextResponse.json({ error: "Failed to fetch delivery orders" }, { status: 500 });

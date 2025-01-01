@@ -1,19 +1,27 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useEffect } from "react"
+import { useForm, useFieldArray } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { format } from "date-fns"
+import { CalendarIcon, Plus, Trash, SaveAll } from 'lucide-react'
+import { cn } from "@/lib/utils"
+import { DeliveryOrder, DeliveryOrderItem } from "@/lib/db/schema"
+import { deliveryOrderSchema, type DeliveryOrderFormValues } from "@/lib/schema/deliveryOrderSchema"
+import { useDeliveryData } from "@/hooks/use-delivery-data"
+
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-// import { Textarea } from "@/components/ui/textarea"
+import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { format } from "date-fns"
-import { CalendarIcon, Plus, Trash } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { DeliveryOrder, Company, Car, DeliveryOrderItem } from "@/lib/db/schema"
 import {
   Select,
   SelectContent,
@@ -21,394 +29,481 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+
+const formatCurrency = (value: string) => {
+  const number = parseFloat(value.replace(/[^\d]/g, "")) || 0
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0
+  }).format(number)
+}
+
+interface DeliveryOrderFormProps {
+  deliveryOrder?: Partial<DeliveryOrder & { items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[] }>
+  isEdit?: boolean
+  onSave: (deliveryOrder: DeliveryOrderFormValues) => void
+  onClose?: () => void
+}
 
 export function DeliveryOrderForm({
   deliveryOrder,
+  isEdit = false,
   onSave,
   onClose,
-}: {
-  deliveryOrder?: Partial<DeliveryOrder & { items: DeliveryOrderItem[] }>
-  onSave: (
-    deliveryOrder: Partial<DeliveryOrder & { items: DeliveryOrderItem[] }>
-  ) => void
-  onClose?: () => void
-}) {
-  const [formData, setFormData] = useState<
-    Partial<DeliveryOrder & { items: any }>
-  >({
-    supplierId: undefined,
-    customerId: undefined,
-    carId: undefined,
-    orderDate: "",
-    deliveryDate: "",
-    deliveryStatus: "pending",
-    orderNumber: "",
-    deliveryAddress: "",
-    deliveryAddressAttachment: "",
-    items: [],
-  })
-  const [suppliers, setSuppliers] = useState<Company[]>([])
-  const [customers, setCustomers] = useState<Company[]>([])
-  const [cars, setCars] = useState<Car[]>([])
-
-  useEffect(() => {
-    if (deliveryOrder) {
-      setFormData(deliveryOrder)
-    }
-    fetchCompanies()
-    fetchCars()
-    generateOrderNumber()
-  }, [deliveryOrder])
-
-  const fetchCompanies = async () => {
-    try {
-      const response = await fetch("/api/company")
-      const companies = await response.json()
-      setSuppliers(
-        companies.filter((c: (Company & { companyRoles: string[] })) => c.companyRoles.includes("supplier"))
-      )
-      setCustomers(
-        companies.filter((c: Company & { companyRoles: string[] }) =>
-          c.companyRoles.includes("customer")
-        )
-      )
-    } catch (error) {
-      console.error("Failed to fetch companies:", error)
-    }
-  }
-
-  const fetchCars = async () => {
-    try {
-      const response = await fetch("/api/cars")
-      const carsData = await response.json()
-      setCars(carsData)
-    } catch (error) {
-      console.error("Failed to fetch cars:", error)
-    }
-  }
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
-  }
-
-  const handleDateChange = (
-    date: Date | null,
-    field: "orderDate" | "deliveryDate"
-  ) => {
-    if (date) {
-      const formattedDate = format(date, "yyyy-MM-dd")
-      setFormData({ ...formData, [field]: formattedDate })
-    }
-  }
-
-   const generateOrderNumber = async () => {
-     try {
-       const response = await fetch("/api/utils/last-order-number")
-       const { lastOrderNumber } = await response.json()
-
-       const newNumber = parseInt(lastOrderNumber?.slice(1)) + 1 || 1
-
-       const formattedOrderNumber = `K${newNumber.toString().padStart(4, "0")}`
-
-       setFormData((prev) => ({ ...prev, orderNumber: formattedOrderNumber }))
-     } catch (error) {
-       console.error("Failed to generate order number:", error)
-     }
-   }
-
-  const handleItemChange = (
-    index: number,
-    field: keyof DeliveryOrderItem,
-    value: any
-  ) => {
-    const updatedItems = [...(formData.items || [])]
-    updatedItems[index] = { ...updatedItems[index], [field]: value }
-    if (field === "loadQty" || field === "loadPerPrice") {
-      const qty = parseFloat(updatedItems[index].loadQty as string) || 0
-      const price = parseFloat(updatedItems[index].loadPerPrice as string) || 0
-      updatedItems[index].totalLoadPrice = (qty * price).toString()
-    }
-    setFormData({ ...formData, items: updatedItems })
-  }
-
-  const addItem = () => {
-    setFormData({
-      ...formData,
+}: DeliveryOrderFormProps) {
+  const { suppliers, customers, cars, isLoading, error } = useDeliveryData()
+  
+  const form = useForm<DeliveryOrderFormValues>({
+    resolver: zodResolver(deliveryOrderSchema),
+    defaultValues: {
+      orderNumber: "",
+      supplierId: undefined,
+      customerId: undefined,
+      carId: undefined,
+      orderDate: "",
+      deliveryDate: "",
+      deliveryStatus: "pending",
+      deliveryAddress: "",
       items: [
-        ...(formData.items || []),
         {
           loadQty: "0",
           loadPerPrice: "0",
           totalLoadPrice: "0",
+          loadPerPriceStr: "Rp 0",
+          totalLoadPriceStr: "Rp 0"
         },
       ],
-    })
+    },
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items"
+  })
+
+  useEffect(() => {
+    if (isEdit && deliveryOrder) {
+      if (deliveryOrder.items && deliveryOrder.items.length > 0) {
+        const updatedItems = (deliveryOrder.items || []).map((item) => ({
+          ...item,
+          loadPerPriceStr: formatCurrency(item.loadPerPrice) || "Rp 0",
+          totalLoadPriceStr: formatCurrency(item.totalLoadPrice) || "Rp 0",
+        }));
+
+        deliveryOrder.items = updatedItems || []
+      }
+
+      form.setValue("orderNumber", deliveryOrder.orderNumber || "")
+      form.setValue("supplierId", deliveryOrder.supplierId || 0)
+      form.setValue("customerId", deliveryOrder.customerId || 0)
+      form.setValue("carId", deliveryOrder.carId || 0)
+      form.setValue("orderDate", deliveryOrder.orderDate || "")
+      form.setValue("deliveryDate", deliveryOrder.deliveryDate || "")
+      form.setValue("deliveryStatus", deliveryOrder.deliveryStatus || "pending")
+      form.setValue("deliveryAddress", deliveryOrder.deliveryAddress || "")
+      form.setValue("items", deliveryOrder.items || [])
+    } else {
+      generateOrderNumber()
+      form.reset({
+      orderNumber: "",
+      supplierId: undefined,
+      customerId: undefined,
+      carId: undefined,
+      orderDate: "",
+      deliveryDate: "",
+      deliveryStatus: "pending",
+      deliveryAddress: "",
+      items: [
+          {
+            loadQty: "0",
+            loadPerPrice: "0",
+            totalLoadPrice: "0",
+            loadPerPriceStr: "Rp 0",
+            totalLoadPriceStr: "Rp 0",
+          },
+        ],
+      });
+    }
+  }, [isEdit, deliveryOrder, form])
+
+  const generateOrderNumber = async () => {
+    try {
+      const response = await fetch("/api/utils/last-order-number")
+      const { orderNumber } = await response.json()
+      const newNumber = parseInt(orderNumber?.slice(1)) + 1 || 1
+      const formattedOrderNumber = `K${newNumber.toString().padStart(4, "0")}`
+      form.setValue("orderNumber", formattedOrderNumber)
+    } catch (error) {
+      console.error("Failed to generate order number:", error)
+    }
   }
 
-  const removeItem = (index: number) => {
-    const updatedItems = [...(formData.items || [])]
-    updatedItems.splice(index, 1)
-    setFormData({ ...formData, items: updatedItems })
+  const handleItemChange = (index: number, field: keyof (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string }), value: string) => {
+    if (field === "loadQty" || field === "loadPerPrice") {
+      const numericValue = value.replace(/[^\d]/g, "")
+      
+      if (field === "loadQty") {
+        form.setValue(`items.${index}.loadQty`, numericValue)
+      } else {
+        form.setValue(`items.${index}.loadPerPrice`, numericValue)
+        const formattedValue = formatCurrency(numericValue) || "Rp 0"
+        form.setValue(`items.${index}.loadPerPriceStr`, formattedValue)
+      }
+
+      const qty = parseFloat(form.getValues(`items.${index}.loadQty`)) || 0
+      const price = parseFloat(form.getValues(`items.${index}.loadPerPrice`)) || 0
+      const total = (qty * price).toString()
+
+      form.setValue(`items.${index}.totalLoadPrice`, total)
+      form.setValue(`items.${index}.totalLoadPriceStr`, formatCurrency(total))
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave(formData)
-  }
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error}</div>
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="space-y-4 lg:w-2/4">
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-500">DO Number : </div>
-          <Input
-            name="orderNumber"
-            placeholder="Order Number"
-            value={formData.orderNumber}
-            onChange={handleChange}
-            readOnly
-            required
-          />
-        </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSave)} className="space-y-8">
+        <div className="flex gap-4">
+          <div className="space-y-4 flex-1 border-2 border-gray-200 p-4 rounded-lg">
+            <FormField
+              control={form.control}
+              name="orderNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>DO Number</FormLabel>
+                  <FormControl>
+                    <Input {...field} readOnly />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-500">Order Date : </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.orderDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.orderDate
-                  ? format(new Date(formData.orderDate), "PPP")
-                  : "Select Order Date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={
-                  formData.orderDate ? new Date(formData.orderDate) : undefined
-                }
-                onSelect={(date) => handleDateChange(date ?? null, "orderDate")}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+            <FormField
+              control={form.control}
+              name="orderDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tanggal Order</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? format(new Date(field.value), "PPP") : "Pilih Tanggal Order"}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ? new Date(field.value) : undefined}
+                        onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          
+            <FormField
+              control={form.control}
+              name="deliveryDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tanggal Kirim</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? format(new Date(field.value), "PPP") : "Pilih Tanggal Kirim"}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ? new Date(field.value) : undefined}
+                        onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-500">Supplier : </div>
-          <Select
-            name="supplierId"
-            onValueChange={(value) =>
-              setFormData({ ...formData, supplierId: Number(value) })
-            }
-            value={formData.supplierId?.toString()}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Supplier" />
-            </SelectTrigger>
-            <SelectContent>
-              {suppliers.map((supplier) => (
-                <SelectItem key={supplier.id} value={supplier.id.toString()}>
-                  {supplier.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <FormField
+              control={form.control}
+              name="supplierId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Supplier</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(Number(value))
+                    }}
+                    value={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Supplier" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {suppliers.map((supplier) => (
+                        <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                          {supplier.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-500">Customer : </div>
-          <Select
-            name="customerId"
-            onValueChange={(value) =>
-              setFormData({ ...formData, customerId: Number(value) })
-            }
-            value={formData.customerId?.toString()}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Customer" />
-            </SelectTrigger>
-            <SelectContent>
-              {customers.map((customer) => (
-                <SelectItem key={customer.id} value={customer.id.toString()}>
-                  {customer.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <FormField
+              control={form.control}
+              name="customerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Customer</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      console.log("🚀 ~ value:", value)
+                      field.onChange(Number(value))
+                    }}
+                    value={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Kendaraan" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id.toString()}>
+                          {customer.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-500">Kendaraan : </div>
-          <Select
-            name="carId"
-            onValueChange={(value) =>
-              setFormData({ ...formData, carId: Number(value) })
-            }
-            value={formData.carId?.toString()}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Car" />
-            </SelectTrigger>
-            <SelectContent>
-              {cars.map((car) => (
-                <SelectItem key={car.id} value={car.id.toString()}>
-                  {car.brand} {car.model} - {car.licensePlate}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <FormField
+              control={form.control}
+              name="carId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kendaran</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                      field.onChange(Number(value))
+                    }}
+                    value={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Kendaraan" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {cars.map((car) => (
+                        <SelectItem key={car.id} value={car.id.toString()}>
+                          {car.brand} {car.model} - {car.licensePlate}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-500">
-            Delivery Date :{" "}
-          </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.deliveryDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.deliveryDate
-                  ? format(new Date(formData.deliveryDate), "PPP")
-                  : "Select Delivery Date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={
-                  formData.deliveryDate
-                    ? new Date(formData.deliveryDate)
-                    : undefined
-                }
-                onSelect={(date) =>
-                  handleDateChange(date ?? null, "deliveryDate")
-                }
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-        {deliveryOrder?.id && (
-          <div className="space-y-1">
-            <div className="text-sm font-medium text-gray-500">
-              Delivery Status
-            </div>
-            <Select
+            <FormField
+              control={form.control}
               name="deliveryStatus"
-              onValueChange={(value) =>
-                setFormData({
-                  ...formData,
-                  deliveryStatus: value as DeliveryOrder["deliveryStatus"],
-                })
-              }
-              value={formData.deliveryStatus}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Delivery Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="canceled">Canceled</SelectItem>
-              </SelectContent>
-            </Select>
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status Delivery</FormLabel>
+                  <Select
+                    onValueChange={(value) => {
+                    console.log("🚀 ~ value:", value)
+                      form.setValue("deliveryStatus", value as DeliveryOrder["deliveryStatus"])
+                    }}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih Status Pengiriman" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="canceled">Canceled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="deliveryAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Delivery Address</FormLabel>
+                  <FormControl>
+                     <Textarea
+                      {...field}
+                      readOnly
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-        )}
-        {/* <Textarea
-          name="deliveryAddress"
-          placeholder="Delivery Address"
-          value={formData.deliveryAddress}
-          onChange={handleChange}
-          required
-        /> */}
 
-        {/* <Input
-        name="deliveryAddressAttachment"
-        placeholder="Delivery Address Attachment URL"
-        value={formData.deliveryAddressAttachment}
-        onChange={handleChange}
-      /> */}
-      </div>
+          <div className="flex-1">
+            <div className="space-y-2 rounded-lg flex-1 border-2 border-gray-200 p-4">
+              <table className="min-w-full divide-y divide-gray-200 -mt-1.5">
+                <thead className="border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Load Quantity
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Load Per Price (Rp)
+                    </th>
+                    <th colSpan={2} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total Load Price (Rp)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fields.map((field, index) => (
+                    <tr key={field.id}>
+                      <td className="px-6 py-4">
+                        <FormField
+                          control={form.control}
+                          name={`items.${index}.loadQty`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  type="number"
+                                  value={field.value}
+                                  onChange={(e) => handleItemChange(index, "loadQty", e.target.value)}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <FormField
+                          control={form.control}
+                          name={`items.${index}.loadPerPriceStr`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  onChange={(e) => handleItemChange(index, "loadPerPrice", e.target.value)}
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <FormField
+                          control={form.control}
+                          name={`items.${index}.totalLoadPriceStr`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input {...field} readOnly />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </td>
+                      <td>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          onClick={() => remove(index)}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <Button
+                type="button"
+                onClick={() => append({
+                  loadQty: "0",
+                  loadPerPrice: "0",
+                  totalLoadPrice: "0",
+                  loadPerPriceStr: "Rp 0",
+                  totalLoadPriceStr: "Rp 0"
+                })}
+                className="ml-6"
+              >
+                <Plus className="h-4 w-4 mr-2" /> Tambah Item
+              </Button>
+            </div>
+          </div>
+        </div>
 
-      <div className="space-y-2 mt-4">
-        <h3 className="text-lg font-semibold">Delivery Order Items</h3>
-        {formData.items?.map((item: any, index: number) => (
-          <div key={index} className="flex space-x-2">
-            <Input
-              type="number"
-              placeholder="Load Quantity"
-              value={item.loadQty}
-              onChange={(e) =>
-                handleItemChange(index, "loadQty", e.target.value)
-              }
-              required
-            />
-            <Input
-              type="number"
-              placeholder="Actual Load Quantity"
-              value={item.loadQtyActual}
-              disabled
-              onChange={(e) =>
-                handleItemChange(index, "loadQtyActual", e.target.value)
-              }
-            />
-            <Input
-              type="number"
-              placeholder="Load Per Price"
-              value={item.loadPerPrice}
-              onChange={(e) =>
-                handleItemChange(index, "loadPerPrice", e.target.value)
-              }
-              required
-            />
-            <Input
-              type="number"
-              placeholder="Total Load Price"
-              value={item.totalLoadPrice}
-              readOnly
-            />
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => removeItem(index)}
-            >
-              <Trash className="h-4 w-4" />
+        <div className="flex justify-end gap-2">
+          {onClose && (
+            <Button variant="outline" onClick={onClose} type="button">
+              Cancel
             </Button>
-          </div>
-        ))}
-        <Button type="button" onClick={addItem}>
-          <Plus className="h-4 w-4 mr-2" /> Add Item
-        </Button>
-      </div>
-
-      <div className="flex justify-end gap-2">
-        {onClose && (
-          <Button variant="outline" onClick={onClose} type="button">
-            Cancel
+          )}
+          <Button type="submit">
+            <SaveAll className="mr-2 h-4 w-4" /> Simpan Delivery Order
           </Button>
-        )}
-        <Button type="submit">Save</Button>
-      </div>
-    </form>
+        </div>
+      </form>
+    </Form>
   )
 }
+

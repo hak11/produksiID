@@ -102,7 +102,7 @@ export function DriverForm({
             {formData.dateOfBirth ? (
               new Date(formData.dateOfBirth).toLocaleDateString()
             ) : (
-              <span>Select a date of birth</span>
+              <span>Pilih Tanggal Lahir</span>
             )}
           </Button>
         </PopoverTrigger>
@@ -133,7 +133,7 @@ export function DriverForm({
             {formData.hiredDate ? (
               new Date(formData.hiredDate).toLocaleDateString()
             ) : (
-              <span>Select a hired date</span>
+              <span>Pilih Tanggal Join Driver</span>
             )}
           </Button>
         </PopoverTrigger>
