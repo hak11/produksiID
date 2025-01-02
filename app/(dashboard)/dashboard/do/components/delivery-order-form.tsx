@@ -66,7 +66,7 @@ export function DeliveryOrderForm({
       supplierId: undefined,
       customerId: undefined,
       carId: undefined,
-      orderDate: "",
+      orderDate: new Date().toString(),
       deliveryDate: "",
       deliveryStatus: "pending",
       deliveryAddress: "",
@@ -115,21 +115,21 @@ export function DeliveryOrderForm({
       form.setValue("deliveryDrivers.main", deliveryOrder.deliveryDrivers?.main || 0)
       form.setValue("deliveryDrivers.assistant", deliveryOrder.deliveryDrivers?.assistant || 0)
     } else {
-      generateOrderNumber()
+      // generateOrderNumber()
       form.reset({
-      orderNumber: "",
-      supplierId: undefined,
-      customerId: undefined,
-      carId: undefined,
-      orderDate: "",
-      deliveryDate: "",
-      deliveryStatus: "pending",
-      deliveryAddress: "",
-      deliveryDrivers: {
-        main: undefined,
-        assistant: undefined
-      },
-      items: [
+        orderNumber: "",
+        supplierId: undefined,
+        customerId: undefined,
+        carId: undefined,
+        orderDate: format(new Date(), "yyyy-MM-dd"),
+        deliveryDate: "",
+        deliveryStatus: "pending",
+        deliveryAddress: "",
+        deliveryDrivers: {
+          main: undefined,
+          assistant: undefined,
+        },
+        items: [
           {
             loadQty: "0",
             loadPerPrice: "0",
@@ -138,21 +138,21 @@ export function DeliveryOrderForm({
             totalLoadPriceStr: "Rp 0",
           },
         ],
-      });
+      })
     }
   }, [isEdit, deliveryOrder, form])
 
-  const generateOrderNumber = async () => {
-    try {
-      const response = await fetch("/api/utils/last-order-number")
-      const { orderNumber } = await response.json()
-      const newNumber = parseInt(orderNumber?.slice(1)) + 1 || 1
-      const formattedOrderNumber = `K${newNumber.toString().padStart(4, "0")}`
-      form.setValue("orderNumber", formattedOrderNumber)
-    } catch (error) {
-      console.error("Failed to generate order number:", error)
-    }
-  }
+  // const generateOrderNumber = async () => {
+  //   try {
+  //     const response = await fetch("/api/utils/last-order-number")
+  //     const { orderNumber } = await response.json()
+  //     const newNumber = parseInt(orderNumber?.slice(1)) + 1 || 1
+  //     const formattedOrderNumber = `K${newNumber.toString().padStart(4, "0")}`
+  //     form.setValue("orderNumber", formattedOrderNumber)
+  //   } catch (error) {
+  //     console.error("Failed to generate order number:", error)
+  //   }
+  // }
 
   const handleItemChange = (index: number, field: keyof (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string }), value: string) => {
     if (field === "loadQty" || field === "loadPerPrice") {
@@ -196,7 +196,7 @@ export function DeliveryOrderForm({
                 <FormItem>
                   <FormLabel>DO Number</FormLabel>
                   <FormControl>
-                    <Input {...field} readOnly />
+                    <Input {...field} required />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

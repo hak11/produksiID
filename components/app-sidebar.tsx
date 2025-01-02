@@ -77,7 +77,7 @@ const data = {
           url: "/dashboard/do",
         },
         {
-          title: "Buat Surat Jalan",
+          title: "Input Data DO",
           url: "/dashboard/do/create",
         },
       ],

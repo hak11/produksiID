@@ -53,10 +53,6 @@ export function DeliveryOrderList({
   const [loadingIds, setLoadingIds] = useState<number[]>([]);
   const columns: ColumnDef<DeliveryOrderListType>[] = [
     {
-      accessorKey: "id",
-      header: "ID",
-    },
-    {
       accessorKey: "orderNumber",
       header: "Order Number",
       cell: ({ row }) => (
@@ -110,20 +106,23 @@ export function DeliveryOrderList({
               variant="outline"
               disabled={isLoading}
               onClick={() => {
-                setLoadingIds((prev) => [...prev, row.original.id]);
+                setLoadingIds((prev) => [...prev, row.original.id])
 
                 handleDownloadDO(row.original.id, () => {
                   setLoadingIds((prev) =>
                     prev.filter((id) => id !== row.original.id)
-                  );
-                });
+                  )
+                })
               }}
             >
               {isLoading ? (
                 <Loader className="animate-spin" size={16} />
               ) : (
-                <Download size={16} />
+                <div className="flex">
+                  <Download size={8} />
+                </div>
               )}
+              Surat Jalan
             </Button>
             <Button
               variant="destructive"
@@ -132,7 +131,7 @@ export function DeliveryOrderList({
               <Trash2 />
             </Button>
           </div>
-        );
+        )
       }
     },
   ]

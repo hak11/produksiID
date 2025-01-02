@@ -1,11 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
 import { deliveryOrders, deliveryOrderItems, companies, cars, deliveryOrderDrivers } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, desc, or } from "drizzle-orm";
 
 // Get all delivery orders
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const companyId = searchParams.get('companyId');
     const deliveryOrdersWithDetails = await db
       .select({
         id: deliveryOrders.id,
@@ -24,8 +26,17 @@ export async function GET() {
       })
       .from(deliveryOrders)
       .leftJoin(companies, eq(deliveryOrders.supplierId, companies.id))
-      .leftJoin(cars, eq(deliveryOrders.carId, cars.id));
-
+      .leftJoin(cars, eq(deliveryOrders.carId, cars.id))
+      .where(
+        companyId
+          ? or(
+              eq(deliveryOrders.supplierId, parseInt(companyId)),
+              eq(deliveryOrders.customerId, parseInt(companyId))
+            )
+          : undefined
+      )
+      .orderBy(desc(deliveryOrders.id));
+    
     return NextResponse.json(deliveryOrdersWithDetails);
   } catch (error) {
     console.error("🚀 ~ GET ~ error:", error);

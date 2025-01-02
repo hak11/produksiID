@@ -50,6 +50,13 @@
       "when": 1735643353165,
       "tag": "0006_daily_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1735811926414,
+      "tag": "0007_huge_plazm",
+      "breakpoints": true
     }
   ]
 }

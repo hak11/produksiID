@@ -27,6 +27,36 @@ export const deliveryDriverRoleEnum = pgEnum('delivery_driver_role_enum', [
   'backup',    // Driver cadangan
 ]);
 
+export const invoiceStatusEnum = pgEnum('invoice_status_enum', [
+  'draft',
+  'sent',
+  'paid',
+  'partial',
+  'overdue',
+  'cancelled'
+]);
+
+export const invoices = pgTable('invoices', {
+  id: serial('id').primaryKey(),
+  companyId: integer('company_id').notNull().references(() => companies.id),
+  invoiceNumber: varchar('invoice_number', { length: 50 }).notNull().unique(),
+  invoiceDate: date('invoice_date').notNull(),
+  dueDate: date('due_date').notNull(),
+  status: invoiceStatusEnum('status').notNull().default('draft'),
+  totalAmount: numeric('total_amount').notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const invoiceDeliveryOrders = pgTable('invoice_delivery_orders', {
+  id: serial('id').primaryKey(),
+  invoiceId: integer('invoice_id').notNull().references(() => invoices.id),
+  deliveryOrderId: integer('delivery_order_id').notNull().references(() => deliveryOrders.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 export const deliveryOrderItems = pgTable('delivery_order_items', {
   id: serial('id').primaryKey(),
   doId: integer('do_id')
@@ -201,6 +231,21 @@ export const invitations = pgTable('invitations', {
   status: varchar('status', { length: 20 }).notNull().default('pending'),
 });
 
+export const invoicesRelations = relations(invoices, ({ many }) => ({
+  deliveryOrders: many(invoiceDeliveryOrders),
+}));
+
+export const invoiceDeliveryOrdersRelations = relations(invoiceDeliveryOrders, ({ one }) => ({
+  invoice: one(invoices, {
+    fields: [invoiceDeliveryOrders.invoiceId],
+    references: [invoices.id],
+  }),
+  deliveryOrder: one(deliveryOrders, {
+    fields: [invoiceDeliveryOrders.deliveryOrderId],
+    references: [deliveryOrders.id],
+  }),
+}));
+
 export const deliveryOrderItemsRelations = relations(deliveryOrderItems, ({ one }) => ({
   deliveryOrder: one(deliveryOrders, {
     fields: [deliveryOrderItems.doId],
@@ -335,6 +380,10 @@ export type CarDriverAssignment = typeof driver_car_assignments.$inferSelect;
 export type NewCarDriverAssignment = typeof driver_car_assignments.$inferInsert;
 export type DeliveryOrderItem = typeof deliveryOrderItems.$inferSelect;
 export type NewDeliveryOrderItem = typeof deliveryOrderItems.$inferInsert;
+export type Invoice = typeof invoices.$inferSelect;
+export type NewInvoice = typeof invoices.$inferInsert;
+export type InvoiceDeliveryOrder = typeof invoiceDeliveryOrders.$inferSelect;
+export type NewInvoiceDeliveryOrder = typeof invoiceDeliveryOrders.$inferInsert;
 export type DeliveryOrderDetailType = DeliveryOrder & {
   supplierName: string
   customerName: string
@@ -342,12 +391,17 @@ export type DeliveryOrderDetailType = DeliveryOrder & {
   items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[]
 }
 
+export type InvoicesDetailType = Invoice & {
+  invoiceDetailDO: DeliveryOrder[]
+}
+
 export type DetailDOType = DeliveryOrder & {
   supplier: Company
   customer: Company
   car: (Car & { driver: Driver[] })
-  items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[]
+  items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string, nameItem?: string })[]
 }
+
 
 export type TeamDataWithMembers = Team & {
   teamMembers: (TeamMember & {
