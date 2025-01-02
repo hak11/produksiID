@@ -149,25 +149,6 @@ export default function DeliveryOrdersPage() {
           </AlertDialogContent>
         </AlertDialog>
       )}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {isEditing ? "Edit" : "Add"} Delivery Order
-            </DialogTitle>
-            <DialogDescription>
-              {isEditing
-                ? "Edit the details of the selected delivery order."
-                : "Fill in the details of the new delivery order."}
-            </DialogDescription>
-          </DialogHeader>
-          <DeliveryOrderForm
-            deliveryOrder={selectedDeliveryOrder || ({} as DeliveryOrder)}
-            onSave={handleSave}
-            onClose={() => setOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
       <DeliveryOrderList
         deliveryOrders={deliveryOrders}
         onEdit={(deliveryOrderId: number) => handleEdit(deliveryOrderId)}

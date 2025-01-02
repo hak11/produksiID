@@ -25,13 +25,11 @@ import {
 export function DeliveryOrderForm({
   deliveryOrder,
   onSave,
-  onClose,
 }: {
   deliveryOrder?: Partial<DeliveryOrder & { items: DeliveryOrderItem[] }>
   onSave: (
     deliveryOrder: Partial<DeliveryOrder & { items: DeliveryOrderItem[] }>
   ) => void
-  onClose?: () => void
 }) {
   const [formData, setFormData] = useState<
     Partial<DeliveryOrder & { items: any }>
@@ -45,7 +43,11 @@ export function DeliveryOrderForm({
     orderNumber: "",
     deliveryAddress: "",
     deliveryAddressAttachment: "",
-    items: [],
+    items: [{
+      loadQty: 0,
+      loadPerPrice: 1500000,
+      totalLoadPrice: 0,
+    }],
   })
   const [suppliers, setSuppliers] = useState<Company[]>([])
   const [customers, setCustomers] = useState<Company[]>([])
@@ -109,9 +111,9 @@ export function DeliveryOrderForm({
    const generateOrderNumber = async () => {
      try {
        const response = await fetch("/api/utils/last-order-number")
-       const { lastOrderNumber } = await response.json()
+       const { orderNumber } = await response.json()
 
-       const newNumber = parseInt(lastOrderNumber?.slice(1)) + 1 || 1
+       const newNumber = parseInt(orderNumber?.slice(1)) + 1 || 1
 
        const formattedOrderNumber = `K${newNumber.toString().padStart(4, "0")}`
 
@@ -142,9 +144,9 @@ export function DeliveryOrderForm({
       items: [
         ...(formData.items || []),
         {
-          loadQty: "0",
-          loadPerPrice: "0",
-          totalLoadPrice: "0",
+          loadQty: 0,
+          loadPerPrice: 1500000,
+          totalLoadPrice: 0,
         },
       ],
     })
@@ -163,178 +165,189 @@ export function DeliveryOrderForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="space-y-4 lg:w-2/4">
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-500">DO Number : </div>
-          <Input
-            name="orderNumber"
-            placeholder="Order Number"
-            value={formData.orderNumber}
-            onChange={handleChange}
-            readOnly
-            required
-          />
-        </div>
-
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-500">Order Date : </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.orderDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.orderDate
-                  ? format(new Date(formData.orderDate), "PPP")
-                  : "Select Order Date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={
-                  formData.orderDate ? new Date(formData.orderDate) : undefined
-                }
-                onSelect={(date) => handleDateChange(date ?? null, "orderDate")}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-500">Supplier : </div>
-          <Select
-            name="supplierId"
-            onValueChange={(value) =>
-              setFormData({ ...formData, supplierId: Number(value) })
-            }
-            value={formData.supplierId?.toString()}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Supplier" />
-            </SelectTrigger>
-            <SelectContent>
-              {suppliers.map((supplier) => (
-                <SelectItem key={supplier.id} value={supplier.id.toString()}>
-                  {supplier.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-500">Customer : </div>
-          <Select
-            name="customerId"
-            onValueChange={(value) =>
-              setFormData({ ...formData, customerId: Number(value) })
-            }
-            value={formData.customerId?.toString()}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Customer" />
-            </SelectTrigger>
-            <SelectContent>
-              {customers.map((customer) => (
-                <SelectItem key={customer.id} value={customer.id.toString()}>
-                  {customer.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-500">Kendaraan : </div>
-          <Select
-            name="carId"
-            onValueChange={(value) =>
-              setFormData({ ...formData, carId: Number(value) })
-            }
-            value={formData.carId?.toString()}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Car" />
-            </SelectTrigger>
-            <SelectContent>
-              {cars.map((car) => (
-                <SelectItem key={car.id} value={car.id.toString()}>
-                  {car.brand} {car.model} - {car.licensePlate}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-500">
-            Delivery Date :{" "}
-          </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.deliveryDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.deliveryDate
-                  ? format(new Date(formData.deliveryDate), "PPP")
-                  : "Select Delivery Date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={
-                  formData.deliveryDate
-                    ? new Date(formData.deliveryDate)
-                    : undefined
-                }
-                onSelect={(date) =>
-                  handleDateChange(date ?? null, "deliveryDate")
-                }
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-        {deliveryOrder?.id && (
+      <div className="flex flex-row gap-4">
+        <div className="space-y-4 flex-1">
           <div className="space-y-1">
             <div className="text-sm font-medium text-gray-500">
-              Delivery Status
+              DO Number :{" "}
             </div>
+            <Input
+              name="orderNumber"
+              placeholder="Order Number"
+              value={formData.orderNumber}
+              onChange={handleChange}
+              readOnly
+              required
+            />
+          </div>
+
+          <div className="space-y-1">
+            <div className="text-sm font-medium text-gray-500">
+              Order Date :{" "}
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.orderDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.orderDate
+                    ? format(new Date(formData.orderDate), "PPP")
+                    : "Select Order Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={
+                    formData.orderDate
+                      ? new Date(formData.orderDate)
+                      : undefined
+                  }
+                  onSelect={(date) =>
+                    handleDateChange(date ?? null, "orderDate")
+                  }
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-1">
+            <div className="text-sm font-medium text-gray-500">Supplier : </div>
             <Select
-              name="deliveryStatus"
+              name="supplierId"
               onValueChange={(value) =>
-                setFormData({
-                  ...formData,
-                  deliveryStatus: value as DeliveryOrder["deliveryStatus"],
-                })
+                setFormData({ ...formData, supplierId: Number(value) })
               }
-              value={formData.deliveryStatus}
+              value={formData.supplierId?.toString()}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select Delivery Status" />
+                <SelectValue placeholder="Select Supplier" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="canceled">Canceled</SelectItem>
+                {suppliers.map((supplier) => (
+                  <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                    {supplier.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-        )}
-        {/* <Textarea
+
+          <div className="space-y-1">
+            <div className="text-sm font-medium text-gray-500">Customer : </div>
+            <Select
+              name="customerId"
+              onValueChange={(value) =>
+                setFormData({ ...formData, customerId: Number(value) })
+              }
+              value={formData.customerId?.toString()}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Customer" />
+              </SelectTrigger>
+              <SelectContent>
+                {customers.map((customer) => (
+                  <SelectItem key={customer.id} value={customer.id.toString()}>
+                    {customer.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <div className="text-sm font-medium text-gray-500">
+              Kendaraan :{" "}
+            </div>
+            <Select
+              name="carId"
+              onValueChange={(value) =>
+                setFormData({ ...formData, carId: Number(value) })
+              }
+              value={formData.carId?.toString()}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Car" />
+              </SelectTrigger>
+              <SelectContent>
+                {cars.map((car) => (
+                  <SelectItem key={car.id} value={car.id.toString()}>
+                    {car.brand} {car.model} - {car.licensePlate}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <div className="text-sm font-medium text-gray-500">
+              Delivery Date :{" "}
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.deliveryDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.deliveryDate
+                    ? format(new Date(formData.deliveryDate), "PPP")
+                    : "Select Delivery Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={
+                    formData.deliveryDate
+                      ? new Date(formData.deliveryDate)
+                      : undefined
+                  }
+                  onSelect={(date) =>
+                    handleDateChange(date ?? null, "deliveryDate")
+                  }
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          {deliveryOrder?.id && (
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-gray-500">
+                Delivery Status
+              </div>
+              <Select
+                name="deliveryStatus"
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    deliveryStatus: value as DeliveryOrder["deliveryStatus"],
+                  })
+                }
+                value={formData.deliveryStatus}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Delivery Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="canceled">Canceled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {/* <Textarea
           name="deliveryAddress"
           placeholder="Delivery Address"
           value={formData.deliveryAddress}
@@ -342,72 +355,98 @@ export function DeliveryOrderForm({
           required
         /> */}
 
-        {/* <Input
+          {/* <Input
         name="deliveryAddressAttachment"
         placeholder="Delivery Address Attachment URL"
         value={formData.deliveryAddressAttachment}
         onChange={handleChange}
       /> */}
-      </div>
+        </div>
 
-      <div className="space-y-2 mt-4">
-        <h3 className="text-lg font-semibold">Delivery Order Items</h3>
-        {formData.items?.map((item: any, index: number) => (
-          <div key={index} className="flex space-x-2">
-            <Input
-              type="number"
-              placeholder="Load Quantity"
-              value={item.loadQty}
-              onChange={(e) =>
-                handleItemChange(index, "loadQty", e.target.value)
-              }
-              required
-            />
-            <Input
-              type="number"
-              placeholder="Actual Load Quantity"
-              value={item.loadQtyActual}
-              disabled
-              onChange={(e) =>
-                handleItemChange(index, "loadQtyActual", e.target.value)
-              }
-            />
-            <Input
-              type="number"
-              placeholder="Load Per Price"
-              value={item.loadPerPrice}
-              onChange={(e) =>
-                handleItemChange(index, "loadPerPrice", e.target.value)
-              }
-              required
-            />
-            <Input
-              type="number"
-              placeholder="Total Load Price"
-              value={item.totalLoadPrice}
-              readOnly
-            />
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => removeItem(index)}
-            >
-              <Trash className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-        <Button type="button" onClick={addItem}>
-          <Plus className="h-4 w-4 mr-2" /> Add Item
-        </Button>
-      </div>
-
-      <div className="flex justify-end gap-2">
-        {onClose && (
-          <Button variant="outline" onClick={onClose} type="button">
-            Cancel
+        <div className="space-y-2 flex-1 -mt-3">
+          <h3 className="text-lg font-semibold">Delivery Order Items</h3>
+          <table className="table-auto border-collapse">
+            <tbody>
+              <tr>
+                <td>
+                  <div className="p-2">Load Quantity</div>
+                </td>
+                {/* <td>
+                  <div className="p-2">Load Actual</div>
+                </td> */}
+                <td>
+                  <div className="p-2">Price Per Load</div>
+                </td>
+                <td>
+                  <div className="p-2">Total</div>
+                </td>
+                <td>
+                  <div className="p-2">Action</div>
+                </td>
+              </tr>
+              {formData.items?.map((item: any, index: number) => (
+                <tr key={index}>
+                  <td className="p-2">
+                    <Input
+                      type="number"
+                      placeholder="Load Quantity"
+                      value={item.loadQty}
+                      onChange={(e) =>
+                        handleItemChange(index, "loadQty", e.target.value)
+                      }
+                      required
+                    />
+                  </td>
+                  {/* <td className="p-2">
+                    <Input
+                      type="number"
+                      placeholder="Actual Load Quantity"
+                      value={item.loadQtyActual}
+                      disabled
+                      onChange={(e) =>
+                        handleItemChange(index, "loadQtyActual", e.target.value)
+                      }
+                    />
+                  </td> */}
+                  <td className="p-2">
+                    <Input
+                      type="number"
+                      placeholder="Load Per Price"
+                      value={item.loadPerPrice}
+                      onChange={(e) =>
+                        handleItemChange(index, "loadPerPrice", e.target.value)
+                      }
+                      required
+                    />
+                  </td>
+                  <td className="p-2">
+                    <Input
+                      type="number"
+                      placeholder="Total Load Price"
+                      value={item.totalLoadPrice}
+                      readOnly
+                    />
+                  </td>
+                  <td className="p-2">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => removeItem(index)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <Button type="button" onClick={addItem}>
+            <Plus className="h-4 w-4 mr-2" /> Add Item
           </Button>
-        )}
-        <Button type="submit">Save</Button>
+        </div>
+      </div>
+      <div className="flex justify-end mt-4 gap-2">
+        <Button type="submit">Save Delivery Order</Button>
       </div>
     </form>
   )

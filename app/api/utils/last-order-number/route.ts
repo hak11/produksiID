@@ -13,8 +13,11 @@ export async function GET() {
       .from(deliveryOrders)
       .orderBy(desc(deliveryOrders.id))
       .limit(1);
-
-    return NextResponse.json(deliveryOrdersWithDetails);
+    
+    if (deliveryOrdersWithDetails.length === 0) {
+      return NextResponse.json({}, { status: 200 });
+    }
+    return NextResponse.json(deliveryOrdersWithDetails[0]);
   } catch (error) {
     console.error("🚀 ~ GET ~ error:", error);
     return NextResponse.json({ error: "Failed to fetch delivery orders" }, { status: 500 });
