@@ -36,6 +36,16 @@ export const invoiceStatusEnum = pgEnum('invoice_status_enum', [
   'cancelled'
 ]);
 
+export const services = pgTable('services', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 50 }).notNull().unique(),
+  price: numeric('price').notNull(),
+  unit: varchar('unit'),
+  deleted_at: timestamp('deleted_at').notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 export const invoices = pgTable('invoices', {
   id: serial('id').primaryKey(),
   companyId: integer('company_id').notNull().references(() => companies.id),
@@ -384,6 +394,8 @@ export type Invoice = typeof invoices.$inferSelect;
 export type NewInvoice = typeof invoices.$inferInsert;
 export type InvoiceDeliveryOrder = typeof invoiceDeliveryOrders.$inferSelect;
 export type NewInvoiceDeliveryOrder = typeof invoiceDeliveryOrders.$inferInsert;
+export type Service = typeof services.$inferSelect;
+export type NewService = typeof services.$inferInsert;
 export type DeliveryOrderDetailType = DeliveryOrder & {
   supplierName: string
   customerName: string

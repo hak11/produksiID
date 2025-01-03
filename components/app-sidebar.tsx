@@ -11,6 +11,7 @@ import {
   CalendarDays,
   BarChart2,
   LineChart,
+  Truck
 } from "lucide-react"
 
 import Link from "next/link"
@@ -67,6 +68,26 @@ const data = {
       icon: CalendarDays,
     },
     {
+      title: "Pengiriman",
+      url: "/purchase-order/history",
+      icon: Truck,
+      isActive: true,
+      items: [
+        {
+          title: "Surat Jalan",
+          url: "/dashboard/shipments",
+        },
+        {
+          title: "Buat Surat Jalan",
+          url: "/dashboard/shipments/create",
+        },
+        // {
+        //   title: "Kontrak Pengiriman",
+        //   url: "/dashboard/shipments/create",
+        // },
+      ],
+    },
+    {
       title: "Delivery Order",
       url: "/purchase-order/history",
       icon: BookOpen,
@@ -90,11 +111,11 @@ const data = {
       items: [
         {
           title: "List",
-          url: "/invoices",
+          url: "/dashboard/invoices",
         },
         {
           title: "Buat Invoice",
-          url: "/invoices/create",
+          url: "/dashboard/invoices/create",
         },
       ],
     },
@@ -129,8 +150,12 @@ const data = {
           url: "/dashboard/cars",
         },
         {
-          title: "Perusahaan (Sup/Cus)",
+          title: "Mitra Perusahaan",
           url: "/dashboard/company",
+        },
+        {
+          title: "Layanan Saya",
+          url: "/dashboard/services",
         },
       ],
     },

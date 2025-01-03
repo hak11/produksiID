@@ -4,13 +4,12 @@ import { useEffect, useState } from "react"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import { CalendarIcon, Trash, SaveAll } from 'lucide-react'
+import { CalendarIcon, SaveAll } from 'lucide-react'
 import { MultiSelect } from "@/components/multi-select"
 import { cn } from "@/lib/utils"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Invoice,
-  DeliveryOrder,
   Company,
   InvoicesDetailType,
 } from "@/lib/db/schema"
@@ -45,10 +44,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { invoiceSchema, InvoicesFormValues } from "@/lib/schema/invoicesSchema"
-import { DeliveryOrderFormValues, DeliveryOrderItemFormValues } from "@/lib/schema/deliveryOrderSchema"
+import {
+  invoiceSchema,
+  InvoicesFormValues,
+  DoInvoiceItemFormValues,
+  DoInvoiceFormValues,
+} from "@/lib/schema/invoicesSchema"
 import { formatCurrency } from "@/lib/utils"
-import { json } from "stream/consumers"
+// import { json } from "stream/consumers"
 
 
 interface InvoiceFormProps {
@@ -57,8 +60,9 @@ interface InvoiceFormProps {
 }
 
 export function InvoiceForm({ invoice, onSave }: InvoiceFormProps) {
+  console.log("🚀 ~ invoice:", invoice)
   const [companies, setCompanies] = useState<Company[]>([])
-  const [invoiceItems, setInvoiceItems] = useState<DeliveryOrderItemFormValues[]>([])
+  const [invoiceItems, setInvoiceItems] = useState<DoInvoiceItemFormValues[]>([])
   const [selectedDeliveryOrders, setSelectedDeliveryOrders] = useState<string[]>([])
 
   const form = useForm<InvoicesFormValues>({
@@ -124,8 +128,7 @@ export function InvoiceForm({ invoice, onSave }: InvoiceFormProps) {
     // }
   // }
 
-  const calculateTotalPrice = () => {
-   
+  // const calculateTotalPrice = () => {
     // console.log("🚀 ~ calculateTotalPrice ~ deliveryOrder:", deliveryOrder)
     // return deliveryOrder.items.reduce((total: number, item: DeliveryOrderItem) => {
     //   return total + (item.loadQtyActual || item.loadQty) * item.loadPerPrice
@@ -133,7 +136,7 @@ export function InvoiceForm({ invoice, onSave }: InvoiceFormProps) {
     // return deliveryOrder.items.reduce((total: number, item: DeliveryOrderItem) => {
     //   return total + (item.loadQtyActual || item.loadQty) * item.loadPerPrice
     // }, 0)
-  }
+  // }
 
   // const updateTotalAmount = () => {
   //   const total = fields.reduce((sum, field) => sum + field.amount, 0)
@@ -150,7 +153,7 @@ export function InvoiceForm({ invoice, onSave }: InvoiceFormProps) {
 
     const dataDetails = await response.json()
 
-    const dataItems: DeliveryOrderItemFormValues[] = dataDetails.flatMap(
+    const dataItems: DoInvoiceItemFormValues[] = dataDetails.flatMap(
       (deliveryOrder: any) => {
         return deliveryOrder.items.map((item: any) => ({
           loadQty: item.loadQty,
@@ -368,8 +371,10 @@ export function InvoiceForm({ invoice, onSave }: InvoiceFormProps) {
         /> */}
 
         <MultiSelect
-          options={fields.map((field: DeliveryOrderFormValues) => ({
-            label: `(${format(new Date(field.deliveryDate), "dd MMM yy")}) - ${field.orderNumber} - ${field.customerName} - ${field.supplierName}`,
+          options={fields.map((field: DoInvoiceFormValues) => ({
+            label: `(${format(new Date(field.deliveryDate), "dd MMM yy")}) - ${
+              field.orderNumber
+            } - ${field.customerName} - ${field.supplierName}`,
             value: field.orderNumber,
           }))}
           onValueChange={multipleSelectDOHandler}
@@ -386,7 +391,6 @@ export function InvoiceForm({ invoice, onSave }: InvoiceFormProps) {
             ))}
           </span>
         </div>
-
 
         <Table>
           <TableHeader>

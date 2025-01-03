@@ -1,13 +1,13 @@
 import * as z from "zod"
 
 export const deliveryOrderItemSchema = z.object({
-    doId: z.number(),
+    // doId: z.number(),
     loadQty: z.string(),
-    loadQtyActual: z.string(),
+    // loadQtyActual: z.string(),
     loadPerPrice: z.string(),
-    customerName: z.string(),
-    orderNumber: z.string(),
-    supplierName: z.string(),
+    // customerName: z.string().optional(),
+    // orderNumber: z.string().optional(),
+    // supplierName: z.string().optional(),
     totalLoadPrice: z.string(),
     loadPerPriceStr: z.string(),
     totalLoadPriceStr: z.string()

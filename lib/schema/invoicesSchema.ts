@@ -1,5 +1,19 @@
 import * as z from "zod"
-import { deliveryOrderSchema } from "./deliveryOrderSchema"
+import { deliveryOrderSchema, deliveryOrderItemSchema } from "./deliveryOrderSchema"
+
+export const doInvoiceItemSchema = deliveryOrderItemSchema.extend({
+    doId: z.number(),
+    loadQtyActual: z.string(),
+    customerName: z.string().optional(),
+    orderNumber: z.string().optional(),
+    supplierName: z.string().optional(),
+  })
+
+
+export const doInvoiceSchema = deliveryOrderSchema.extend({
+  items: z.array(doInvoiceItemSchema)
+})
+
 
 export const invoiceSchema = z.object({
   invoiceNumber: z.string().min(1, "Invoice number is required"),
@@ -13,11 +27,13 @@ export const invoiceSchema = z.object({
   status: z.enum(["draft", "sent", "paid", "overdue", "cancelled"]),
   totalAmount: z.string().min(1, "Total amount is required"),
   notes: z.string().optional(),
-  deliveryOrders: z.array(deliveryOrderSchema),
+  deliveryOrders: z.array(doInvoiceSchema),
   doIds: z.array(z.number()),
 })
 
 export type InvoicesFormValues = z.infer<typeof invoiceSchema>
+export type DoInvoiceItemFormValues = z.infer<typeof doInvoiceItemSchema>
+export type DoInvoiceFormValues = z.infer<typeof doInvoiceSchema>
 
 
 // export const insertInvoiceSchema = createInsertSchema(invoices).extend({
