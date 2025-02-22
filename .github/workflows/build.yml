@@ -34,12 +34,6 @@ jobs:
           echo "$key=$value" >> $GITHUB_ENV
         done
 
-        
-    - name: Debug AWS SSM Output
-      run: |
-        aws ssm get-parameters-by-path --path "/staging/produksi/" --with-decryption --query "Parameters[*]" --output json
-
-
     - name: Print All ENV (For Debugging)
       run: |
         echo "BASE_URL=$BASE_URL"
@@ -51,20 +45,20 @@ jobs:
     - name: Login to AWS ECR
       uses: aws-actions/amazon-ecr-login@v1
 
-    # - name: Build Docker Image with AWS Secrets
-    #   run: |
-    #     docker build \
-    #       --build-arg BASE_URL=${{ env.BASE_URL }} \
-    #       --build-arg POSTGRES_URL=${{ env.POSTGRES_URL }} \
-    #       --build-arg AUTH_SECRET=${{ env.AUTH_SECRET }} \
-    #       --build-arg STRIPE_SECRET_KEY=${{ env.STRIPE_SECRET_KEY }} \
-    #       --build-arg STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }} \
-    #       -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+    - name: Build Docker Image with AWS Secrets
+      run: |
+        docker build \
+          --build-arg BASE_URL=${{ env.BASE_URL }} \
+          --build-arg POSTGRES_URL=${{ env.POSTGRES_URL }} \
+          --build-arg AUTH_SECRET=${{ env.AUTH_SECRET }} \
+          --build-arg STRIPE_SECRET_KEY=${{ env.STRIPE_SECRET_KEY }} \
+          --build-arg STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }} \
+          -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
 
-    # - name: Tag & Push to AWS ECR
-    #   run: |
-    #     docker tag $ECR_REGISTRY/$ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
+    - name: Tag & Push to AWS ECR
+      run: |
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-    # - name: Push Image to ECR
-    #   run: |
-    #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+    - name: Push Image to ECR
+      run: |
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
