@@ -1,0 +1,26 @@
+name: Deploy to AWS ECS
+
+on:
+  workflow_dispatch:  # Menjadikan workflow ini hanya berjalan saat ditekan tombol
+
+env:
+  AWS_REGION: ap-southeast-1
+  ECS_CLUSTER: 904233128516.dkr.ecr.ap-southeast-1.amazonaws.com/produksi/web-fe
+  ECS_SERVICE: 
+
+jobs:
+  deploy:
+    name: Deploy to ECS (Manual Trigger)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Update ECS Service
+      run: |
+        aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --force-new-deployment

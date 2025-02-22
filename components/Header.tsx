@@ -43,12 +43,12 @@ function Header() {
           />
         </Link>
         <div className="flex items-center space-x-4">
-          <Link
-            href="/pricing"
+          {/* <Link
+            href="/Harga"
             className="text-sm font-medium text-gray-700 hover:text-gray-900"
           >
-            Pricing
-          </Link>
+            Subscribe
+          </Link> */}
           {user ? (
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <DropdownMenuTrigger asChild>

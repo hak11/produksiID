@@ -3,7 +3,7 @@ import { db } from "@/lib/db/drizzle";
 import { deliveryOrders, deliveryOrderItems, cars, companies, deliveryOrderDrivers } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 
-export async function GET( request: Request, { params }: { params: { id: string } }) {
+export async function GET( request: Request, { params }: any) {
   try {
     const { id: doID } = await params;
 
