@@ -25,13 +25,35 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
+  
+    - name: Get All ENV from AWS Parameter Store
+      run: |
+        PARAMS=$(aws ssm get-parameters-by-path --path "/staging/produksi/" --with-decryption --query "Parameters[*].[Name,Value]" --output json)
+        echo "$PARAMS" | jq -r '.[] | "echo \(.name | sub("/staging/produksi/"; ""))=\(.value) >> $GITHUB_ENV"' | bash
 
+    - name: Print All ENV (For Debugging)
+      run: |
+        echo "BASE_URL=$BASE_URL"
+        echo "POSTGRES_URL=$POSTGRES_URL"
+        echo "AUTH_SECRET=$AUTH_SECRET"
+        echo "STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY"
+        echo "STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET"
+      
     - name: Login to AWS ECR
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build Docker Image
+    - name: Build Docker Image with AWS Secrets
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+        docker build \
+          --build-arg BASE_URL=${{ env.BASE_URL }} \
+          --build-arg POSTGRES_URL=${{ env.POSTGRES_URL }} \
+          --build-arg AUTH_SECRET=${{ env.AUTH_SECRET }} \
+          --build-arg STRIPE_SECRET_KEY=${{ env.STRIPE_SECRET_KEY }} \
+          --build-arg STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }} \
+          -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+
+    - name: Tag & Push to AWS ECR
+      run: |
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
     - name: Push Image to ECR
