@@ -8,6 +8,21 @@ RUN yarn install --frozen-lockfile
 # ===== Stage 2: Build Next.js =====
 FROM node:18-alpine AS builder
 WORKDIR /app
+
+# Deklarasi ARG untuk Build
+ARG BASE_URL
+ARG AUTH_SECRET
+ARG POSTGRES_URL
+ARG STRIPE_SECRET_KEY
+ARG STRIPE_WEBHOOK_SECRET
+
+# Set ENV agar tersedia dalam container saat build
+ENV NEXT_PUBLIC_BASE_URL=$BASE_URL
+ENV AUTH_SECRET=$AUTH_SECRET
+ENV POSTGRES_URL=$POSTGRES_URL
+ENV STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY
+ENV STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . . 
 RUN yarn build
