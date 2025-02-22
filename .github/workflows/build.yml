@@ -33,6 +33,11 @@ jobs:
           key=$(echo "$key" | sed 's|/staging/produksi/||')
           echo "$key=$value" >> $GITHUB_ENV
         done
+        
+    - name: Debug AWS SSM Output
+      run: |
+        aws ssm get-parameters-by-path --path "/staging/produksi/" --with-decryption --query "Parameters[*]" --output json
+
 
     - name: Print All ENV (For Debugging)
       run: |
@@ -48,11 +53,11 @@ jobs:
     - name: Build Docker Image with AWS Secrets
       run: |
         docker build \
-          --build-arg BASE_URL=${{ env.BASE_URL }} \
-          --build-arg POSTGRES_URL=${{ env.POSTGRES_URL }} \
-          --build-arg AUTH_SECRET=${{ env.AUTH_SECRET }} \
-          --build-arg STRIPE_SECRET_KEY=${{ env.STRIPE_SECRET_KEY }} \
-          --build-arg STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }} \
+          --build-arg BASE_URL=$BASE_URL \
+          --build-arg POSTGRES_URL=$POSTGRES_URL \
+          --build-arg AUTH_SECRET=$AUTH_SECRET \
+          --build-arg STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY \
+          --build-arg STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
 
     - name: Tag & Push to AWS ECR
