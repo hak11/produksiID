@@ -24,7 +24,8 @@ ENV STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY
 ENV STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY . . 
+COPY . .
+
 RUN yarn build
 
 # ===== Stage 3: Production Image =====
@@ -39,7 +40,7 @@ RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nextjs -u 1001
 
 # Copy hanya file yang dibutuhkan untuk production
-COPY --from=builder /app/next.config.js ./ 
+COPY --from=builder /app/next.config.ts ./ 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
