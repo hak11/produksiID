@@ -28,8 +28,9 @@ jobs:
   
     - name: Get All ENV from AWS Parameter Store
       run: |
-        PARAMS=$(aws ssm get-parameters-by-path --path "/staging/produksi/" --with-decryption --query "Parameters[*].[Name,Value]" --output json)
-        echo "$PARAMS" | jq -r '.[] | "echo \(.name | sub("/staging/produksi/"; ""))=\(.value) >> $GITHUB_ENV"' | bash
+        PARAMS=$(aws ssm get-parameters-by-path --path "/staging/produksi/" --with-decryption --query "Parameters[*]" --output json)
+        echo "$PARAMS" | jq -r '.[] | "echo \(.Name | sub("/staging/produksi/"; ""))=\(.Value)"' >> $GITHUB_ENV
+
 
     - name: Print All ENV (For Debugging)
       run: |
