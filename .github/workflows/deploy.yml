@@ -6,7 +6,7 @@ on:
 env:
   AWS_REGION: ap-southeast-1
   ECS_CLUSTER: 904233128516.dkr.ecr.ap-southeast-1.amazonaws.com/produksi/web-fe
-  ECS_SERVICE: 
+  ECS_SERVICE: produksi-fe
 
 jobs:
   deploy:
