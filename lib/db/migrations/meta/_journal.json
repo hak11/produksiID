@@ -8,6 +8,13 @@
       "when": 1740898836290,
       "tag": "0000_naive_malice",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1740904988316,
+      "tag": "0001_handy_wiccan",
+      "breakpoints": true
     }
   ]
 }

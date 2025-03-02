@@ -1,4 +1,5 @@
-import { pgTable, serial, varchar,text, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar,text, timestamp, integer } from 'drizzle-orm/pg-core';
+import { companies } from './companies';
 
 export const teams = pgTable('teams', {
   id: serial('id').primaryKey(),
@@ -9,6 +10,8 @@ export const teams = pgTable('teams', {
   stripeSubscriptionId: text('stripe_subscription_id').unique(),
   stripeProductId: text('stripe_product_id'),
   planName: varchar('plan_name', { length: 50 }),
+  companyId: integer('company_id')
+      .references(() => companies.id),
   subscriptionStatus: varchar('subscription_status', { length: 20 }),
 });
 

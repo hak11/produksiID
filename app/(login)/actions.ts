@@ -6,12 +6,14 @@ import { db } from '@/lib/db/drizzle';
 import {
   User,
   users,
+  companies,
   teams,
   teamMembers,
   activityLogs,
   type NewUser,
   type NewTeam,
   type NewTeamMember,
+  type NewCompany,
   type NewActivityLog,
   ActivityType,
   invitations,
@@ -115,9 +117,8 @@ const signUpSchema = z.object({
   password: z.string().min(8),
 });
 
-export const signUp = validatedAction(signUpSchema, async (data, formData) => {
-  const { email, password, inviteId } = data;
-  // const { name, phone, companyName, companyCategory, email, password, inviteId } = data;
+export const signUp = validatedAction(signUpSchema, async (data) => {
+  const { name, phone, companyName, companyCategory, email, password, inviteId } = data;
 
   const existingUser = await db
     .select()
@@ -141,9 +142,32 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     role: 'owner', // Default role, will be overridden if there's an invitation
   };
 
-  const [createdUser] = await db.insert(users).values(newUser).returning();
+  const newCompany: NewCompany = {
+    name: companyName,
+    registeredDate: new Date().toLocaleDateString(),
+    email,
+    picName: name,
+    picPhone: phone,
+    category: companyCategory,
+  };
 
-  if (!createdUser) {
+  const { createdUser, createdCompany } = await db.transaction(async (tx) => {
+    // Insert user
+    const [userInserted] = await tx.insert(users).values(newUser).returning();
+
+    // Insert company
+    const [companyInserted] = await tx.insert(companies).values(newCompany).returning();
+
+    // Bisa tambahkan operasi lain di sini
+
+    // Return data yang sudah di-insert
+    return {
+      createdUser: userInserted,
+      createdCompany: companyInserted,
+    };
+  });
+
+  if (!createdUser || !createdCompany) {
     return {
       error: 'Failed to create user. Please try again.',
       email,
@@ -191,7 +215,8 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
   } else {
     // Create a new team if there's no invitation
     const newTeam: NewTeam = {
-      name: `${email}'s Team`,
+      name: `${companyName}'s Team`,
+      companyId: createdCompany.id,
     };
 
     [createdTeam] = await db.insert(teams).values(newTeam).returning();
@@ -222,13 +247,16 @@ export const signUp = validatedAction(signUpSchema, async (data, formData) => {
     setSession(createdUser),
   ]);
 
-  const redirectTo = formData.get('redirect') as string | null;
-  if (redirectTo === 'checkout') {
-    const priceId = formData.get('priceId') as string;
-    return createCheckoutSession({ team: createdTeam, priceId });
-  }
+  // const redirectTo = formData.get('redirect') as string | null;
+  // if (redirectTo === 'checkout') {
+  //   const priceId = formData.get('priceId') as string;
+  //   return createCheckoutSession({ team: createdTeam, priceId });
+  // }
 
-  redirect('/dashboard');
+  // return { success: 'Team member removed successfully' };
+
+
+  redirect('/sign-in');
 });
 
 export async function signOut() {
