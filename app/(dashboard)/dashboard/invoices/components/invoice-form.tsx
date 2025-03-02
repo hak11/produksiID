@@ -49,7 +49,7 @@ import {
   InvoicesFormValues,
   DoInvoiceItemFormValues,
   DoInvoiceFormValues,
-} from "@/lib/schema/invoicesSchema"
+} from "@/lib/validatorSchema/invoicesSchema"
 import { formatCurrency } from "@/lib/utils"
 // import { json } from "stream/consumers"
 

@@ -5,64 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1726443359662,
-      "tag": "0000_soft_the_anarchist",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1735391893110,
-      "tag": "0001_clumsy_weapon_omega",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1735392304227,
-      "tag": "0002_typical_gamma_corps",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1735455906126,
-      "tag": "0003_curved_thor",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1735625678798,
-      "tag": "0004_strong_wolfsbane",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1735629374883,
-      "tag": "0005_conscious_glorian",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1735643353165,
-      "tag": "0006_daily_millenium_guard",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1735811926414,
-      "tag": "0007_huge_plazm",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1735884663224,
-      "tag": "0008_real_scarecrow",
+      "when": 1740898836290,
+      "tag": "0000_naive_malice",
       "breakpoints": true
     }
   ]

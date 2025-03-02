@@ -9,11 +9,9 @@ export const doInvoiceItemSchema = deliveryOrderItemSchema.extend({
     supplierName: z.string().optional(),
   })
 
-
 export const doInvoiceSchema = deliveryOrderSchema.extend({
   items: z.array(doInvoiceItemSchema)
 })
-
 
 export const invoiceSchema = z.object({
   invoiceNumber: z.string().min(1, "Invoice number is required"),

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import { DeliveryOrderForm } from "../components/delivery-order-form"
 import { DeliveryOrder, DeliveryOrderItem } from "@/lib/db/schema"
-import { type DeliveryOrderFormValues } from "@/lib/schema/deliveryOrderSchema"
+import { type DeliveryOrderFormValues } from "@/lib/validatorSchema/deliveryOrderSchema"
 
 export default function CreateDeliveryOrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: doID } = React.use(params);
