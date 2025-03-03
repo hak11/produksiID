@@ -1,9 +1,9 @@
-import { pgTable, integer, serial, numeric, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, numeric, timestamp } from 'drizzle-orm/pg-core';
 import { deliveryOrders } from './deliveryOrders';
 
 export const deliveryOrderItems = pgTable('delivery_order_items', {
-  id: serial('id').primaryKey(),
-  doId: integer('do_id')
+  id: uuid('id').primaryKey().defaultRandom(),
+  doId: uuid('do_id')
     .references(() => deliveryOrders.id)
     .notNull(),
   loadQty: numeric('load_qty').notNull(),

@@ -4,7 +4,7 @@ import { cars, driverCarAssignments, drivers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 type CarWithDrivers = {
-  id: number;
+  id: string;
   brand: string;
   model: string;
   year: number;
@@ -13,7 +13,7 @@ type CarWithDrivers = {
   color: string | null;
   status: string;
   lastMaintenanceDate: string | null;
-  drivers: { id: number; name: string }[];
+  drivers: { id: string; name: string }[];
 };
 
 // Get all cars
@@ -25,7 +25,7 @@ export async function GET() {
       .leftJoin(driverCarAssignments, eq(cars.id, driverCarAssignments.carId))
       .leftJoin(drivers, eq(driverCarAssignments.driverId, drivers.id));
 
-    const groupedCars = carsWithDrivers.reduce<Record<number, CarWithDrivers>>((acc, curr) => {
+    const groupedCars = carsWithDrivers.reduce<Record<string, CarWithDrivers>>((acc, curr) => {
       const car = curr.cars;
       const driver = curr.drivers;
 
@@ -135,11 +135,9 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Car ID is required" }, { status: 400 });
     }
 
-  const carId = Number(id);
+    await db.delete(driverCarAssignments).where(eq(driverCarAssignments.carId, id));
 
-    await db.delete(driverCarAssignments).where(eq(driverCarAssignments.carId, carId));
-
-    await db.delete(cars).where(eq(cars.id, Number(id)));
+    await db.delete(cars).where(eq(cars.id, id));
     return NextResponse.json({ message: "Car deleted successfully" });
   } catch (error) {
     console.error("🚀 ~ DELETE ~ error:", error)

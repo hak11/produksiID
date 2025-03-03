@@ -44,7 +44,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Assignment ID is required" }, { status: 400 });
     }
 
-    await db.delete(driverCarAssignments).where(eq(driverCarAssignments.id, Number(id)));
+    await db.delete(driverCarAssignments).where(eq(driverCarAssignments.id, id));
     return NextResponse.json({ message: "Assignment deleted successfully" });
   } catch (error) {
     console.error("🚀 ~ DELETE ~ error:", error)

@@ -24,7 +24,7 @@ export async function GET( request: Request, { params }: any) {
         deliveryAddress: deliveryOrders.deliveryAddress,
       })
       .from(deliveryOrders)
-      .where(eq(deliveryOrders.id, Number(doID)))
+      .where(eq(deliveryOrders.id, doID))
       .limit(1);
 
     if (!doDetails.length) {
@@ -43,7 +43,7 @@ export async function GET( request: Request, { params }: any) {
         nameItem: sql<string[]>`'item ' || ROW_NUMBER() OVER (PARTITION BY ${deliveryOrderItems.doId} ORDER BY ${deliveryOrderItems.id})`.as('nameItem'),
       })
       .from(deliveryOrderItems)
-      .where(eq(deliveryOrderItems.doId, Number(doID)));
+      .where(eq(deliveryOrderItems.doId, doID));
 
   const supplier = await db
     .select()
@@ -73,7 +73,7 @@ export async function GET( request: Request, { params }: any) {
   const doDriverReduce = doDriver.reduce((acc, curr) => {
     acc[curr.role] = curr.driverId;
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, string>);
 
   doDetail.items = doItems;
 

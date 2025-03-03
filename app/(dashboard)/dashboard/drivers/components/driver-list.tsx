@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2, Edit } from 'lucide-react'
 
 interface Driver {
-  id: number;
+  id: string;
   name: string;
   licenseNumber: string;
   contactNumber: string;
@@ -25,7 +25,7 @@ export function DriverList({
 }: {
   drivers: Driver[];
   onEdit: (driver: Driver) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }) {
   const columns: ColumnDef<Driver>[] = [
     {

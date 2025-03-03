@@ -30,8 +30,8 @@ export async function GET(request: NextRequest) {
       .where(
         companyId
           ? or(
-              eq(deliveryOrders.supplierId, parseInt(companyId)),
-              eq(deliveryOrders.customerId, parseInt(companyId))
+              eq(deliveryOrders.supplierId, companyId),
+              eq(deliveryOrders.customerId, companyId)
             )
           : undefined
       )
@@ -175,11 +175,9 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Delivery order ID is required" }, { status: 400 });
     }
 
-    const deliveryOrderId = Number(id);
-
     await db.transaction(async (tx) => {
-      await tx.delete(deliveryOrderItems).where(eq(deliveryOrderItems.doId, deliveryOrderId));
-      await tx.delete(deliveryOrders).where(eq(deliveryOrders.id, deliveryOrderId));
+      await tx.delete(deliveryOrderItems).where(eq(deliveryOrderItems.doId, id));
+      await tx.delete(deliveryOrders).where(eq(deliveryOrders.id, id));
     });
 
     return NextResponse.json({ message: "Delivery order deleted successfully." });

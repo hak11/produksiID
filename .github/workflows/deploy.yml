@@ -5,8 +5,8 @@ on:
 
 env:
   AWS_REGION: ap-southeast-1
-  ECS_CLUSTER: default
-  ECS_SERVICE: produksi-fe
+  ECS_CLUSTER: produksi-stag
+  ECS_SERVICE: produksi-web-fe
 
 jobs:
   deploy:

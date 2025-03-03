@@ -46,11 +46,11 @@ export function DeliveryOrderList({
   onDelete,
 }: {
   deliveryOrders: DeliveryOrderListType[]
-  handleDownloadDO: (id: number, callback: () => void) => void
-  onDelete: (id: number) => void
+  handleDownloadDO: (id: string, callback: () => void) => void
+  onDelete: (id: string) => void
 }) {
 
-  const [loadingIds, setLoadingIds] = useState<number[]>([]);
+  const [loadingIds, setLoadingIds] = useState<string[]>([]);
   const columns: ColumnDef<DeliveryOrderListType>[] = [
     {
       accessorKey: "orderNumber",

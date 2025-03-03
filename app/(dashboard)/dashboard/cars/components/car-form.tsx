@@ -29,7 +29,7 @@ export function CarForm({
 }: {
   car: Partial<CarType> | null;
   drivers: DriverType[];
-  onSave: (car: Partial<CarType>, drivers: number[]) => void;
+  onSave: (car: Partial<CarType>, drivers: string[]) => void;
   onClose: () => void;
 }) {
   const [formData, setFormData] = useState<Partial<CarType>>({
@@ -43,7 +43,7 @@ export function CarForm({
     lastMaintenanceDate: "",
   });
 
-  const [selectedDrivers, setSelectedDrivers] = useState<number[]>([]);
+  const [selectedDrivers, setSelectedDrivers] = useState<string[]>([]);
 
   useEffect(() => {
     if (car) {
@@ -62,7 +62,7 @@ export function CarForm({
     }
   };
 
-  const handleDriverSelection = (driverId: number) => {
+  const handleDriverSelection = (driverId: string) => {
     if (!selectedDrivers.includes(driverId)) {
       setSelectedDrivers((prev) => [...prev, driverId]);
     } else {
@@ -153,7 +153,7 @@ export function CarForm({
       </Popover>
       <div>
         <h3 className="text-lg font-bold">Assign Drivers</h3>
-        <Select onValueChange={(value) => handleDriverSelection(Number(value))}>
+        <Select onValueChange={(value) => handleDriverSelection(value)}>
           <SelectTrigger>
             <SelectValue placeholder="Pilih Driver" />
           </SelectTrigger>

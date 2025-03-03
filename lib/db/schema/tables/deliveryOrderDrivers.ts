@@ -1,14 +1,14 @@
-import { pgTable, integer, serial, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, timestamp } from 'drizzle-orm/pg-core';
 import { deliveryOrders } from './deliveryOrders';
 import { drivers } from './drivers';
 import { deliveryDriverRoleEnum } from '../enums';
 
 export const deliveryOrderDrivers = pgTable('delivery_order_drivers', {
-  id: serial('id').primaryKey(),
-  deliveryOrderId: integer('delivery_order_id')
+  id: uuid('id').primaryKey().defaultRandom(),
+  deliveryOrderId: uuid('delivery_order_id')
     .references(() => deliveryOrders.id)
     .notNull(),
-  driverId: integer('driver_id')
+  driverId: uuid('driver_id')
     .references(() => drivers.id)
     .notNull(),
   role: deliveryDriverRoleEnum('role').notNull(),

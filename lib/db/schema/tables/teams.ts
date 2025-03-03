@@ -1,8 +1,7 @@
-import { pgTable, serial, varchar,text, timestamp, integer } from 'drizzle-orm/pg-core';
-import { companies } from './companies';
+import { pgTable, uuid, varchar,text, timestamp } from 'drizzle-orm/pg-core';
 
 export const teams = pgTable('teams', {
-  id: serial('id').primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 100 }).notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -10,8 +9,6 @@ export const teams = pgTable('teams', {
   stripeSubscriptionId: text('stripe_subscription_id').unique(),
   stripeProductId: text('stripe_product_id'),
   planName: varchar('plan_name', { length: 50 }),
-  companyId: integer('company_id')
-      .references(() => companies.id),
   subscriptionStatus: varchar('subscription_status', { length: 20 }),
 });
 

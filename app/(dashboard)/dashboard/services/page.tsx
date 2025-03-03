@@ -31,7 +31,7 @@ export default function ServicesPage() {
     null
   )
   const [isEditing, setIsEditing] = useState(false)
-  const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function ServicesPage() {
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
       await fetch(`/api/services/detail${id}`, { method: "DELETE" })
       const updatedServices = await fetch("/api/services").then((res) =>
@@ -155,7 +155,7 @@ export default function ServicesPage() {
           setSelectedService(service)
           setOpen(true)
         }}
-        onDelete={(id: number) => setDeleteId(id)}
+        onDelete={(id: string) => setDeleteId(id)}
       />
     </div>
   )

@@ -3,35 +3,54 @@ import { users, teams, teamMembers } from './schema';
 import { hashPassword } from '@/lib/auth/session';
 
 async function seed() {
-  const email = 'test@test.com';
-  const password = 'admin123';
-  const passwordHash = await hashPassword(password);
+  const emailAdmin = 'admin@test.com';
+  const passwordAdmin = 'admin123';
+  const emailMember = 'member@test.com';
+  const passwordMember = 'member123';
+  const passwordAdminHash = await hashPassword(passwordAdmin);
+  const passwordmemberHash = await hashPassword(passwordMember);
 
-  const [user] = await db
+  const insertedUsers = await db
     .insert(users)
     .values([
       {
-        email: email,
-        passwordHash: passwordHash,
-        role: "owner",
+        email: emailAdmin,
+        passwordHash: passwordAdminHash,
+        role: "admin",
+      },
+      {
+        email: emailMember,
+        passwordHash: passwordmemberHash,
+        role: "member",
       },
     ])
-    .returning();
+    .returning({ id: users.id });
 
-  console.log('Initial user created.');
+  const [userAdmin, userMember] = insertedUsers || [];
+
+  console.log('Initial users created:', userAdmin?.id, userMember?.id);
 
   const [team] = await db
     .insert(teams)
     .values({
       name: 'Test Team',
     })
-    .returning();
+    .returning({ id: teams.id });
 
-  await db.insert(teamMembers).values({
-    teamId: team.id,
-    userId: user.id,
-    role: 'owner',
-  });
+  if (!team) throw new Error("Team creation failed!");
+
+  await db.insert(teamMembers).values([
+    {
+      teamId: team.id,
+      userId: userAdmin?.id,
+      role: 'admin',
+    },
+    {
+      teamId: team.id,
+      userId: userMember?.id,
+      role: 'member',
+    }
+  ]);
 }
 
 seed()

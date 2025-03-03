@@ -2,7 +2,7 @@ import * as z from "zod"
 import { deliveryOrderSchema, deliveryOrderItemSchema } from "./deliveryOrderSchema"
 
 export const doInvoiceItemSchema = deliveryOrderItemSchema.extend({
-    doId: z.number(),
+    doId: z.string(),
     loadQtyActual: z.string(),
     customerName: z.string().optional(),
     orderNumber: z.string().optional(),
@@ -18,7 +18,7 @@ export const invoiceSchema = z.object({
   invoiceDate: z.string({
     required_error: "Invoice date is required",
   }),
-  companyId: z.number(),
+  companyId: z.string(),
   dueDate: z.string({
     required_error: "Due date is required",
   }),
@@ -26,7 +26,7 @@ export const invoiceSchema = z.object({
   totalAmount: z.string().min(1, "Total amount is required"),
   notes: z.string().optional(),
   deliveryOrders: z.array(doInvoiceSchema),
-  doIds: z.array(z.number()),
+  doIds: z.array(z.string()),
 })
 
 export type InvoicesFormValues = z.infer<typeof invoiceSchema>

@@ -27,7 +27,7 @@ export function ServiceList({
 }: {
   services: Service[]
   onEdit: (services: Service) => void
-  onDelete: (id: number) => void
+  onDelete: (id: string) => void
 }) {
   const columns: ColumnDef<Service>[] = [
     {

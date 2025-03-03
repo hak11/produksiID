@@ -34,8 +34,8 @@ console.log("🚀 ~ createCheckoutSession ~ team:", team)
 }
 
 async function logActivity(
-  teamId: number | null | undefined,
-  userId: number,
+  teamId: string | null | undefined,
+  userId: string,
   type: ActivityType,
   ipAddress?: string,
 ) {
@@ -139,7 +139,7 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
   const newUser: NewUser = {
     email,
     passwordHash,
-    role: 'owner', // Default role, will be overridden if there's an invitation
+    role: 'admin', // Default role, will be overridden if there's an invitation
   };
 
   const newCompany: NewCompany = {
@@ -175,8 +175,8 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
     };
   }
 
-  let teamId: number;
-  let userRole: string;
+  let teamId: string;
+  let userRole: 'admin' | 'member' = 'admin';
   let createdTeam: typeof teams.$inferSelect | null = null;
 
   if (inviteId) {
@@ -186,7 +186,7 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
       .from(invitations)
       .where(
         and(
-          eq(invitations.id, parseInt(inviteId)),
+          eq(invitations.id, inviteId),
           eq(invitations.email, email),
           eq(invitations.status, 'pending'),
         ),
@@ -195,7 +195,7 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
 
     if (invitation) {
       teamId = invitation.teamId;
-      userRole = invitation.role;
+      userRole = invitation.role as 'admin' | 'member';
 
       await db
         .update(invitations)
@@ -216,7 +216,6 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
     // Create a new team if there's no invitation
     const newTeam: NewTeam = {
       name: `${companyName}'s Team`,
-      companyId: createdCompany.id,
     };
 
     [createdTeam] = await db.insert(teams).values(newTeam).returning();
@@ -230,7 +229,7 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
     }
 
     teamId = createdTeam.id;
-    userRole = 'owner';
+    userRole = 'admin';
 
     await logActivity(teamId, createdUser.id, ActivityType.CREATE_TEAM);
   }
@@ -380,7 +379,7 @@ export const updateAccount = validatedActionWithUser(
 );
 
 const removeTeamMemberSchema = z.object({
-  memberId: z.number(),
+  memberId: z.string(),
 });
 
 export const removeTeamMember = validatedActionWithUser(

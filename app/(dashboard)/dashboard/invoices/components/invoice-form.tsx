@@ -110,7 +110,7 @@ export function InvoiceForm({ invoice, onSave }: InvoiceFormProps) {
   const handleCompanyChange = async (companyId: string) => {
     setSelectedDeliveryOrders([])
     remove()
-    form.setValue("companyId", parseInt(companyId))
+    form.setValue("companyId", companyId)
     const response = await fetch(`/api/delivery-order?companyId=${companyId}`)
     const data = await response.json()
     append(data)

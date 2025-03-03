@@ -15,6 +15,8 @@ export const deliveryDriverRoleEnum = pgEnum('delivery_driver_role_enum', [
 
 export const roleEnum = pgEnum('role_enum', ['supplier', 'customer']);
 
+export const roleTeamEnum = pgEnum('role_team_enum', ['admin', 'member']);
+
 export const invoiceStatusEnum = pgEnum('invoice_status_enum', [
   'draft',
   'sent',

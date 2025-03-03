@@ -14,11 +14,11 @@ export const deliveryOrderItemSchema = z.object({
   })
 
 export const deliveryOrderSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   orderNumber: z.string(),
-  supplierId: z.number(),
-  customerId: z.number(),
-  carId: z.number(),
+  supplierId: z.string(),
+  customerId: z.string(),
+  carId: z.string(),
   orderDate: z.string(),
   deliveryDate: z.string(),
   deliveryStatus: z.enum(["pending", "in_progress", "completed", "canceled"]).default("pending"),
@@ -26,8 +26,8 @@ export const deliveryOrderSchema = z.object({
   customerName: z.string(),
   supplierName: z.string(),
   deliveryDrivers: z.object({
-    main: z.number(),
-    assistant: z.number(),
+    main: z.string(),
+    assistant: z.string(),
   }),
   items: z.array(deliveryOrderItemSchema)
 })

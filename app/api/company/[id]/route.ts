@@ -29,7 +29,7 @@ export async function GET( request: Request, { params }: any ) {
         companyRoles,
         eq(companies.id, companyRoles.companyId)
       )
-      .where(eq(companies.id, Number(companyId)))
+      .where(eq(companies.id, companyId))
       .groupBy(companies.id)
       .limit(1);
 

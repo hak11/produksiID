@@ -15,20 +15,20 @@ export default function CarsPage() {
   const [selectedCar, setSelectedCar] = useState<Partial<CarType> | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [open, setOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null)
   
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
-      await fetch(`/api/cars?id=${id}`, { method: "DELETE" });
-      const updatedCars = await fetch("/api/cars").then((res) => res.json());
-      setCars(updatedCars);
-      toast.success("Data successfully deleted");
+      await fetch(`/api/cars?id=${id}`, { method: "DELETE" })
+      const updatedCars = await fetch("/api/cars").then((res) => res.json())
+      setCars(updatedCars)
+      toast.success("Data successfully deleted")
       setDeleteId(null)
     } catch (error) {
       console.error(error)
       toast.error("An error occurred while saving the car")
     }
-  };
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,12 +44,15 @@ export default function CarsPage() {
       const carsWithDrivers = carsData.map((car) => ({
         ...car,
         drivers: assignments
-          .filter((assignment: { carId: number; driverId: number }) => assignment.carId === car.id)
-          .map((assignment: { carId: number; driverId: number }) =>
+          .filter(
+            (assignment: { carId: string; driverId: string }) =>
+              assignment.carId === car.id
+          )
+          .map((assignment: { carId: string; driverId: string }) =>
             driversData.find((driver) => driver.id === assignment.driverId)
           )
           .filter(Boolean) as DriverType[], // Ensure valid drivers only
-      }));
+      }))
 
       setCars(carsWithDrivers);
       setDrivers(driversData);
@@ -59,24 +62,24 @@ export default function CarsPage() {
   }, []);
 
 
-  const handleSave = async (car: Partial<CarType>, assignedDrivers: number[]) => {
+  const handleSave = async (
+    car: Partial<CarType>,
+    assignedDrivers: string[]
+  ) => {
     try {
-      
       const isUpdate = car.id
       const url = "/api/cars"
       const method = isUpdate ? "PUT" : "POST"
       const message = isUpdate
         ? "Data successfully saved"
         : "Data successfully created"
-      
-      
+
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ car, driverIds: assignedDrivers }),
       })
 
-      
       if (!response.ok) {
         throw new Error(
           `Failed to ${isUpdate ? "update" : "create"} driver: ${
@@ -87,19 +90,18 @@ export default function CarsPage() {
 
       toast.success(message)
 
-      setOpen(false);
+      setOpen(false)
       const updatedCars = await fetch(url).then((res) => {
-        if (!res.ok)
-          throw new Error(`Failed to fetch cars: ${res.statusText}`)
+        if (!res.ok) throw new Error(`Failed to fetch cars: ${res.statusText}`)
         return res.json()
       })
-      setCars(updatedCars);
-      setSelectedCar(null);
-  } catch (error) {
-      console.error(error);
-      toast.error("An error occurred while saving the car");
+      setCars(updatedCars)
+      setSelectedCar(null)
+    } catch (error) {
+      console.error(error)
+      toast.error("An error occurred while saving the car")
+    }
   }
-  };
 
   return (
     <div className="space-y-4">
@@ -113,7 +115,9 @@ export default function CarsPage() {
             <DialogHeader>
               <DialogTitle>{isEditing ? "Edit" : "Add"} Car</DialogTitle>
               <DialogDescription>
-                {isEditing ? "Edit the details of the selected car." : "Fill in the details of the new car."}
+                {isEditing
+                  ? "Edit the details of the selected car."
+                  : "Fill in the details of the new car."}
               </DialogDescription>
             </DialogHeader>
             <CarForm
@@ -126,12 +130,16 @@ export default function CarsPage() {
         </Dialog>
       </header>
       {deleteId !== null && (
-        <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialog
+          open={deleteId !== null}
+          onOpenChange={() => setDeleteId(null)}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this car? This action cannot be undone.
+                Are you sure you want to delete this car? This action cannot be
+                undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -140,7 +148,7 @@ export default function CarsPage() {
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
-                  handleDelete(deleteId);
+                  handleDelete(deleteId)
                 }}
               >
                 Delete
@@ -152,12 +160,12 @@ export default function CarsPage() {
       <CarList
         cars={cars}
         onEdit={(car) => {
-          setIsEditing(true);
-          setSelectedCar(car);
-          setOpen(true);
+          setIsEditing(true)
+          setSelectedCar(car)
+          setOpen(true)
         }}
-        onDelete={(id: number) => setDeleteId(id)}
+        onDelete={(id: string) => setDeleteId(id)}
       />
     </div>
-  );
+  )
 }

@@ -25,10 +25,10 @@ export default function DeliveryOrdersPage() {
   const [deliveryOrders, setDeliveryOrders] = useState<DeliveryOrderListType[]>(
     []
   )
-  const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
 
-  const handleDownloadDO = async (id: number, callback: () => void) => {
+  const handleDownloadDO = async (id: string, callback: () => void) => {
     const detailDO = await fetch("/api/delivery-order/" + id).then((res) =>
       res.json()
     )
@@ -44,7 +44,7 @@ export default function DeliveryOrdersPage() {
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
       await fetch(`/api/delivery-order?id=${id}`, { method: "DELETE" })
       const updatedDeliveryOrders = await fetch("/api/delivery-order").then(
@@ -109,7 +109,7 @@ export default function DeliveryOrdersPage() {
       <DeliveryOrderList
         deliveryOrders={deliveryOrders}
         handleDownloadDO={handleDownloadDO}
-        onDelete={(id: number) => setDeleteId(id)}
+        onDelete={(id: string) => setDeleteId(id)}
       />
     </div>
   )

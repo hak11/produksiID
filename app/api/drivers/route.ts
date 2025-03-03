@@ -68,7 +68,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Driver ID is required" }, { status: 400 });
     }
 
-    await db.delete(drivers).where(eq(drivers.id, Number(id)));
+    await db.delete(drivers).where(eq(drivers.id, id));
     return NextResponse.json({ message: "Driver deleted successfully" });
   } catch (error) {
     console.error("🚀 ~ DELETE ~ error:", error)

@@ -1,13 +1,13 @@
-import { pgTable, integer, serial, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, timestamp } from 'drizzle-orm/pg-core';
 import { cars } from './cars';
 import { drivers } from './drivers';
 
 export const driverCarAssignments = pgTable('driverCarAssignments', {
-  id: serial('id').primaryKey(),
-  carId: integer('car_id')
+  id: uuid('id').primaryKey().defaultRandom(),
+  carId: uuid('car_id')
     .notNull()
     .references(() => cars.id),
-  driverId: integer('driver_id')
+  driverId: uuid('driver_id')
     .notNull()
     .references(() => drivers.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),

@@ -13,7 +13,7 @@ export default function DriversPage() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<Partial<Driver> | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function DriversPage() {
 
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
       await fetch(`/api/drivers?id=${id}`, { method: "DELETE" });
       const updatedDrivers = await fetch("/api/drivers").then((res) => res.json());
@@ -125,7 +125,7 @@ export default function DriversPage() {
           setSelectedDriver(driver);
           setOpen(true);
         }}
-        onDelete={(id: number) => setDeleteId(id)}
+        onDelete={(id: string) => setDeleteId(id)}
       />
     </div>
   );

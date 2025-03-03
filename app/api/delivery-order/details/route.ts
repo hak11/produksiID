@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       const doDriverReduce = doDriversFiltered.reduce((acc, curr) => {
         acc[curr.role] = curr.driverId;
         return acc;
-      }, {} as Record<string, number>);
+      }, {} as Record<string, string>);
 
       return {
         ...doDetail,

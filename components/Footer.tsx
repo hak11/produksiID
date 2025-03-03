@@ -1,5 +1,5 @@
-import Link from "next/link"
-import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"
+// import Link from "next/link"
+// import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -10,7 +10,7 @@ export default function Footer() {
           reserved.
         </p>
 
-        <div className="flex space-x-4">
+        {/* <div className="flex space-x-4">
           <Link
             href="#"
             aria-label="Facebook"
@@ -39,7 +39,7 @@ export default function Footer() {
           >
             <Youtube className="h-5 w-5" />
           </Link>
-        </div>
+        </div> */}
       </div>
     </footer>
   )

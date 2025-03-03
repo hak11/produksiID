@@ -37,7 +37,7 @@ import {
 import { formatCurrency } from "@/lib/utils"
 
 interface DeliveryOrderFormProps {
-  deliveryOrder?: Partial<DeliveryOrder & { items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[], deliveryDrivers: { main: number | null, assistant: number | null } }>
+  deliveryOrder?: Partial<DeliveryOrder & { items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[], deliveryDrivers: { main: string | null, assistant: string | null } }>
   isEdit?: boolean
   onSave: (deliveryOrder: DeliveryOrderFormValues, callback?: () => void) => void
   onClose?: () => void
@@ -96,16 +96,16 @@ export function DeliveryOrderForm({
       }
 
       form.setValue("orderNumber", deliveryOrder.orderNumber || "")
-      form.setValue("supplierId", deliveryOrder.supplierId || 0)
-      form.setValue("customerId", deliveryOrder.customerId || 0)
-      form.setValue("carId", deliveryOrder.carId || 0)
+      form.setValue("supplierId", deliveryOrder.supplierId || "")
+      form.setValue("customerId", deliveryOrder.customerId || "")
+      form.setValue("carId", deliveryOrder.carId || "")
       form.setValue("orderDate", deliveryOrder.orderDate || "")
       form.setValue("deliveryDate", deliveryOrder.deliveryDate || "")
       form.setValue("deliveryStatus", deliveryOrder.deliveryStatus || "pending")
       form.setValue("deliveryAddress", deliveryOrder.deliveryAddress || "")
       form.setValue("items", deliveryOrder.items || [])
-      form.setValue("deliveryDrivers.main", deliveryOrder.deliveryDrivers?.main || 0)
-      form.setValue("deliveryDrivers.assistant", deliveryOrder.deliveryDrivers?.assistant || 0)
+      form.setValue("deliveryDrivers.main", deliveryOrder.deliveryDrivers?.main || "")
+      form.setValue("deliveryDrivers.assistant", deliveryOrder.deliveryDrivers?.assistant || "")
     } else {
       // generateOrderNumber()
       form.reset({

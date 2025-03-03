@@ -112,13 +112,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Company ID is required" }, { status: 400 });
     }
 
-    const companyId = Number(id);
-
     // Delete roles associated with the company
-    await db.delete(companyRoles).where(eq(companyRoles.companyId, companyId));
+    await db.delete(companyRoles).where(eq(companyRoles.companyId, id));
 
     // Delete the company
-    await db.delete(companies).where(eq(companies.id, companyId));
+    await db.delete(companies).where(eq(companies.id, id));
 
     return NextResponse.json({ message: "Company deleted successfully." });
   } catch (error) {
