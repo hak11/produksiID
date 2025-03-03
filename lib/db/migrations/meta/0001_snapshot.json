@@ -980,8 +980,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.driver_car_assignments": {
-      "name": "driver_car_assignments",
+    "public.driverCarAssignments": {
+      "name": "driverCarAssignments",
       "schema": "",
       "columns": {
         "id": {
@@ -1019,9 +1019,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "driver_car_assignments_car_id_cars_id_fk": {
-          "name": "driver_car_assignments_car_id_cars_id_fk",
-          "tableFrom": "driver_car_assignments",
+        "driverCarAssignments_car_id_cars_id_fk": {
+          "name": "driverCarAssignments_car_id_cars_id_fk",
+          "tableFrom": "driverCarAssignments",
           "tableTo": "cars",
           "columnsFrom": [
             "car_id"
@@ -1032,9 +1032,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "driver_car_assignments_driver_id_drivers_id_fk": {
-          "name": "driver_car_assignments_driver_id_drivers_id_fk",
-          "tableFrom": "driver_car_assignments",
+        "driverCarAssignments_driver_id_drivers_id_fk": {
+          "name": "driverCarAssignments_driver_id_drivers_id_fk",
+          "tableFrom": "driverCarAssignments",
           "tableTo": "drivers",
           "columnsFrom": [
             "driver_id"

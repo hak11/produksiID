@@ -2,7 +2,7 @@ import { pgTable, integer, serial, timestamp } from 'drizzle-orm/pg-core';
 import { cars } from './cars';
 import { drivers } from './drivers';
 
-export const driverCarAssignments = pgTable('driver_car_assignments', {
+export const driverCarAssignments = pgTable('driverCarAssignments', {
   id: serial('id').primaryKey(),
   carId: integer('car_id')
     .notNull()

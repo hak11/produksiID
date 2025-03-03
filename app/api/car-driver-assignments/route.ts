@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
-import { driver_car_assignments } from "@/lib/db/schema";
+import { driverCarAssignments } from "@/lib/db/schema";
 import { eq  } from "drizzle-orm";
 
 export async function GET() {
   try {
     const assignments = await db
       .select()
-      .from(driver_car_assignments);
+      .from(driverCarAssignments);
     return NextResponse.json(assignments);
   } catch (error) {
     console.error("🚀 ~ GET ~ error:", error)
@@ -20,13 +20,13 @@ export async function POST(request: Request) {
   try {
     const { carId, driverIds } = await request.json();
 
-    await db.delete(driver_car_assignments).where(eq(driver_car_assignments.carId, carId));
+    await db.delete(driverCarAssignments).where(eq(driverCarAssignments.carId, carId));
 
     const newAssignments = driverIds.map((driverId: number) => ({
       carId,
       driverId,
     }));
-    await db.insert(driver_car_assignments).values(newAssignments);
+    await db.insert(driverCarAssignments).values(newAssignments);
 
     return NextResponse.json({ message: "Assignments updated successfully" });
   } catch (error) {
@@ -44,7 +44,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Assignment ID is required" }, { status: 400 });
     }
 
-    await db.delete(driver_car_assignments).where(eq(driver_car_assignments.id, Number(id)));
+    await db.delete(driverCarAssignments).where(eq(driverCarAssignments.id, Number(id)));
     return NextResponse.json({ message: "Assignment deleted successfully" });
   } catch (error) {
     console.error("🚀 ~ DELETE ~ error:", error)

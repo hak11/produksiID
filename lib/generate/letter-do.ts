@@ -59,7 +59,7 @@ export function generateDeliveryOrderPDF(data: DetailDOType): Blob {
   pdf.text('Pickup From :', deliverToX, 70);
   pdf.setFont('helvetica', 'normal');
   pdf.text(data.supplier.name, deliverToX, 75);
-  pdf.text(data.supplier.address, deliverToX, 80, { maxWidth: 50});
+  pdf.text(data.supplier.address || "", deliverToX, 80, { maxWidth: 50});
   // pdf.text(data.supplier.picPhone, deliverToX, 85);
 
   // Delivery Address section
@@ -68,7 +68,7 @@ export function generateDeliveryOrderPDF(data: DetailDOType): Blob {
   pdf.text('Delivery To :', addressX, 70);
   pdf.setFont('helvetica', 'normal');
   pdf.text(data.customer.name, addressX, 75);
-  pdf.text(data.customer.address, addressX, 80, { maxWidth: 50});
+  pdf.text(data.customer.address || "", addressX, 80, { maxWidth: 50});
   // pdf.text(data.customer.picPhone, addressX, 85);
 
   const tableData = data.items.map((item, index) => {

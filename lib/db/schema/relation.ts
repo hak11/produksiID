@@ -105,7 +105,7 @@ export const carsRelations = relations(cars, ({ many }) => ({
   assignments: many(driverCarAssignments)
 }));
 
-export const driver_car_assignmentsRelations = relations(driverCarAssignments, ({ one }) => ({
+export const driverCarAssignmentsRelations = relations(driverCarAssignments, ({ one }) => ({
   driver: one(drivers, {
     fields: [driverCarAssignments.driverId],
     references: [drivers.id],

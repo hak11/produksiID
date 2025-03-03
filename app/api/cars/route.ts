@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
-import { cars, driver_car_assignments, drivers } from "@/lib/db/schema";
+import { cars, driverCarAssignments, drivers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 type CarWithDrivers = {
@@ -10,7 +10,7 @@ type CarWithDrivers = {
   year: number;
   licensePlate: string;
   vin: string;
-  color: string;
+  color: string | null;
   status: string;
   lastMaintenanceDate: string | null;
   drivers: { id: number; name: string }[];
@@ -22,8 +22,8 @@ export async function GET() {
     const carsWithDrivers = await db
       .select()
       .from(cars)
-      .leftJoin(driver_car_assignments, eq(cars.id, driver_car_assignments.carId))
-      .leftJoin(drivers, eq(driver_car_assignments.driverId, drivers.id));
+      .leftJoin(driverCarAssignments, eq(cars.id, driverCarAssignments.carId))
+      .leftJoin(drivers, eq(driverCarAssignments.driverId, drivers.id));
 
     const groupedCars = carsWithDrivers.reduce<Record<number, CarWithDrivers>>((acc, curr) => {
       const car = curr.cars;
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         carId,
         driverId,
       }));
-      await db.insert(driver_car_assignments).values(assignments);
+      await db.insert(driverCarAssignments).values(assignments);
     }
 
     return NextResponse.json({ message: "Car created successfully.", carId });
@@ -110,13 +110,13 @@ export async function PUT(request: Request) {
     await db.update(cars).set(car).where(eq(cars.id, car.id));
 
     // Update driver assignments
-    await db.delete(driver_car_assignments).where(eq(driver_car_assignments.carId, car.id));
+    await db.delete(driverCarAssignments).where(eq(driverCarAssignments.carId, car.id));
     if (driverIds.length > 0) {
       const assignments = driverIds.map((driverId) => ({
         carId: car.id,
         driverId,
       }));
-      await db.insert(driver_car_assignments).values(assignments);
+      await db.insert(driverCarAssignments).values(assignments);
     }
 
     return NextResponse.json({ message: "Car updated successfully." });
@@ -137,7 +137,7 @@ export async function DELETE(request: Request) {
 
   const carId = Number(id);
 
-    await db.delete(driver_car_assignments).where(eq(driver_car_assignments.carId, carId));
+    await db.delete(driverCarAssignments).where(eq(driverCarAssignments.carId, carId));
 
     await db.delete(cars).where(eq(cars.id, Number(id)));
     return NextResponse.json({ message: "Car deleted successfully" });
