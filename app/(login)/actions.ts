@@ -413,7 +413,7 @@ export const removeTeamMember = validatedActionWithUser(
 
 const inviteTeamMemberSchema = z.object({
   email: z.string().email('Invalid email address'),
-  role: z.enum(['member', 'owner']),
+  role: z.enum(['admin', 'member']),
 });
 
 export const inviteTeamMember = validatedActionWithUser(

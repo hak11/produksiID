@@ -1,5 +1,6 @@
-import { pgTable, uuid, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, timestamp, varchar } from 'drizzle-orm/pg-core';
 import { cars } from './cars';
+import { teams } from './teams';
 import { drivers } from './drivers';
 
 export const driverCarAssignments = pgTable('driverCarAssignments', {
@@ -10,6 +11,9 @@ export const driverCarAssignments = pgTable('driverCarAssignments', {
   driverId: uuid('driver_id')
     .notNull()
     .references(() => drivers.id),
+  status: varchar('status', { length: 20 }).notNull().default('active'),
+  teamId: uuid('team_id')
+        .references(() => teams.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

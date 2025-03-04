@@ -1,4 +1,4 @@
-import { pgTable, uuid, numeric, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, numeric, timestamp, varchar } from 'drizzle-orm/pg-core';
 import { deliveryOrders } from './deliveryOrders';
 
 export const deliveryOrderItems = pgTable('delivery_order_items', {
@@ -6,6 +6,7 @@ export const deliveryOrderItems = pgTable('delivery_order_items', {
   doId: uuid('do_id')
     .references(() => deliveryOrders.id)
     .notNull(),
+  name: varchar('name').default('space'),
   loadQty: numeric('load_qty').notNull(),
   loadQtyActual: numeric('load_qty_actual'),
   loadPerPrice: numeric('load_per_price').notNull(),
