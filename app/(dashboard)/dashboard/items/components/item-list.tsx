@@ -17,19 +17,19 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Trash2, Edit } from "lucide-react"
-import { Service } from "@/lib/db/schema"
+import { Item } from "@/lib/db/schema"
 import { formatCurrency } from "@/lib/utils"
 
-export function ServiceList({
-  services,
+export function ItemList({
+  items,
   onEdit,
   onDelete,
 }: {
-  services: Service[]
-  onEdit: (services: Service) => void
+  items: Item[]
+  onEdit: (items: Item) => void
   onDelete: (id: string) => void
 }) {
-  const columns: ColumnDef<Service>[] = [
+  const columns: ColumnDef<Item>[] = [
     {
       accessorKey: "name",
       header: "Name",
@@ -63,7 +63,7 @@ export function ServiceList({
   ]
 
   const table = useReactTable({
-    data: services,
+    data: items,
     columns,
     getCoreRowModel: getCoreRowModel(),
   })

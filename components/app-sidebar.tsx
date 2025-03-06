@@ -155,7 +155,7 @@ const data = {
         },
         {
           title: "Layanan Saya",
-          url: "/dashboard/services",
+          url: "/dashboard/items",
         },
       ],
     },

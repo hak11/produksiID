@@ -49,39 +49,53 @@ export function DeliveryOrderForm({
   onSave,
   onClose,
 }: DeliveryOrderFormProps) {
-  const { suppliers, customers, cars, drivers, isLoading, error } = useDeliveryData()
+  const { suppliers, customers, cars, drivers, isLoading, items, error } = useDeliveryData()
   
-  const form = useForm<DeliveryOrderFormValues>({
-    resolver: zodResolver(deliveryOrderSchema),
-    defaultValues: {
-      orderNumber: "",
-      supplierId: undefined,
-      customerId: undefined,
-      carId: undefined,
-      orderDate: new Date().toString(),
-      deliveryDate: "",
-      deliveryStatus: "pending",
-      deliveryAddress: "",
-      deliveryDrivers: {
-        main: undefined,
-        assistant: undefined
-      },
-      items: [
-        {
-          loadQty: "0",
-          loadPerPrice: "0",
-          totalLoadPrice: "0",
-          loadPerPriceStr: "Rp 0",
-          totalLoadPriceStr: "Rp 0"
+  const form =
+    useForm<DeliveryOrderFormValues>({
+      resolver: zodResolver(deliveryOrderSchema),
+      defaultValues: {
+        orderNumber: "",
+        supplierId: undefined,
+        customerId: undefined,
+        carId: undefined,
+        orderDate: new Date().toString(),
+        deliveryDate: "",
+        deliveryStatus: "pending",
+        deliveryAddress: "",
+        deliveryDrivers: {
+          main: undefined,
+          assistant: undefined,
         },
-      ],
-    },
-  })
+        items: [
+          {
+            id: undefined,
+            loadQty: "1",
+            loadPerPrice: "0",
+            totalLoadPrice: "0",
+            loadPerPriceStr: "Rp 0",
+            totalLoadPriceStr: "Rp 0",
+            itemId: undefined
+          },
+        ],
+      },
+    })
+
+  const {
+    control,
+    setValue,
+    reset,
+    getValues,
+    handleSubmit,
+    formState: { errors },
+  } = form
 
   const { fields, append, remove } = useFieldArray({
-    control: form.control,
+    control: control,
     name: "items"
   })
+
+  console.log(errors)
 
   useEffect(() => {
     if (isEdit && deliveryOrder) {
@@ -95,20 +109,19 @@ export function DeliveryOrderForm({
         deliveryOrder.items = updatedItems || []
       }
 
-      form.setValue("orderNumber", deliveryOrder.orderNumber || "")
-      form.setValue("supplierId", deliveryOrder.supplierId || "")
-      form.setValue("customerId", deliveryOrder.customerId || "")
-      form.setValue("carId", deliveryOrder.carId || "")
-      form.setValue("orderDate", deliveryOrder.orderDate || "")
-      form.setValue("deliveryDate", deliveryOrder.deliveryDate || "")
-      form.setValue("deliveryStatus", deliveryOrder.deliveryStatus || "pending")
-      form.setValue("deliveryAddress", deliveryOrder.deliveryAddress || "")
-      form.setValue("items", deliveryOrder.items || [])
-      form.setValue("deliveryDrivers.main", deliveryOrder.deliveryDrivers?.main || "")
-      form.setValue("deliveryDrivers.assistant", deliveryOrder.deliveryDrivers?.assistant || "")
+      setValue("orderNumber", deliveryOrder.orderNumber || "")
+      setValue("supplierId", deliveryOrder.supplierId || "")
+      setValue("customerId", deliveryOrder.customerId || "")
+      setValue("carId", deliveryOrder.carId || "")
+      setValue("orderDate", deliveryOrder.orderDate || "")
+      setValue("deliveryDate", deliveryOrder.deliveryDate || "")
+      setValue("deliveryStatus", deliveryOrder.deliveryStatus || "pending")
+      setValue("deliveryAddress", deliveryOrder.deliveryAddress || "")
+      setValue("items", deliveryOrder.items || [])
+      setValue("deliveryDrivers.main", deliveryOrder.deliveryDrivers?.main || "")
+      setValue("deliveryDrivers.assistant", deliveryOrder.deliveryDrivers?.assistant || "")
     } else {
-      // generateOrderNumber()
-      form.reset({
+      reset({
         orderNumber: "",
         supplierId: undefined,
         customerId: undefined,
@@ -123,42 +136,55 @@ export function DeliveryOrderForm({
         },
         items: [
           {
-            loadQty: "0",
+            id: undefined,
+            loadQty: "1",
             loadPerPrice: "0",
             totalLoadPrice: "0",
             loadPerPriceStr: "Rp 0",
             totalLoadPriceStr: "Rp 0",
+            itemId: undefined,
           },
         ],
       })
     }
-  }, [isEdit, deliveryOrder, form])
+  }, [isEdit, deliveryOrder, reset, setValue])
 
   const handleItemChange = (index: number, field: keyof (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string }), value: string) => {
     if (field === "loadQty" || field === "loadPerPrice") {
       const numericValue = value.replace(/[^\d]/g, "")
       
       if (field === "loadQty") {
-        form.setValue(`items.${index}.loadQty`, numericValue)
+        setValue(`items.${index}.loadQty`, numericValue)
       } else {
-        form.setValue(`items.${index}.loadPerPrice`, numericValue)
+        setValue(`items.${index}.loadPerPrice`, numericValue)
         const formattedValue = formatCurrency(numericValue) || "Rp 0"
-        form.setValue(`items.${index}.loadPerPriceStr`, formattedValue)
+        setValue(`items.${index}.loadPerPriceStr`, formattedValue)
       }
 
-      const qty = parseFloat(form.getValues(`items.${index}.loadQty`)) || 0
-      const price = parseFloat(form.getValues(`items.${index}.loadPerPrice`)) || 0
+      const qty = parseFloat(getValues(`items.${index}.loadQty`)) || 0
+      const price = parseFloat(getValues(`items.${index}.loadPerPrice`)) || 0
       const total = (qty * price).toString()
 
-      form.setValue(`items.${index}.totalLoadPrice`, total)
-      form.setValue(`items.${index}.totalLoadPriceStr`, formatCurrency(total))
+      setValue(`items.${index}.totalLoadPrice`, total)
+      setValue(`items.${index}.totalLoadPriceStr`, formatCurrency(total))
+    }
+
+    if (field === "itemId") {
+      setValue(`items.${index}.itemId`, value)
+      const getPriceFromItems =
+        items.find((item) => item.id === value)?.price || "0"
+      handleItemChange(index, "loadPerPrice", getPriceFromItems)
     }
   }
 
   const submitForm = (formData: any) => {
-    onSave(formData, () => {
-      window.location.reload()
-    })
+    try {
+      onSave(formData, () => {
+        window.location.reload()
+      })
+    } catch (error) {
+      console.log("🚀 ~ submitForm ~ error:", error)
+    }
   }
 
   if (isLoading) return <div><Loader className="animate-spin" size={16} /> Loading...</div>
@@ -166,11 +192,11 @@ export function DeliveryOrderForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(submitForm)} className="space-y-8">
+      <form onSubmit={handleSubmit(submitForm)} className="space-y-8">
         <div className="flex gap-4">
           <div className="space-y-4 w-1/3 border-2 border-gray-200 p-4 rounded-lg">
             <FormField
-              control={form.control}
+              control={control}
               name="orderNumber"
               render={({ field }) => (
                 <FormItem>
@@ -184,7 +210,7 @@ export function DeliveryOrderForm({
             />
 
             <FormField
-              control={form.control}
+              control={control}
               name="orderDate"
               render={({ field }) => (
                 <FormItem>
@@ -225,7 +251,7 @@ export function DeliveryOrderForm({
             />
 
             <FormField
-              control={form.control}
+              control={control}
               name="deliveryDate"
               render={({ field }) => (
                 <FormItem>
@@ -266,16 +292,20 @@ export function DeliveryOrderForm({
             />
 
             <FormField
-              control={form.control}
+              control={control}
               name="supplierId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Supplier</FormLabel>
                   <Select
                     onValueChange={(value) => {
-                      field.onChange(Number(value))
+                      field.onChange(value)
+                      const getSupplierName = suppliers.find(
+                        (supplier) => supplier.id === value
+                      )?.name
+                      setValue("supplierName", getSupplierName || "")
                     }}
-                    value={field.value?.toString()}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -284,10 +314,7 @@ export function DeliveryOrderForm({
                     </FormControl>
                     <SelectContent>
                       {suppliers.map((supplier) => (
-                        <SelectItem
-                          key={supplier.id}
-                          value={supplier.id.toString()}
-                        >
+                        <SelectItem key={supplier.id} value={supplier.id}>
                           {supplier.name}
                         </SelectItem>
                       ))}
@@ -299,16 +326,24 @@ export function DeliveryOrderForm({
             />
 
             <FormField
-              control={form.control}
+              control={control}
               name="customerId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Customer</FormLabel>
+                  <FormLabel>Customer (Tujuan)</FormLabel>
                   <Select
                     onValueChange={(value) => {
-                      field.onChange(Number(value))
+                      field.onChange(value)
+                      const getCustomerName = customers.find(
+                        (customer) => customer.id === value
+                      )?.name
+                      setValue("customerName", getCustomerName || "")
+                      const getCustomerAddress = customers.find(
+                        (customer) => customer.id === value
+                      )?.address
+                      setValue("deliveryAddress", getCustomerAddress || "")
                     }}
-                    value={field.value?.toString()}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -317,10 +352,7 @@ export function DeliveryOrderForm({
                     </FormControl>
                     <SelectContent>
                       {customers.map((customer) => (
-                        <SelectItem
-                          key={customer.id}
-                          value={customer.id.toString()}
-                        >
+                        <SelectItem key={customer.id} value={customer.id}>
                           {customer.name}
                         </SelectItem>
                       ))}
@@ -332,16 +364,16 @@ export function DeliveryOrderForm({
             />
 
             <FormField
-              control={form.control}
+              control={control}
               name="carId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Kendaran</FormLabel>
                   <Select
                     onValueChange={(value) => {
-                      field.onChange(Number(value))
+                      field.onChange(value)
                     }}
-                    value={field.value?.toString()}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -350,7 +382,7 @@ export function DeliveryOrderForm({
                     </FormControl>
                     <SelectContent>
                       {cars.map((car) => (
-                        <SelectItem key={car.id} value={car.id.toString()}>
+                        <SelectItem key={car.id} value={car.id}>
                           {car.brand} {car.model} - {car.licensePlate}
                         </SelectItem>
                       ))}
@@ -362,14 +394,14 @@ export function DeliveryOrderForm({
             />
 
             <FormField
-              control={form.control}
+              control={control}
               name="deliveryStatus"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status Delivery</FormLabel>
                   <Select
                     onValueChange={(value) => {
-                      form.setValue(
+                      setValue(
                         "deliveryStatus",
                         value as DeliveryOrder["deliveryStatus"]
                       )
@@ -394,11 +426,11 @@ export function DeliveryOrderForm({
             />
 
             <FormField
-              control={form.control}
+              control={control}
               name="deliveryAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Delivery Address</FormLabel>
+                  <FormLabel>Alamat Pengiriman</FormLabel>
                   <FormControl>
                     <Textarea {...field} readOnly />
                   </FormControl>
@@ -410,16 +442,16 @@ export function DeliveryOrderForm({
               <div className="flex justify-between gap-4">
                 <div className="flex-1">
                   <FormField
-                    control={form.control}
+                    control={control}
                     name="deliveryDrivers.main"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Pilih Driver (Utama)</FormLabel>
                         <Select
                           onValueChange={(value) => {
-                            field.onChange(Number(value))
+                            field.onChange(value)
                           }}
-                          value={field.value?.toString()}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -428,10 +460,7 @@ export function DeliveryOrderForm({
                           </FormControl>
                           <SelectContent>
                             {drivers.map((driver) => (
-                              <SelectItem
-                                key={driver.id}
-                                value={driver.id.toString()}
-                              >
+                              <SelectItem key={driver.id} value={driver.id}>
                                 {driver.name}
                               </SelectItem>
                             ))}
@@ -444,16 +473,16 @@ export function DeliveryOrderForm({
                 </div>
                 <div className="flex-1">
                   <FormField
-                    control={form.control}
+                    control={control}
                     name="deliveryDrivers.assistant"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Pilih Driver (assistant)</FormLabel>
                         <Select
                           onValueChange={(value) => {
-                            field.onChange(Number(value))
+                            field.onChange(value)
                           }}
-                          value={field.value?.toString()}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -462,10 +491,7 @@ export function DeliveryOrderForm({
                           </FormControl>
                           <SelectContent>
                             {drivers.map((driver) => (
-                              <SelectItem
-                                key={driver.id}
-                                value={driver.id.toString()}
-                              >
+                              <SelectItem key={driver.id} value={driver.id}>
                                 {driver.name}
                               </SelectItem>
                             ))}
@@ -507,31 +533,45 @@ export function DeliveryOrderForm({
                     <tr key={field.id}>
                       <td className="px-4 py-4">
                         <FormField
-                          control={form.control}
-                          name={`items.${index}.loadPerPrice`}
+                          control={control}
+                          name={`items.${index}.itemId`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  type="number"
-                                  value={field.value}
-                                  onChange={(e) =>
-                                    handleItemChange(
-                                      index,
-                                      "loadQty",
-                                      e.target.value
-                                    )
-                                  }
-                                />
-                              </FormControl>
+                              <Select
+                                onValueChange={(value) => {
+                                  field.onChange(Number(value))
+                                  handleItemChange(index, "itemId", value)
+                                }}
+                                value={
+                                  field.value
+                                    ? field.value?.toString()
+                                    : undefined
+                                }
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="w-48">
+                                    <SelectValue placeholder="Pilih Layanan" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {items.map((item) => (
+                                    <SelectItem
+                                      key={item.id}
+                                      value={item.id.toString()}
+                                    >
+                                      {item.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
                             </FormItem>
                           )}
                         />
                       </td>
                       <td className="px-4 py-4">
                         <FormField
-                          control={form.control}
+                          control={control}
                           name={`items.${index}.loadQty`}
                           render={({ field }) => (
                             <FormItem>
@@ -556,7 +596,7 @@ export function DeliveryOrderForm({
                       </td>
                       <td className="px-4 py-4">
                         <FormField
-                          control={form.control}
+                          control={control}
                           name={`items.${index}.loadPerPriceStr`}
                           render={({ field }) => (
                             <FormItem>
@@ -579,7 +619,7 @@ export function DeliveryOrderForm({
                       </td>
                       <td className="px-4 py-4">
                         <FormField
-                          control={form.control}
+                          control={control}
                           name={`items.${index}.totalLoadPriceStr`}
                           render={({ field }) => (
                             <FormItem>
@@ -607,11 +647,13 @@ export function DeliveryOrderForm({
                 type="button"
                 onClick={() =>
                   append({
+                    id: "",
                     loadQty: "0",
                     loadPerPrice: "0",
                     totalLoadPrice: "0",
                     loadPerPriceStr: "Rp 0",
                     totalLoadPriceStr: "Rp 0",
+                    itemId: "",
                   })
                 }
                 className="ml-6"

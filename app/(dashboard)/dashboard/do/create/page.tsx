@@ -22,7 +22,6 @@ export default function CreateDeliveryOrderPage() {
       if (callback) {
         callback()
       }
-      // You might want to redirect to the list page or clear the form here
     } catch (error) {
       console.error(error)
       toast.error("An error occurred while saving the delivery order")

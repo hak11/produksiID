@@ -21,13 +21,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Service } from "@/lib/db/schema"
-import { ServiceForm } from "./components/service-form"
-import { ServiceList } from "./components/service-list"
+import { Item } from "@/lib/db/schema"
+import { ItemForm } from "./components/item-form"
+import { ItemList } from "./components/item-list"
 
-export default function ServicesPage() {
-  const [services, setServices] = useState<Service[]>([])
-  const [selectedService, setSelectedService] = useState<Partial<Service> | null>(
+export default function ItemsPage() {
+  const [items, setItems] = useState<Item[]>([])
+  const [selectedItem, setSelectedItem] = useState<Partial<Item> | null>(
     null
   )
   const [isEditing, setIsEditing] = useState(false)
@@ -35,18 +35,18 @@ export default function ServicesPage() {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const fetchServices = async () => {
-      const response = await fetch("/api/services")
+    const fetchItems = async () => {
+      const response = await fetch("/api/items")
       const data = await response.json()
-      setServices(data)
+      setItems(data)
     }
-    fetchServices()
+    fetchItems()
   }, [])
 
-  const handleSave = async (service: Partial<Service>) => {
+  const handleSave = async (item: Partial<Item>) => {
     try {
-      const isUpdate = selectedService && selectedService.id
-      const url = isUpdate ? `/api/services/${selectedService.id}` : "/api/services"
+      const isUpdate = selectedItem && selectedItem.id
+      const url = isUpdate ? `/api/items/${selectedItem.id}` : "/api/items"
       const method = isUpdate ? "PUT" : "POST"
       const message = isUpdate
         ? "Data successfully saved"
@@ -55,12 +55,12 @@ export default function ServicesPage() {
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(service),
+        body: JSON.stringify(item),
       })
 
       if (!response.ok) {
         throw new Error(
-          `Failed to ${isUpdate ? "update" : "create"} service: ${
+          `Failed to ${isUpdate ? "update" : "create"} item: ${
             response.statusText
           }`
         )
@@ -69,13 +69,13 @@ export default function ServicesPage() {
       toast.success(message)
 
       setOpen(false)
-      const updatedServices = await fetch('/api/services').then((res) => {
+      const updatedItems = await fetch('/api/items').then((res) => {
         if (!res.ok)
-          throw new Error(`Failed to fetch services: ${res.statusText}`)
+          throw new Error(`Failed to fetch items: ${res.statusText}`)
         return res.json()
       })
-      setServices(updatedServices)
-      setSelectedService(null)
+      setItems(updatedItems)
+      setSelectedItem(null)
     } catch (error: any) {
       console.error("Error in handleSave:", error)
       toast.error(`Error: ${error.message || "Something went wrong"}`)
@@ -84,11 +84,11 @@ export default function ServicesPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`/api/services/detail${id}`, { method: "DELETE" })
-      const updatedServices = await fetch("/api/services").then((res) =>
+      await fetch(`/api/items/detail${id}`, { method: "DELETE" })
+      const updatedItems = await fetch("/api/items").then((res) =>
         res.json()
       )
-      setServices(updatedServices)
+      setItems(updatedItems)
       toast.success("Data successfully deleted")
       setDeleteId(null)
     } catch (error: any) {
@@ -100,20 +100,20 @@ export default function ServicesPage() {
   return (
     <div className="space-y-4">
       <header className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Manage Services</h1>
+        <h1 className="text-2xl font-bold">Manage Items / Items</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setSelectedService(null)}>Add Service</Button>
+            <Button onClick={() => setSelectedItem(null)}>Add Data</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{isEditing ? "Edit" : "Add"} Service</DialogTitle>
+              <DialogTitle>{isEditing ? "Edit" : "Add"} Data</DialogTitle>
               <DialogDescription>
-                {isEditing ? "Edit the details of the selected service." : ""}
+                {isEditing ? "Edit the details of the selected item." : ""}
               </DialogDescription>
             </DialogHeader>
-            <ServiceForm
-              service={selectedService}
+            <ItemForm
+              item={selectedItem}
               onSave={handleSave}
               onClose={() => setOpen(false)}
             />
@@ -129,7 +129,7 @@ export default function ServicesPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete this service? This action cannot
+                Are you sure you want to delete this item? This action cannot
                 be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -148,11 +148,11 @@ export default function ServicesPage() {
           </AlertDialogContent>
         </AlertDialog>
       )}
-      <ServiceList
-        services={services}
-        onEdit={(service) => {
+      <ItemList
+        items={items}
+        onEdit={(item: any) => {
           setIsEditing(true)
-          setSelectedService(service)
+          setSelectedItem(item)
           setOpen(true)
         }}
         onDelete={(id: string) => setDeleteId(id)}

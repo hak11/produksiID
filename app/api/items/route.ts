@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
-import { services } from "@/lib/db/schema";
+import { items } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const allServices = await db.select().from(services).orderBy(desc(services.id));
-    return NextResponse.json(allServices);
+    const allItems = await db.select().from(items).orderBy(desc(items.id));
+    return NextResponse.json(allItems);
   } catch (error) {
-    console.error("Error fetching services:", error);
-    return NextResponse.json({ error: "Failed to fetch services" }, { status: 500 });
+    console.error("Error fetching items:", error);
+    return NextResponse.json({ error: "Failed to fetch items" }, { status: 500 });
   }
 }
 
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, price, unit } = body;
 
-    const newService = await db.insert(services).values({
+    const newService = await db.insert(items).values({
       name,
       price,
       unit,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
-import { services } from "@/lib/db/schema";
+import { items } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET(
@@ -8,7 +8,7 @@ export async function GET(
   { params }: any 
 ) {
   try {
-    const service = await db.select().from(services).where(eq(services.id, params.id)).limit(1);
+    const service = await db.select().from(items).where(eq(items.id, params.id)).limit(1);
 
     if (service.length === 0) {
       return NextResponse.json({ error: "Service not found" }, { status: 404 });
@@ -29,9 +29,9 @@ export async function PUT(
     const body = await request.json();
     const { name, price, unit } = body;
 
-    const updatedService = await db.update(services)
+    const updatedService = await db.update(items)
       .set({ name, price, unit, updatedAt: new Date() })
-      .where(eq(services.id, params.id))
+      .where(eq(items.id, params.id))
       .returning();
 
     if (updatedService.length === 0) {
@@ -50,7 +50,7 @@ export async function DELETE(
   { params }: any
 ) {
   try {
-    const deletedService = await db.delete(services).where(eq(services.id, params.id)).returning();
+    const deletedService = await db.delete(items).where(eq(items.id, params.id)).returning();
 
     if (deletedService.length === 0) {
       return NextResponse.json({ error: "Service not found" }, { status: 404 });

@@ -1,5 +1,5 @@
 export * from './enums';
-export * from './tables/services';
+export * from './tables/items';
 export * from './tables/invoices';
 export * from './tables/deliveryOrders';
 export * from './tables/deliveryOrderItems';

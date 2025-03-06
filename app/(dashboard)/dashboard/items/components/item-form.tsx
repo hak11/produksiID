@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Service } from "@/lib/db/schema";
+import { Item } from "@/lib/db/schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,44 +12,44 @@ import { formatCurrency } from "@/lib/utils"
 import toast from "react-hot-toast";
 
 // Define validation schema using Zod
-const serviceSchema = z.object({
+const itemSchema = z.object({
   name: z.string().min(1, "Name is required"),
   price: z.string().min(1, "Price is required"),
   unit: z.string(),
   priceStr: z.string().default("Rp 0"),
 });
 
-type ServiceFormValues = z.infer<typeof serviceSchema>;
+type ItemFormValues = z.infer<typeof itemSchema>;
 
-export function ServiceForm({
-  service,
+export function ItemForm({
+  item,
   onSave,
   onClose,
 }: {
-  service: Partial<Service> | null;
-  onSave: (service: Partial<Service>) => void;
-  onClose: () => void;
+  item: Partial<Item> | null
+  onSave: (item: Partial<Item>) => void
+  onClose: () => void
 }) {
-  const form = useForm<ServiceFormValues>({
-    resolver: zodResolver(serviceSchema),
+  const form = useForm<ItemFormValues>({
+    resolver: zodResolver(itemSchema),
     defaultValues: {
       name: "",
       price: "",
       unit: "",
       priceStr: "Rp 0",
     },
-  });
+  })
 
   useEffect(() => {
-    if (service) {
+    if (item) {
       form.reset({
-        name: service.name || "",
-        price: service.price?.toString() || "0",
-        unit: service.unit || "",
-        priceStr: service.price ? formatCurrency(service.price) : "Rp 0",
-      });
+        name: item.name || "",
+        price: item.price?.toString() || "0",
+        unit: item.unit || "",
+        priceStr: item.price ? formatCurrency(item.price) : "Rp 0",
+      })
     }
-  }, [service, form]);
+  }, [item, form])
 
   const handleChangePrice = (value: string) => {
     try {
@@ -61,11 +61,11 @@ export function ServiceForm({
       console.log("🚀 ~ handleChangePrice ~ error:", error)
       toast.error("Invalid price format")
     }
-  };
+  }
 
-  const onSubmit = (data: ServiceFormValues) => {
-    onSave(data);
-  };
+  const onSubmit = (data: ItemFormValues) => {
+    onSave(data)
+  }
 
   return (
     <Form {...form}>

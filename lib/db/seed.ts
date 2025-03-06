@@ -1,6 +1,6 @@
 import { db } from './drizzle';
 import { users, teams, teamMembers, cars, drivers, driverCarAssignments, companies, companyRoles, invoices, invoiceDeliveryOrders, invoiceStatusEnum,
-  roleEnum, deliveryOrders, deliveryOrderItems, deliveryOrderDrivers, deliveryStatusEnum, deliveryDriverRoleEnum  } from './schema';
+  roleEnum, deliveryOrders, deliveryOrderItems, deliveryOrderDrivers, deliveryStatusEnum, deliveryDriverRoleEnum, items  } from './schema';
 import { hashPassword } from '@/lib/auth/session';
 
 async function seed() {
@@ -354,6 +354,22 @@ async function seed() {
     ]).returning({ id: deliveryOrders.id, orderDate: deliveryOrders.orderDate });
 
     console.log("Delivery orders seeded successfully.");
+     const insertedItems = await db.insert(items).values([
+      {
+        name: "space-Ctn",
+        price: `${200000}`,
+        unit: "Ctn",
+        teamId: team.id,
+      },
+      {
+        name: "space-Kg",
+        price: `${300000}`,
+        unit: "Kg",
+        teamId: team.id,
+      },
+    ]).returning({ id: items.id, price: items.price });
+
+    console.log("items seeded successfully.");
 
     const insertDeliveryOrderItems = await db.insert(deliveryOrderItems).values(
       [
@@ -362,24 +378,27 @@ async function seed() {
           name: "Barang A", 
           loadQty: `${100}`, 
           loadQtyActual: `${95}`, 
-          loadPerPrice: `${20000}`, 
-          totalLoadPrice: `${1900000}` 
+          loadPerPrice: insertedItems[0].price, 
+          totalLoadPrice: `${1900000}`,
+          itemId: insertedItems[0].id
         },
         { 
           doId: insertedOrders[1].id, 
           name: "Barang B", 
           loadQty: `${50}`, 
           loadQtyActual: `${50}`, 
-          loadPerPrice: `${50000}`, 
-          totalLoadPrice: `${2500000}` 
+          loadPerPrice: insertedItems[1].price, 
+          totalLoadPrice: `${2500000}`,
+          itemId: insertedItems[1].id
         },
         { 
           doId: insertedOrders[1].id, 
           name: "Barang C", 
           loadQty: `${20}`, 
           loadQtyActual: `${30}`, 
-          loadPerPrice: `${50000}`, 
-          totalLoadPrice: `${1500000}` 
+          loadPerPrice: insertedItems[0].price, 
+          totalLoadPrice: `${1500000}`,
+          itemId: insertedItems[0].id
         },
       ]
     ).returning({ id: deliveryOrderItems.id, doId: deliveryOrderItems.doId, totalLoadPrice: deliveryOrderItems.totalLoadPrice  });
