@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
 import { deliveryOrders, deliveryOrderItems, companies, cars, deliveryOrderDrivers } from "@/lib/db/schema";
-import { eq, sql, desc, or } from "drizzle-orm";
+import { eq, sql, desc, or, and } from "drizzle-orm";
+import { getSession } from "@/lib/auth/session"
 
 // Get all delivery orders
 export async function GET(request: NextRequest) {
+  const session = await getSession();
+  if (!session || session.team_id === null) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const teamId = session.team_id
+
   try {
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get('companyId');
+
     const deliveryOrdersWithDetails = await db
       .select({
         id: deliveryOrders.id,
@@ -28,12 +37,15 @@ export async function GET(request: NextRequest) {
       .leftJoin(companies, eq(deliveryOrders.supplierId, companies.id))
       .leftJoin(cars, eq(deliveryOrders.carId, cars.id))
       .where(
-        companyId
-          ? or(
-              eq(deliveryOrders.supplierId, companyId),
-              eq(deliveryOrders.customerId, companyId)
-            )
-          : undefined
+        and(
+          eq(deliveryOrders.teamId, teamId),
+          companyId
+            ? or(
+                eq(deliveryOrders.supplierId, companyId),
+                eq(deliveryOrders.customerId, companyId)
+              )
+            : undefined
+        )
       )
       .orderBy(desc(deliveryOrders.id));
     

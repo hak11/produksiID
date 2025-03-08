@@ -1,17 +1,17 @@
 "use client"
 
 import { useEffect } from "react"
-import { useForm, useFieldArray } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import { CalendarIcon, Plus, Trash, SaveAll, Loader } from "lucide-react"
+import { CalendarIcon, SaveAll, Loader } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { DeliveryNotes, DeliveryNoteItems } from "@/lib/db/schema"
 import {
   deliveryNoteSchema,
   type DeliveryNoteFormValues,
 } from "@/lib/validatorSchema/deliveryNoteSchema"
-import { useDeliveryData } from "@/hooks/use-delivery-data"
+import { useDeliveryOrder } from "@/hooks/useDeliveryOrder"
 
 import {
   Form,
@@ -51,7 +51,8 @@ export function DeliveryNoteForm({
   onSave,
   // onClose,
 }: DeliveryNoteFormProps) {
-  const { deliveryOrders, isLoading, error } = useDeliveryData()
+  const { deliveryOrders, isLoading, error } = useDeliveryOrder()
+  console.log("🚀 ~ deliveryOrders:", deliveryOrders)
 
   const form = useForm<DeliveryNoteFormValues>({
     resolver: zodResolver(deliveryNoteSchema),
@@ -73,10 +74,10 @@ export function DeliveryNoteForm({
     // formState: { errors },
   } = form
 
-  const { fields, append, remove } = useFieldArray({
-    control: control,
-    name: "items",
-  })
+  // const { fields, append, remove } = useFieldArray({
+  //   control: control,
+  //   name: "items",
+  // })
 
   useEffect(() => {
     if (isEdit && deliveryNote) {
@@ -84,7 +85,7 @@ export function DeliveryNoteForm({
       setValue("issueDate", deliveryNote.issueDate || "")
       setValue("status", deliveryNote.status || "draft")
       setValue("remarks", deliveryNote.remarks || "")
-      setValue("items", deliveryNote.items || [])
+      // setValue("items", deliveryNote.items || [])
     } else {
       reset({
         noteNumber: "",
@@ -123,7 +124,7 @@ export function DeliveryNoteForm({
             name="noteNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Delivery Note Number</FormLabel>
+                <FormLabel>No Surat Jalan / Delivery Note Number</FormLabel>
                 <FormControl>
                   <Input {...field} required />
                 </FormControl>

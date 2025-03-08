@@ -19,6 +19,7 @@ export async function comparePasswords(
 
 type SessionData = {
   user: { id: string };
+  team_id: string;
   expires: string;
 };
 
@@ -43,10 +44,11 @@ export async function getSession() {
   return await verifyToken(session);
 }
 
-export async function setSession(user: NewUser) {
+export async function setSession(user: NewUser, team_id: string) {
   const expiresInOneDay = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const session: SessionData = {
     user: { id: user.id! },
+    team_id: team_id,
     expires: expiresInOneDay.toISOString(),
   };
   const encryptedSession = await signToken(session);

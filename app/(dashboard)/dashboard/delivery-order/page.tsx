@@ -74,7 +74,7 @@ export default function DeliveryOrdersPage() {
     <div className="space-y-4">
       <header className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Manage Delivery Orders</h1>
-        <Link href="/dashboard/deliveryOrder/create" passHref>
+        <Link href="/dashboard/delivery-order/create" passHref>
           <Button>Create Delivery Order</Button>
         </Link>
       </header>

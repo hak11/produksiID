@@ -36,7 +36,7 @@ export default function CreateDeliveryNotePage() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-2xl font-bold">Create Delivery Note</h1>
+        <h1 className="text-2xl font-bold">Buat Surat Jalan / Delivery Note</h1>
       </header>
       <DeliveryNoteForm onSave={handleSave} />
     </div>

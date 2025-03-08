@@ -416,13 +416,6 @@ async function seed() {
         issueDate: new Date().toISOString().split('T')[0],
         status: deliveryNoteStatusEnum.enumValues[0], // 'draft'
         remarks: `Surat Jalan untuk beberapa pesanan`,
-      },
-      {
-        teamId: team.id,
-        noteNumber: `DN-0002`,
-        issueDate: new Date().toISOString().split('T')[0],
-        status: deliveryNoteStatusEnum.enumValues[1], // 'draft'
-        remarks: `Surat Jalan kedua`,
       }
     ];
 
@@ -443,13 +436,7 @@ async function seed() {
         deliveryOrderId: insertedOrders[1].id,
         deliveryOrderItemId: insertDeliveryOrderItems[2].id,
         actualQty: `${15}` 
-      },
-      { 
-        deliveryNoteId: insertedNotes[1].id, 
-        deliveryOrderId: insertedOrders[0].id,
-        deliveryOrderItemId: insertDeliveryOrderItems[0].id,
-        actualQty: `${90}` 
-      },
+      }
     ];
 
     const insertedDeliveryNoteItems = await db.insert(deliveryNoteItems).values(deliveryNoteOrdersData).returning({ id: deliveryNoteItems.id, deliveryOrderId: deliveryNoteItems.id, actualQty: deliveryNoteItems.actualQty });
@@ -464,14 +451,6 @@ async function seed() {
         dueDate: new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         status: invoiceStatusEnum.enumValues[0], // 'draft'
         totalAmount: `${(50 * 200000) + (15 * 300000)}`,
-      },
-      {
-        teamId: team.id,
-        invoiceNumber: `INV-0002`,
-        invoiceDate: new Date().toISOString().split('T')[0],
-        dueDate: new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: invoiceStatusEnum.enumValues[0], // 'draft'
-        totalAmount: `${(90 * 200000)}`,
       }
     ];
 
@@ -480,7 +459,6 @@ async function seed() {
     const invoiceDeliveryNoteData = [
       { invoiceId: insertedInvoices[0].id, deliveryNoteItemId: insertedDeliveryNoteItems[0].id },
       { invoiceId: insertedInvoices[0].id, deliveryNoteItemId: insertedDeliveryNoteItems[1].id },
-      { invoiceId: insertedInvoices[1].id, deliveryNoteItemId: insertedDeliveryNoteItems[2].id },
     ];
     
     await db.insert(invoiceDeliveryNotes).values(invoiceDeliveryNoteData);

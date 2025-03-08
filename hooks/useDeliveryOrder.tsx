@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react"
 import { DeliveryOrder } from "@/lib/db/schema"
 
-export function useDeliveryData() {
+export function useDeliveryOrder() {
   const [deliveryOrders, setDeliveryOrders] = useState<DeliveryOrder[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [doResponse] = await Promise.all([
-          fetch("/api/delivery-order?team_id="),
+          fetch("/api/delivery-order"),
         ])
 
         if (!doResponse.ok) {

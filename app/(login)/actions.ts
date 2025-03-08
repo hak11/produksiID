@@ -94,7 +94,7 @@ export const signIn = validatedAction(signInSchema, async (data, formData) => {
   }
 
   await Promise.all([
-    setSession(foundUser),
+    setSession(foundUser, foundTeam?.id || ""),
     logActivity(foundTeam?.id, foundUser.id, ActivityType.SIGN_IN),
   ]);
 
@@ -243,7 +243,7 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
   await Promise.all([
     db.insert(teamMembers).values(newTeamMember),
     logActivity(teamId, createdUser.id, ActivityType.SIGN_UP),
-    setSession(createdUser),
+    setSession(createdUser, teamId),
   ]);
 
   // const redirectTo = formData.get('redirect') as string | null;
