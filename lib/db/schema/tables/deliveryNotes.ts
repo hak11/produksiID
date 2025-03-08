@@ -23,3 +23,10 @@ export const deliveryNoteItems = pgTable('delivery_note_items', {
   actualQty: numeric('actual_qty'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
+
+
+export type DeliveryNotes = typeof deliveryNotes.$inferSelect;
+export type NewDeliverNotes = typeof deliveryNotes.$inferInsert;
+
+export type DeliveryNoteItems = typeof deliveryNoteItems.$inferSelect;
+export type NewDeliverNoteItems = typeof deliveryNoteItems.$inferInsert;

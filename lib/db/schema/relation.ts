@@ -53,16 +53,20 @@ export const deliveryNoteRelations = relations(deliveryNotes, ({ many }) => ({
   deliveryNoteItems: many(deliveryNoteItems),
 }));
 
-// export const deliveryNoteItemsRelations = relations(invoiceDeliveryNotes, ({ one }) => ({
-//   invoice: one(invoices, {
-//     fields: [invoiceDeliveryNotes.invoiceId],
-//     references: [invoices.id],
-//   }),
-//   deliveryNoteItems: one(deliveryNoteItems, {
-//     fields: [invoiceDeliveryNotes.deliveryNoteItemId],
-//     references: [deliveryNoteItems.id],
-//   }),
-// }));
+export const deliveryNoteItemsRelations = relations(deliveryNoteItems, ({ one }) => ({
+  deliveryNote: one(deliveryNotes, {
+    fields: [deliveryNoteItems.deliveryNoteId],
+    references: [deliveryNotes.id],
+  }),
+  deliveryOrder: one(deliveryOrders, {
+    fields: [deliveryNoteItems.deliveryOrderId],
+    references: [deliveryOrders.id],
+  }),
+  invoiceItem: one(invoiceDeliveryNotes, {
+    fields: [deliveryNoteItems.id],
+    references: [invoiceDeliveryNotes.deliveryNoteItemId],
+  })
+}));
 
 export const deliveryOrderItemsRelations = relations(deliveryOrderItems, ({ one }) => ({
   deliveryOrder: one(deliveryOrders, {

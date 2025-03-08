@@ -1,5 +1,5 @@
 {
-  "id": "524d7478-aeb0-4fee-b470-6afb6399737b",
+  "id": "ae875efe-2124-470d-91dd-446f1d1741cf",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -379,12 +379,6 @@
           "type": "numeric",
           "primaryKey": false,
           "notNull": true
-        },
-        "load_qty_actual": {
-          "name": "load_qty_actual",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false
         },
         "load_per_price": {
           "name": "load_per_price",
@@ -1368,8 +1362,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.invoice_delivery_orders": {
-      "name": "invoice_delivery_orders",
+    "public.invoice_delivery_notes": {
+      "name": "invoice_delivery_notes",
       "schema": "",
       "columns": {
         "id": {
@@ -1385,8 +1379,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "delivery_order_id": {
-          "name": "delivery_order_id",
+        "delivery_note_id": {
+          "name": "delivery_note_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -1408,9 +1402,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "invoice_delivery_orders_invoice_id_invoices_id_fk": {
-          "name": "invoice_delivery_orders_invoice_id_invoices_id_fk",
-          "tableFrom": "invoice_delivery_orders",
+        "invoice_delivery_notes_invoice_id_invoices_id_fk": {
+          "name": "invoice_delivery_notes_invoice_id_invoices_id_fk",
+          "tableFrom": "invoice_delivery_notes",
           "tableTo": "invoices",
           "columnsFrom": [
             "invoice_id"
@@ -1421,12 +1415,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "invoice_delivery_orders_delivery_order_id_delivery_orders_id_fk": {
-          "name": "invoice_delivery_orders_delivery_order_id_delivery_orders_id_fk",
-          "tableFrom": "invoice_delivery_orders",
-          "tableTo": "delivery_orders",
+        "invoice_delivery_notes_delivery_note_id_delivery_note_items_id_fk": {
+          "name": "invoice_delivery_notes_delivery_note_id_delivery_note_items_id_fk",
+          "tableFrom": "invoice_delivery_notes",
+          "tableTo": "delivery_note_items",
           "columnsFrom": [
-            "delivery_order_id"
+            "delivery_note_id"
           ],
           "columnsTo": [
             "id"
@@ -1520,6 +1514,167 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.delivery_note_items": {
+      "name": "delivery_note_items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "delivery_note_id": {
+          "name": "delivery_note_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "delivery_order_id": {
+          "name": "delivery_order_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actual_qty": {
+          "name": "actual_qty",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "delivery_note_items_delivery_note_id_delivery_notes_id_fk": {
+          "name": "delivery_note_items_delivery_note_id_delivery_notes_id_fk",
+          "tableFrom": "delivery_note_items",
+          "tableTo": "delivery_notes",
+          "columnsFrom": [
+            "delivery_note_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "delivery_note_items_delivery_order_id_delivery_orders_id_fk": {
+          "name": "delivery_note_items_delivery_order_id_delivery_orders_id_fk",
+          "tableFrom": "delivery_note_items",
+          "tableTo": "delivery_orders",
+          "columnsFrom": [
+            "delivery_order_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.delivery_notes": {
+      "name": "delivery_notes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "team_id": {
+          "name": "team_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "note_number": {
+          "name": "note_number",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "issue_date": {
+          "name": "issue_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "delivery_note_status_enum",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "remarks": {
+          "name": "remarks",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "delivery_notes_team_id_teams_id_fk": {
+          "name": "delivery_notes_team_id_teams_id_fk",
+          "tableFrom": "delivery_notes",
+          "tableTo": "teams",
+          "columnsFrom": [
+            "team_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "delivery_notes_note_number_team_id_unique": {
+          "name": "delivery_notes_note_number_team_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "note_number",
+            "team_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -1530,6 +1685,16 @@
         "main",
         "assistant",
         "backup"
+      ]
+    },
+    "public.delivery_note_status_enum": {
+      "name": "delivery_note_status_enum",
+      "schema": "public",
+      "values": [
+        "draft",
+        "printed",
+        "delivered",
+        "cancelled"
       ]
     },
     "public.delivery_status_enum": {
