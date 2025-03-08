@@ -56,7 +56,7 @@ export function DeliveryOrderList({
       accessorKey: "orderNumber",
       header: "Order Number",
       cell: ({ row }) => (
-        <Link href={`/dashboard/do/${row.original.id}`} className="underline">
+        <Link href={`/dashboard/delivery-order/${row.original.id}`} className="underline">
           {row.original.orderNumber}
         </Link>
       )

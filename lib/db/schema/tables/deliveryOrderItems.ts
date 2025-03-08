@@ -9,7 +9,6 @@ export const deliveryOrderItems = pgTable('delivery_order_items', {
     .notNull(),
   name: varchar('name').default('space'),
   loadQty: numeric('load_qty').notNull(),
-  loadQtyActual: numeric('load_qty_actual'),
   loadPerPrice: numeric('load_per_price').notNull(),
   totalLoadPrice: numeric('total_load_price').notNull(),
   itemId: uuid('item_id')

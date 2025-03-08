@@ -107,6 +107,7 @@ export function DeliveryOrderForm({
         }));
 
         deliveryOrder.items = updatedItems || []
+        console.log("🚀 ~ useEffect ~ deliveryOrder:", deliveryOrder)
       }
 
       setValue("orderNumber", deliveryOrder.orderNumber || "")
@@ -539,7 +540,7 @@ export function DeliveryOrderForm({
                             <FormItem>
                               <Select
                                 onValueChange={(value) => {
-                                  field.onChange(Number(value))
+                                  field.onChange(value)
                                   handleItemChange(index, "itemId", value)
                                 }}
                                 value={

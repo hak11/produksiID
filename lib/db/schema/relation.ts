@@ -7,7 +7,8 @@ import { teamMembers } from './tables/teamMembers';
 import { activityLogs } from './tables/activityLogs';
 import { invitations } from './tables/invitations';
 import { deliveryOrders } from './tables/deliveryOrders';
-import { invoiceDeliveryOrders } from './tables/invoiceDeliveryOrders';
+import { deliveryNoteItems, deliveryNotes } from './tables/deliveryNotes';
+import { invoiceDeliveryNotes } from './tables/invoiceDeliveryNotes';
 import { invoices } from './tables/invoices';
 import { deliveryOrderItems } from './tables/deliveryOrderItems';
 import { deliveryOrderDrivers } from './tables/deliveryOrderDrivers';
@@ -34,19 +35,34 @@ export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
 
 
 export const invoicesRelations = relations(invoices, ({ many }) => ({
-  deliveryOrders: many(invoiceDeliveryOrders),
+  invoiceDeliveryNotes: many(invoiceDeliveryNotes),
 }));
 
-export const invoiceDeliveryOrdersRelations = relations(invoiceDeliveryOrders, ({ one }) => ({
+export const invoiceDeliveryNotesRelations = relations(invoiceDeliveryNotes, ({ one }) => ({
   invoice: one(invoices, {
-    fields: [invoiceDeliveryOrders.invoiceId],
+    fields: [invoiceDeliveryNotes.invoiceId],
     references: [invoices.id],
   }),
-  deliveryOrder: one(deliveryOrders, {
-    fields: [invoiceDeliveryOrders.deliveryOrderId],
-    references: [deliveryOrders.id],
+  deliveryNoteItems: one(deliveryNoteItems, {
+    fields: [invoiceDeliveryNotes.deliveryNoteItemId],
+    references: [deliveryNoteItems.id],
   }),
 }));
+
+export const deliveryNoteRelations = relations(deliveryNotes, ({ many }) => ({
+  deliveryNoteItems: many(deliveryNoteItems),
+}));
+
+// export const deliveryNoteItemsRelations = relations(invoiceDeliveryNotes, ({ one }) => ({
+//   invoice: one(invoices, {
+//     fields: [invoiceDeliveryNotes.invoiceId],
+//     references: [invoices.id],
+//   }),
+//   deliveryNoteItems: one(deliveryNoteItems, {
+//     fields: [invoiceDeliveryNotes.deliveryNoteItemId],
+//     references: [deliveryNoteItems.id],
+//   }),
+// }));
 
 export const deliveryOrderItemsRelations = relations(deliveryOrderItems, ({ one }) => ({
   deliveryOrder: one(deliveryOrders, {

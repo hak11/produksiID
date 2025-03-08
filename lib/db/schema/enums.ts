@@ -13,6 +13,13 @@ export const deliveryDriverRoleEnum = pgEnum('delivery_driver_role_enum', [
   'backup',    // Driver cadangan
 ]);
 
+export const deliveryNoteStatusEnum = pgEnum('delivery_note_status_enum', [
+  'draft',
+  'printed',
+  'delivered',
+  'cancelled'
+]);
+
 export const roleEnum = pgEnum('role_enum', ['supplier', 'customer']);
 
 export const roleTeamEnum = pgEnum('role_team_enum', ['admin', 'member']);

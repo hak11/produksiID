@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
 import { deliveryOrders, deliveryOrderItems, cars, companies, deliveryOrderDrivers } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export async function GET( request: Request, { params }: any) {
   try {
@@ -37,11 +37,9 @@ export async function GET( request: Request, { params }: any) {
       .select({
         id: deliveryOrderItems.id,
         loadQty: deliveryOrderItems.loadQty,
-        loadQtyActual: deliveryOrderItems.loadQtyActual,
         loadPerPrice: deliveryOrderItems.loadPerPrice,
         totalLoadPrice: deliveryOrderItems.totalLoadPrice,
-        itemId: deliveryOrderItems.itemId,
-        name: deliveryOrderItems.name,
+        nameItem: sql<string[]>`'item ' || ROW_NUMBER() OVER (PARTITION BY ${deliveryOrderItems.doId} ORDER BY ${deliveryOrderItems.id})`.as('nameItem'),
       })
       .from(deliveryOrderItems)
       .where(eq(deliveryOrderItems.doId, doID));

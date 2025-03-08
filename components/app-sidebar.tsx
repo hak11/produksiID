@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/sidebar"
 import Image from "next/image"
 
-// This is sample data.
 const data = {
   user: {
     name: "shadcn",
@@ -75,11 +74,11 @@ const data = {
       items: [
         {
           title: "Surat Jalan",
-          url: "/dashboard/shipments",
+          url: "/dashboard/delivery-note",
         },
         {
           title: "Buat Surat Jalan",
-          url: "/dashboard/shipments/create",
+          url: "/dashboard/delivery-note/create",
         },
         // {
         //   title: "Kontrak Pengiriman",
@@ -95,11 +94,11 @@ const data = {
       items: [
         {
           title: "List",
-          url: "/dashboard/do",
+          url: "/dashboard/delivery-order",
         },
         {
           title: "Input Data DO",
-          url: "/dashboard/do/create",
+          url: "/dashboard/delivery-order/create",
         },
       ],
     },

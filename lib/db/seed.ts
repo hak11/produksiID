@@ -1,6 +1,8 @@
 import { db } from './drizzle';
-import { users, teams, teamMembers, cars, drivers, driverCarAssignments, companies, companyRoles, invoices, invoiceDeliveryOrders, invoiceStatusEnum,
-  roleEnum, deliveryOrders, deliveryOrderItems, deliveryOrderDrivers, deliveryStatusEnum, deliveryDriverRoleEnum, items  } from './schema';
+import { users, teams, teamMembers, cars, drivers, driverCarAssignments, companies, companyRoles, invoices, invoiceDeliveryNotes, invoiceStatusEnum,
+  roleEnum, deliveryOrders, deliveryOrderItems, deliveryOrderDrivers, deliveryStatusEnum, deliveryDriverRoleEnum, items,
+  deliveryNoteStatusEnum, deliveryNotes, deliveryNoteItems
+} from './schema';
 import { hashPassword } from '@/lib/auth/session';
 
 async function seed() {
@@ -377,7 +379,6 @@ async function seed() {
           doId: insertedOrders[0].id, 
           name: "Barang A", 
           loadQty: `${100}`, 
-          loadQtyActual: `${95}`, 
           loadPerPrice: insertedItems[0].price, 
           totalLoadPrice: `${1900000}`,
           itemId: insertedItems[0].id
@@ -386,7 +387,6 @@ async function seed() {
           doId: insertedOrders[1].id, 
           name: "Barang B", 
           loadQty: `${50}`, 
-          loadQtyActual: `${50}`, 
           loadPerPrice: insertedItems[1].price, 
           totalLoadPrice: `${2500000}`,
           itemId: insertedItems[1].id
@@ -395,7 +395,6 @@ async function seed() {
           doId: insertedOrders[1].id, 
           name: "Barang C", 
           loadQty: `${20}`, 
-          loadQtyActual: `${30}`, 
           loadPerPrice: insertedItems[0].price, 
           totalLoadPrice: `${1500000}`,
           itemId: insertedItems[0].id
@@ -410,10 +409,57 @@ async function seed() {
       { deliveryOrderId: insertedOrders[1].id, driverId: insertedDrivers[1].id, role: deliveryDriverRoleEnum.enumValues[1] },
     ]);
 
+     const deliveryNotesData = [
+      {
+        teamId: team.id,
+        noteNumber: `DN-0001`,
+        issueDate: new Date().toISOString().split('T')[0],
+        status: deliveryNoteStatusEnum.enumValues[0], // 'draft'
+        remarks: `Surat Jalan untuk beberapa pesanan`,
+      },
+      {
+        teamId: team.id,
+        noteNumber: `DN-0002`,
+        issueDate: new Date().toISOString().split('T')[0],
+        status: deliveryNoteStatusEnum.enumValues[1], // 'draft'
+        remarks: `Surat Jalan kedua`,
+      }
+    ];
+
+    // Insert delivery notes
+    const insertedNotes = await db.insert(deliveryNotes).values(deliveryNotesData).returning({ id: deliveryNotes.id });
+
+    console.log(`Inserted ${insertedNotes.length} delivery notes.`);
+
+    const deliveryNoteOrdersData = [
+      { 
+        deliveryNoteId: insertedNotes[0].id, 
+        deliveryOrderId: insertedOrders[1].id,
+        deliveryOrderItemId: insertDeliveryOrderItems[1].id,
+        actualQty: `${50}`
+      },
+      { 
+        deliveryNoteId: insertedNotes[0].id, 
+        deliveryOrderId: insertedOrders[1].id,
+        deliveryOrderItemId: insertDeliveryOrderItems[2].id,
+        actualQty: `${15}` 
+      },
+      { 
+        deliveryNoteId: insertedNotes[1].id, 
+        deliveryOrderId: insertedOrders[0].id,
+        deliveryOrderItemId: insertDeliveryOrderItems[0].id,
+        actualQty: `${90}` 
+      },
+    ];
+
+    const insertedDeliveryNoteItems = await db.insert(deliveryNoteItems).values(deliveryNoteOrdersData).returning({ id: deliveryNoteItems.id, deliveryOrderId: deliveryNoteItems.id, actualQty: deliveryNoteItems.actualQty });
+
+    console.log("Inserted Delivery Note Orders relationships.");
+
     const invoicesData = insertedOrders.map((order, index) => {
-       const totalAmount = insertDeliveryOrderItems
-        .filter(item => insertedOrders.some(order => order.id === item.doId))
-        .reduce((acc, item) => acc + Number(item.totalLoadPrice), 0).toString();
+       const totalAmount = insertedDeliveryNoteItems
+        .filter(item => insertedOrders.some(order => order.id === item.deliveryOrderId))
+        .reduce((acc, item) => acc + Number(item.actualQty), 0).toString();
       return {
         teamId: team.id,
         invoiceNumber: `INV-${String(index + 1).padStart(4, '0')}`,
@@ -428,13 +474,14 @@ async function seed() {
       .values(invoicesData)
       .returning({ id: invoices.id, invoiceNumber: invoices.invoiceNumber });
 
-    const invoiceDeliveryOrdersData = insertedOrders.map((order, index) => ({
-      invoiceId: insertedInvoices[index].id,
-      deliveryOrderId: order.id
-    }));
+    const invoiceDeliveryNoteItemsData = insertedDeliveryNoteItems.map((noteItem, index) => {
+      return {
+        invoiceId: insertedInvoices[index].id,
+        deliveryNoteItemId: noteItem.id,
+      }
+    });
 
-    // Insert Invoice-Delivery Orders relationship
-    await db.insert(invoiceDeliveryOrders).values(invoiceDeliveryOrdersData);
+    await db.insert(invoiceDeliveryNotes).values(invoiceDeliveryNoteItemsData);
 
     console.log("Invoice-Delivery Orders seeded successfully.");
 }

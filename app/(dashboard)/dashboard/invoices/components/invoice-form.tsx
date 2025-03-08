@@ -144,7 +144,6 @@ export function InvoiceForm({ invoice, onSave }: InvoiceFormProps) {
   // }
 
   const multipleSelectDOHandler = async (doNumber: string[]) => {
-    // const deliveryOrders = form.getValues("deliveryOrders")
     const response = await fetch("/api/delivery-order/details", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
