@@ -2,10 +2,18 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
 import { companies, companyRoles } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { getSession } from "@/lib/auth/session";
 
 // Get all companies
 export async function GET() {
   try {
+    const session = await getSession();
+    if (!session || session.team_id === null) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const teamId = session.team_id
+
     const companiesWithRoles = await db
       .select({
         id: companies.id,
@@ -20,6 +28,7 @@ export async function GET() {
         companyRoles, 
         eq(companies.id, companyRoles.companyId)
       )
+      .where(eq(companies.teamId, teamId))
       .groupBy(companies.id);
 
     return NextResponse.json(companiesWithRoles);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
 import { cars, driverCarAssignments, drivers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { getSession } from "@/lib/auth/session";
 
 type CarWithDrivers = {
   id: string;
@@ -19,11 +20,18 @@ type CarWithDrivers = {
 // Get all cars
 export async function GET() {
   try {
+    const session = await getSession();
+    if (!session || session.team_id === null) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const teamId = session.team_id
     const carsWithDrivers = await db
       .select()
       .from(cars)
       .leftJoin(driverCarAssignments, eq(cars.id, driverCarAssignments.carId))
-      .leftJoin(drivers, eq(driverCarAssignments.driverId, drivers.id));
+      .leftJoin(drivers, eq(driverCarAssignments.driverId, drivers.id))
+      .where(eq(cars.teamId, teamId));
 
     const groupedCars = carsWithDrivers.reduce<Record<string, CarWithDrivers>>((acc, curr) => {
       const car = curr.cars;

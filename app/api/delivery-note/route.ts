@@ -1,12 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
 import { deliveryNotes, deliveryNoteItems, deliveryOrders, deliveryNoteStatusEnum, teams } from "@/lib/db/schema";
 import { eq, sql, desc, and } from "drizzle-orm";
+import { getSession } from "@/lib/auth/session";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const teamId = searchParams.get('teamId');
+    const session = await getSession();
+    if (!session || session.team_id === null) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const teamId = session.team_id
 
     const deliveryNotesWithItems = await db
       .select({

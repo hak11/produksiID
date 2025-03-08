@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
 import { items } from "@/lib/db/schema";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
+import { getSession } from "@/lib/auth/session";
 
 export async function GET() {
   try {
-    const allItems = await db.select().from(items).orderBy(desc(items.id));
+    const session = await getSession();
+    if (!session || session.team_id === null) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const teamId = session.team_id
+    const allItems = await db.select().from(items).where(eq(items.teamId, teamId)).orderBy(desc(items.id));
     return NextResponse.json(allItems);
   } catch (error) {
     console.error("Error fetching items:", error);

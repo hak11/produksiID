@@ -1,154 +1,101 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
-import { deliveryNotes, deliveryNoteItems } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { deliveryOrders, deliveryOrderItems, cars, companies, deliveryOrderDrivers } from "@/lib/db/schema";
+import { sql, inArray } from "drizzle-orm";
 
-// GET: Ambil daftar delivery notes, bisa difilter berdasarkan teamId jika diperlukan
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const teamId = searchParams.get("teamId");
-
-    const notes = await db
-      .select({
-        id: deliveryNotes.id,
-        noteNumber: deliveryNotes.noteNumber,
-        teamId: deliveryNotes.teamId,
-        issueDate: deliveryNotes.issueDate,
-        status: deliveryNotes.status,
-        remarks: deliveryNotes.remarks,
-        createdAt: deliveryNotes.createdAt,
-        updatedAt: deliveryNotes.updatedAt,
-      })
-      .from(deliveryNotes)
-      .where(teamId ? eq(deliveryNotes.teamId, teamId) : undefined)
-      .orderBy(desc(deliveryNotes.createdAt));
-
-    return NextResponse.json(notes);
-  } catch (error) {
-    console.error("🚀 ~ GET ~ error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch delivery notes" },
-      { status: 500 }
-    );
-  }
-}
-
-// POST: Buat delivery note baru beserta item–nya (jika ada)
 export async function POST(request: NextRequest) {
   try {
-    const { items, ...noteData } = await request.json();
+    const { doNumber } = await request.json();
+    console.log("🚀 ~ POST ~ doNumber:", doNumber)
 
-    if (!noteData) {
-      return NextResponse.json(
-        { error: "Delivery note data is required." },
-        { status: 400 }
-      );
+    if (!Array.isArray(doNumber) || doNumber.length === 0) {
+      return NextResponse.json({ error: "Valid array of Delivery Order IDs is required" }, { status: 400 });
     }
 
-    const newNote = await db.transaction(async (tx) => {
-      const [insertedNote] = await tx
-        .insert(deliveryNotes)
-        .values(noteData)
-        .returning();
+    const doDetails = await db
+      .select({
+        id: deliveryOrders.id,
+        orderDate: deliveryOrders.orderDate,
+        deliveryDate: deliveryOrders.deliveryDate,
+        deliveryStatus: deliveryOrders.deliveryStatus,
+        orderNumber: deliveryOrders.orderNumber,
+        supplierId: deliveryOrders.supplierId,
+        customerId: deliveryOrders.customerId,
+        carId: deliveryOrders.carId,
+        deliveryAddress: deliveryOrders.deliveryAddress,
+      })
+      .from(deliveryOrders)
+      .where(inArray(deliveryOrders.orderNumber, doNumber));
 
-      if (items && Array.isArray(items) && items.length > 0) {
-        await tx.insert(deliveryNoteItems).values(
-          items.map((item: any) => ({
-            ...item,
-            deliveryNoteId: insertedNote.id,
-          }))
-        );
-      }
-
-      return insertedNote;
-    });
-
-    return NextResponse.json({
-      message: "Delivery note created successfully.",
-      deliveryNote: newNote,
-    });
-  } catch (error) {
-    console.error("🚀 ~ POST ~ error:", error);
-    return NextResponse.json(
-      { error: "Failed to create delivery note." },
-      { status: 500 }
-    );
-  }
-}
-
-// PUT: Update delivery note yang sudah ada (juga update item–nya)
-export async function PUT(request: NextRequest) {
-  try {
-    const { id, items, ...noteData } = await request.json();
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "Delivery note ID is required." },
-        { status: 400 }
-      );
+    if (doDetails.length === 0) {
+      return NextResponse.json({ error: "No delivery orders found." }, { status: 404 });
     }
 
-    const updatedNote = await db.transaction(async (tx) => {
-      const [note] = await tx
-        .update(deliveryNotes)
-        .set({ ...noteData, updatedAt: new Date() })
-        .where(eq(deliveryNotes.id, id))
-        .returning();
+    const doIdsFound = doDetails.map(detail => detail.id);
 
-      if (items) {
-        // Hapus item lama
-        await tx.delete(deliveryNoteItems).where(eq(deliveryNoteItems.deliveryNoteId, id));
-        // Masukkan item baru (jika ada)
-        if (Array.isArray(items) && items.length > 0) {
-          await tx.insert(deliveryNoteItems).values(
-            items.map((item: any) => ({
-              ...item,
-              deliveryNoteId: id,
-            }))
-          );
-        }
-      }
+    const doItems = await db
+      .select({
+        id: deliveryOrderItems.id,
+        doId: deliveryOrderItems.doId,
+        loadQty: deliveryOrderItems.loadQty,
+        loadPerPrice: deliveryOrderItems.loadPerPrice,
+        totalLoadPrice: deliveryOrderItems.totalLoadPrice,
+        nameItem: sql<string>`'item ' || ROW_NUMBER() OVER (PARTITION BY ${deliveryOrderItems.doId} ORDER BY ${deliveryOrderItems.id})`.as('nameItem'),
+      })
+      .from(deliveryOrderItems)
+      .where(inArray(deliveryOrderItems.doId, doIdsFound));
 
-      return note;
+    const supplierIds = [...new Set(doDetails.map(detail => detail.supplierId))];
+    const customerIds = [...new Set(doDetails.map(detail => detail.customerId))];
+    const carIds = [...new Set(doDetails.map(detail => detail.carId))];
+
+    const suppliers = await db
+      .select()
+      .from(companies)
+      .where(inArray(companies.id, supplierIds));
+
+    const customers = await db
+      .select()
+      .from(companies)
+      .where(inArray(companies.id, customerIds));
+
+    const dataCars = await db
+      .select()
+      .from(cars)
+      .where(inArray(cars.id, carIds));
+
+    const doDrivers = await db
+      .select()
+      .from(deliveryOrderDrivers)
+      .where(inArray(deliveryOrderDrivers.deliveryOrderId, doIdsFound));
+
+    const dataResponse = doDetails.map(doDetail => {
+      const doItemsFiltered = doItems.filter(item => item.doId === doDetail.id);
+      const supplierFiltered = suppliers.find(s => s.id === doDetail.supplierId) || {};
+      const customerFiltered = customers.find(c => c.id === doDetail.customerId) || {};
+      const carFiltered = dataCars.find(c => c.id === doDetail.carId) || {};
+      const doDriversFiltered = doDrivers.filter(d => d.deliveryOrderId === doDetail.id);
+
+      const doDriverReduce = doDriversFiltered.reduce((acc, curr) => {
+        acc[curr.role] = curr.driverId;
+        return acc;
+      }, {} as Record<string, string>);
+
+      return {
+        ...doDetail,
+        items: doItemsFiltered,
+        supplier: supplierFiltered,
+        customer: customerFiltered,
+        car: carFiltered,
+        deliveryDrivers: doDriverReduce,
+      };
     });
 
-    return NextResponse.json({
-      message: "Delivery note updated successfully.",
-      deliveryNote: updatedNote,
-    });
-  } catch (error) {
-    console.error("🚀 ~ PUT ~ error:", error);
     return NextResponse.json(
-      { error: "Failed to update delivery note." },
-      { status: 500 }
+      dataResponse
     );
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "Delivery note ID is required." },
-        { status: 400 }
-      );
-    }
-
-    await db.transaction(async (tx) => {
-      await tx.delete(deliveryNoteItems).where(eq(deliveryNoteItems.deliveryNoteId, id));
-      await tx.delete(deliveryNotes).where(eq(deliveryNotes.id, id));
-    });
-
-    return NextResponse.json({ message: "Delivery note deleted successfully." });
   } catch (error) {
-    console.error("🚀 ~ DELETE ~ error:", error);
-    return NextResponse.json(
-      { error: "Failed to delete delivery note." },
-      { status: 500 }
-    );
+    console.error("🚀 ~ POST (multiple details) ~ error:", error);
+    return NextResponse.json({ error: "Failed to fetch delivery order details." }, { status: 500 });
   }
 }

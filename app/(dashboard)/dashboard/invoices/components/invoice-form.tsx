@@ -335,40 +335,6 @@ export function InvoiceForm({ invoice, onSave }: InvoiceFormProps) {
           />
         </div>
 
-        {/* <FormField
-          control={form.control}
-          name="doIds"
-          render={({ field }) => {
-            return (
-              <FormItem>
-                <FormLabel>Delivery Orders</FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    console.log("🚀 ~ valueFormField:", value)
-                  }}
-                  value={field.value?.toString()}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih Delivery Orders" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {fields.map((dataDO) => {
-                      return (
-                        <SelectItem key={dataDO.id} value={dataDO.id}>
-                          {dataDO.orderNumber}
-                        </SelectItem>
-                      )
-                    })}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )
-          }}
-        /> */}
-
         <MultiSelect
           options={fields.map((field: DoInvoiceFormValues) => ({
             label: `(${format(new Date(field.deliveryDate), "dd MMM yy")}) - ${
