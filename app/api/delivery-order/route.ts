@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from 'zod';
 import { db } from "@/lib/db/drizzle";
-import { deliveryOrders, deliveryOrderItems, companies, cars, deliveryOrderDrivers } from "@/lib/db/schema";
+import { deliveryOrders, deliveryOrderItems, companies, cars, deliveryOrderDrivers, DeliveryStatus } from "@/lib/db/schema";
 import { eq, sql, desc, or, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session"
 
-// Get all delivery orders
+const querySchema = z.object({
+  companyId: z.string().optional(),
+  status: DeliveryStatus.optional(),
+});
+
 export async function GET(request: NextRequest) {
   const session = await getSession();
   if (!session || session.team_id === null) {
@@ -13,22 +17,18 @@ export async function GET(request: NextRequest) {
   }
 
   const teamId = session.team_id
-  let statusDO = undefined
 
   try {
     const { searchParams } = new URL(request.url);
-    const companyId = searchParams.get('companyId');
-    const statusRawDO = searchParams.get('status');
-    
-    if (statusRawDO) {
-      const DeliveryStatusSchema = z.enum(['pending', 'in_progress', 'completed', 'canceled']);
-      const parsedStatus = DeliveryStatusSchema.safeParse(statusRawDO);
-      if (parsedStatus.success) {
-        statusDO = parsedStatus.data;
-      } else {
-        return NextResponse.json({ error: "Invalid status parameter" }, { status: 400 });
-      }
+
+    const queryObj = Object.fromEntries(searchParams.entries());
+    const parsedQuery = querySchema.safeParse(queryObj);
+
+    if (!parsedQuery.success) {
+      return NextResponse.json({ error: "Invalid query parameters" }, { status: 400 });
     }
+
+    const { companyId, status: statusDO } = parsedQuery.data;
 
     const deliveryOrdersWithDetails = await db
       .select({

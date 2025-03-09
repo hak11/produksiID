@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { z } from 'zod';
 import { db } from "@/lib/db/drizzle";
-import { deliveryNotes, deliveryNoteItems, deliveryOrders, deliveryNoteStatusEnum, teams } from "@/lib/db/schema";
+import { deliveryNotes, deliveryNoteItems, deliveryOrders, DeliveryNoteStatus, DeliveryNoteItems } from "@/lib/db/schema";
 import { eq, sql, desc, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
 
@@ -34,36 +35,53 @@ export async function GET() {
   }
 }
 
+const postRequestSchema = z.object({
+  noteNumber: z.string(),
+  issueDate: z.string(),
+  remarks: z.string().optional(),
+  items: z.array(
+    z.object({
+      deliveryOrderId: z.string(),
+      deliveryOrderItemId: z.string(),
+      actualQty: z.string().optional(),
+    })
+  ),
+  status: DeliveryNoteStatus,
+});
+
 // **POST: Buat Surat Jalan baru**
 export async function POST(request: Request) {
-  try {
-    const { deliveryOrderIds, issueDate, remarks } = await request.json();
-
-    if (!deliveryOrderIds || deliveryOrderIds.length === 0) {
-      return NextResponse.json({ error: "At least one Delivery Order ID is required." }, { status: 400 });
+  const session = await getSession();
+    if (!session || session.team_id === null) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [team] = await db.select().from(teams).limit(1);
-    if (!team) throw new Error("Team not found!");
+  const teamId = session.team_id
+  try {
+    const bodyRequest = await request.json();
+    const parsedQuery = postRequestSchema.safeParse(bodyRequest);
+    if (!parsedQuery.success) {
+      console.log("🚀 ~ POST ~ parsedQuery:", parsedQuery.error)
+      return NextResponse.json({ error: "Invalid query parameters" }, { status: 400 });
+    }
 
-    const noteNumber = `DN-${Math.floor(1000 + Math.random() * 9000)}`;
+    const { noteNumber, issueDate, remarks, status, items } = bodyRequest;
 
     const newDeliveryNote = await db.transaction(async (tx) => {
-      // Insert delivery note
       const [insertedNote] = await tx.insert(deliveryNotes).values({
-        teamId: team.id,
+        teamId,
         noteNumber,
         issueDate: new Date(issueDate).toISOString().split('T')[0],
-        status: deliveryNoteStatusEnum.enumValues[0], // 'draft'
+        status: status,
         remarks,
       }).returning();
 
-      // Insert delivery note items
       await tx.insert(deliveryNoteItems).values(
-        deliveryOrderIds.map((orderId: string) => ({
+        items.map((orderItem: DeliveryNoteItems) => ({
           deliveryNoteId: insertedNote.id,
-          deliveryOrderId: orderId,
-          actualQty: null, // Default null, bisa diupdate nanti
+          deliveryOrderId: orderItem.deliveryOrderId,
+          deliveryOrderItemId: orderItem.deliveryOrderItemId,
+          actualQty: orderItem.actualQty,
         }))
       );
 

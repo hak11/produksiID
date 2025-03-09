@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
-import { deliveryOrders, deliveryOrderItems, cars, companies, deliveryOrderDrivers } from "@/lib/db/schema";
-import { sql, inArray } from "drizzle-orm";
+import { deliveryOrders, deliveryOrderItems, companies, items } from "@/lib/db/schema";
+import { inArray, eq } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         deliveryAddress: deliveryOrders.deliveryAddress,
       })
       .from(deliveryOrders)
-      .where(inArray(deliveryOrders.orderNumber, doNumber));
+      .where(inArray(deliveryOrders.id, doNumber));
 
     if (doDetails.length === 0) {
       return NextResponse.json({ error: "No delivery orders found." }, { status: 404 });
@@ -40,14 +40,17 @@ export async function POST(request: NextRequest) {
         loadQty: deliveryOrderItems.loadQty,
         loadPerPrice: deliveryOrderItems.loadPerPrice,
         totalLoadPrice: deliveryOrderItems.totalLoadPrice,
-        nameItem: sql<string>`'item ' || ROW_NUMBER() OVER (PARTITION BY ${deliveryOrderItems.doId} ORDER BY ${deliveryOrderItems.id})`.as('nameItem'),
+        name: deliveryOrderItems.name,
+        itemName: items.name
       })
       .from(deliveryOrderItems)
+      .leftJoin(items, eq(deliveryOrderItems.itemId, items.id))
       .where(inArray(deliveryOrderItems.doId, doIdsFound));
 
     const supplierIds = [...new Set(doDetails.map(detail => detail.supplierId))];
     const customerIds = [...new Set(doDetails.map(detail => detail.customerId))];
-    const carIds = [...new Set(doDetails.map(detail => detail.carId))];
+
+    // const carIds = [...new Set(doDetails.map(detail => detail.carId))];
 
     const suppliers = await db
       .select()
@@ -59,35 +62,36 @@ export async function POST(request: NextRequest) {
       .from(companies)
       .where(inArray(companies.id, customerIds));
 
-    const dataCars = await db
-      .select()
-      .from(cars)
-      .where(inArray(cars.id, carIds));
 
-    const doDrivers = await db
-      .select()
-      .from(deliveryOrderDrivers)
-      .where(inArray(deliveryOrderDrivers.deliveryOrderId, doIdsFound));
+    // const dataCars = await db
+    //   .select()
+    //   .from(cars)
+    //   .where(inArray(cars.id, carIds));
+
+    // const doDrivers = await db
+    //   .select()
+    //   .from(deliveryOrderDrivers)
+    //   .where(inArray(deliveryOrderDrivers.deliveryOrderId, doIdsFound));
 
     const dataResponse = doDetails.map(doDetail => {
       const doItemsFiltered = doItems.filter(item => item.doId === doDetail.id);
       const supplierFiltered = suppliers.find(s => s.id === doDetail.supplierId) || {};
       const customerFiltered = customers.find(c => c.id === doDetail.customerId) || {};
-      const carFiltered = dataCars.find(c => c.id === doDetail.carId) || {};
-      const doDriversFiltered = doDrivers.filter(d => d.deliveryOrderId === doDetail.id);
+      // const carFiltered = dataCars.find(c => c.id === doDetail.carId) || {};
+      // const doDriversFiltered = doDrivers.filter(d => d.deliveryOrderId === doDetail.id);
 
-      const doDriverReduce = doDriversFiltered.reduce((acc, curr) => {
-        acc[curr.role] = curr.driverId;
-        return acc;
-      }, {} as Record<string, string>);
+      // const doDriverReduce = doDriversFiltered.reduce((acc, curr) => {
+      //   acc[curr.role] = curr.driverId;
+      //   return acc;
+      // }, {} as Record<string, string>);
 
       return {
         ...doDetail,
         items: doItemsFiltered,
         supplier: supplierFiltered,
         customer: customerFiltered,
-        car: carFiltered,
-        deliveryDrivers: doDriverReduce,
+        // car: carFiltered,
+        // deliveryDrivers: doDriverReduce,
       };
     });
 

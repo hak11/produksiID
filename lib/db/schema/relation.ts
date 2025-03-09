@@ -58,9 +58,9 @@ export const deliveryNoteItemsRelations = relations(deliveryNoteItems, ({ one })
     fields: [deliveryNoteItems.deliveryNoteId],
     references: [deliveryNotes.id],
   }),
-  deliveryOrder: one(deliveryOrders, {
-    fields: [deliveryNoteItems.deliveryOrderId],
-    references: [deliveryOrders.id],
+  deliveryOrderItems: one(deliveryOrderItems, {
+    fields: [deliveryNoteItems.deliveryOrderItemId],
+    references: [deliveryOrderItems.id],
   }),
   invoiceItem: one(invoiceDeliveryNotes, {
     fields: [deliveryNoteItems.id],

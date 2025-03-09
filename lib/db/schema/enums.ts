@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { pgEnum } from 'drizzle-orm/pg-core';
 
 export const deliveryStatusEnum = pgEnum('delivery_status_enum', [
@@ -6,6 +7,8 @@ export const deliveryStatusEnum = pgEnum('delivery_status_enum', [
   'completed',  // Pengiriman selesai
   'canceled',   // Pengiriman dibatalkan
 ]);
+
+export const DeliveryStatus = z.enum(deliveryStatusEnum.enumValues);
 
 export const deliveryDriverRoleEnum = pgEnum('delivery_driver_role_enum', [
   'main',      // Driver utama
@@ -19,6 +22,8 @@ export const deliveryNoteStatusEnum = pgEnum('delivery_note_status_enum', [
   'delivered',
   'cancelled'
 ]);
+
+export const DeliveryNoteStatus = z.enum(deliveryNoteStatusEnum.enumValues);
 
 export const roleEnum = pgEnum('role_enum', ['supplier', 'customer']);
 
@@ -45,3 +50,4 @@ export enum ActivityType {
   INVITE_TEAM_MEMBER = 'INVITE_TEAM_MEMBER',
   ACCEPT_INVITATION = 'ACCEPT_INVITATION',
 }
+

@@ -338,7 +338,7 @@ async function seed() {
         carId: insertedCars[0].id,
         deliveryDate: "2024-03-05",
         deliveryStatus: deliveryStatusEnum.enumValues[0],
-        orderNumber: "ORD-0001",
+        orderNumber: "ORD-03250001",
         deliveryAddress: "Jl. Tujuan 1",
         teamId: team.id,
       },
@@ -349,7 +349,7 @@ async function seed() {
         carId: insertedCars[1].id,
         deliveryDate: "2024-03-06",
         deliveryStatus: deliveryStatusEnum.enumValues[1],
-        orderNumber: "ORD-0002",
+        orderNumber: "ORD-03250002",
         deliveryAddress: "Jl. Tujuan 2",
         teamId: team.id,
       },
@@ -412,7 +412,7 @@ async function seed() {
      const deliveryNotesData = [
       {
         teamId: team.id,
-        noteNumber: `DN-0001`,
+        noteNumber: `DN-03250001`,
         issueDate: new Date().toISOString().split('T')[0],
         status: deliveryNoteStatusEnum.enumValues[0], // 'draft'
         remarks: `Surat Jalan untuk beberapa pesanan`,

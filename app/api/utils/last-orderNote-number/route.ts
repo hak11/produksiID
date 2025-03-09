@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db/drizzle";
-import { deliveryOrders } from "@/lib/db/schema";
+import { deliveryNotes } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
 
 
@@ -8,10 +8,10 @@ export async function GET() {
   try {
     const deliveryOrdersWithDetails = await db
       .select({
-        orderNumber: deliveryOrders.orderNumber,
+        orderNumber: deliveryNotes.noteNumber,
       })
-      .from(deliveryOrders)
-      .orderBy(desc(deliveryOrders.id))
+      .from(deliveryNotes)
+      .orderBy(desc(deliveryNotes.id))
       .limit(1);
 
     return NextResponse.json(deliveryOrdersWithDetails[0]);
