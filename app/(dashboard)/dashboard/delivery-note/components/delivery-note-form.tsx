@@ -115,7 +115,6 @@ export function DeliveryNoteForm({
   }
   
   const multipleSelectDOHandler = async (doNumber: string[]) => {
-    console.log("🚀 ~ multipleSelectDOHandler ~ doNumber:", doNumber)
     if (doNumber.length > 0) {
       const response = await fetch("/api/delivery-order/details", {
         method: "POST",

@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React from "react"
 import Link from 'next/link';
 import {
   ColumnDef,
@@ -19,10 +19,14 @@ import { DeliveryNotes } from "@/lib/db/schema"
 import { Badge, BadgeProps } from "@/components/ui/badge";
 import { Trash2, Loader, Download } from 'lucide-react'
 
+type DnItemType = {
+  id: string
+  orderNumber: string
+}
+
 export type DeliveryNoteListType = DeliveryNotes & {
-  deliveryOrders: string[]
+  deliveryOrders: DnItemType[]
   totalItems: number
-  // carInfo: string
 }
 
 const badgeVariants = (status: string) => {
@@ -42,14 +46,15 @@ const badgeVariants = (status: string) => {
 
 export function DeliveryNoteList({
   deliveryOrders,
+  loadingIds = [],
   handleDownloadDO,
   onDelete,
 }: {
+  loadingIds: string[]
   deliveryOrders: DeliveryNoteListType[]
-  handleDownloadDO: (id: string, callback: () => void) => void
+  handleDownloadDO: (id: string) => void
   onDelete: (id: string) => void
 }) {
-  const [loadingIds, setLoadingIds] = useState<string[]>([])
   const columns: ColumnDef<DeliveryNoteListType>[] = [
     {
       accessorKey: "noteNumber",
@@ -70,10 +75,10 @@ export function DeliveryNoteList({
         for (let i = 0; i < row.original.deliveryOrders.length; i++) {
           return (
             <Link
-              href={`/dashboard/delivery-order/${row.original.deliveryOrders[i]}`}
+              href={`/dashboard/delivery-order/${row.original.deliveryOrders[i].id}`}
               className="underline"
             >
-              {row.original.deliveryOrders[i]}
+              {row.original.deliveryOrders[i].orderNumber}
             </Link>
           )
         }
@@ -108,13 +113,20 @@ export function DeliveryNoteList({
               variant="outline"
               disabled={isLoading}
               onClick={() => {
-                setLoadingIds((prev) => [...prev, row.original.id])
+                handleDownloadDO(row.original.id)
 
-                handleDownloadDO(row.original.id, () => {
-                  setLoadingIds((prev) =>
-                    prev.filter((id) => id !== row.original.id)
-                  )
-                })
+                // try {
+                //   , () => {
+                //     setLoadingIds((prev) =>
+                //       prev.filter((id) => id !== row.original.id)
+                //     )
+                //   })
+                // } catch (error) {
+                //   console.log("🚀 ~ error:", error)
+                //   setLoadingIds((prev) =>
+                //     prev.filter((id) => id !== row.original.id)
+                //   )
+                // }
               }}
             >
               {isLoading ? (
@@ -124,7 +136,7 @@ export function DeliveryNoteList({
                   <Download size={8} />
                 </div>
               )}
-              Cetak
+              Download
             </Button>
             <Button
               variant="destructive"

@@ -15,21 +15,31 @@ export default function DeliveryOrdersPage() {
   const [deliveryOrders, setDeliveryOrders] = useState<DeliveryNoteListType[]>(
     []
   )
+
+  const [loadingIds, setLoadingIds] = useState<string[]>([])
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [downloadId, setDownloadId] = useState<string | null>(null)
 
 
-  const handleDownloadDO = async (id: string, callback: () => void) => {
-    const detailDO = await fetch("/api/delivery-note/" + id).then((res) =>
-      res.json()
-    )
+  const handleDownloadDO = async (id: string) => {
+    setLoadingIds((prev) => [...prev, id])
+    try {
+      const detailDO = await fetch("/api/delivery-note/" + id).then((res) =>
+        res.json()
+      )
+      console.log("🚀 ~ handleDownloadDO ~ detailDO:", detailDO)
 
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    const pdfBlob = generateDeliveryOrderPDF(detailDO)
-    const blobUrl = URL.createObjectURL(pdfBlob);
-    window.open(blobUrl, '_blank');
+      if (!detailDO) {
+        throw new Error("Delivery note not found")
+      }
 
-    if (callback) {
-      callback()
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      const pdfBlob = generateDeliveryOrderPDF(detailDO)
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      window.open(blobUrl, '_blank');
+    } catch (error) {
+      console.log("🚀 ~ handleDownloadDO ~ error:", error)
+      setLoadingIds((prev) => prev.filter((i) => i !== id))
     }
   }
 
@@ -80,9 +90,23 @@ export default function DeliveryOrdersPage() {
           }}
         />
       )}
+      {downloadId !== null && (
+        <ConfirmationDialog
+          open={downloadId !== null}
+          title="Confirm Download"
+          description="This DN will change status to print after you click download, are you sure for?"
+          onConfirm={() => handleDownloadDO(downloadId)}
+          confirmLabel="Download DN"
+          onCancel={() => setDownloadId(null)}
+          onOpenChange={(open) => {
+            if (!open) setDownloadId(null)
+          }}
+        />
+      )}
       <DeliveryNoteList
+        loadingIds={loadingIds}
         deliveryOrders={deliveryOrders}
-        handleDownloadDO={handleDownloadDO}
+        handleDownloadDO={(id: string) => setDownloadId(id)}
         onDelete={(id: string) => setDeleteId(id)}
       />
     </div>

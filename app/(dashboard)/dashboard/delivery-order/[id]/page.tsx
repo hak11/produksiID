@@ -13,7 +13,6 @@ export default function CreateDeliveryOrderPage({ params }: { params: Promise<{ 
 
 
   const handleSave = async (deliveryOrder: DeliveryOrderFormValues) => {
-    console.log("🚀 ~ handleSave ~ deliveryOrder:", deliveryOrder)
     try {
       const response = await fetch("/api/delivery-order", {
         method: "PUT",

@@ -19,7 +19,6 @@ export default function CreateDeliveryNotePage({ params }: { params: Promise<{ i
 
 
   const handleSave = async (deliveryNote: DeliveryNoteFormValues) => {
-    console.log("🚀 ~ handleSave ~ deliveryNote:", deliveryNote)
     try {
       const response = await fetch("/api/delivery-note", {
         method: "PUT",

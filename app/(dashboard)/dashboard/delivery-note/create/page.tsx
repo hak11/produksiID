@@ -26,7 +26,6 @@ export default function CreateDeliveryNotePage() {
       }
 
       const data = await response.json()
-      console.log("🚀 ~ CreateDeliveryNotePage ~ data:", data)
       toast.success("Delivery note successfully created")
 
       router.push(`/dashboard/delivery-note/${data.deliveryNote.id}`)

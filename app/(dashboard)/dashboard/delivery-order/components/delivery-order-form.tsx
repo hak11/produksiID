@@ -87,15 +87,13 @@ export function DeliveryOrderForm({
     reset,
     getValues,
     handleSubmit,
-    formState: { errors },
+    // formState: { errors },
   } = form
 
   const { fields, append, remove } = useFieldArray({
     control: control,
     name: "items"
   })
-
-  console.log(errors)
 
   useEffect(() => {
     if (isEdit && deliveryOrder) {
@@ -107,7 +105,6 @@ export function DeliveryOrderForm({
         }));
 
         deliveryOrder.items = updatedItems || []
-        console.log("🚀 ~ useEffect ~ deliveryOrder:", deliveryOrder)
       }
 
       setValue("orderNumber", deliveryOrder.orderNumber || "")
@@ -196,6 +193,41 @@ export function DeliveryOrderForm({
       <form onSubmit={handleSubmit(submitForm)} className="space-y-8">
         <div className="flex gap-4">
           <div className="space-y-4 w-1/3 border-2 border-gray-200 p-4 rounded-lg">
+            {isEdit && (
+              <FormField
+                control={control}
+                name="deliveryStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status Delivery (Automate)</FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        setValue(
+                          "deliveryStatus",
+                          value as DeliveryOrder["deliveryStatus"]
+                        )
+                      }}
+                      disabled={true}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih Status Pengiriman" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="canceled">Canceled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={control}
               name="orderNumber"
@@ -203,7 +235,12 @@ export function DeliveryOrderForm({
                 <FormItem>
                   <FormLabel>DO Number</FormLabel>
                   <FormControl>
-                    <Input {...field} required />
+                    <Input
+                      placeholder="DO Number"
+                      disabled={isEdit}
+                      {...field}
+                      required
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -387,38 +424,6 @@ export function DeliveryOrderForm({
                           {car.brand} {car.model} - {car.licensePlate}
                         </SelectItem>
                       ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={control}
-              name="deliveryStatus"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status Delivery</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      setValue(
-                        "deliveryStatus",
-                        value as DeliveryOrder["deliveryStatus"]
-                      )
-                    }}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih Status Pengiriman" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="canceled">Canceled</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -671,9 +676,17 @@ export function DeliveryOrderForm({
               Cancel
             </Button>
           )}
-          <Button type="submit">
-            <SaveAll className="mr-2 h-4 w-4" /> Simpan Delivery Order
-          </Button>
+          <div className="gap-2 flex">
+            <span>
+              <b>Note:</b> Delivery Order hanya bisa di ubah saat status pending
+            </span>
+            <Button
+              disabled={getValues("deliveryStatus") != "pending"}
+              type="submit"
+            >
+              <SaveAll className="mr-2 h-4 w-4" /> Simpan Delivery Order
+            </Button>
+          </div>
         </div>
       </form>
     </Form>

@@ -5,9 +5,6 @@ import { deliveryNotes, deliveryNoteItems, deliveryOrders, DeliveryNoteStatus, D
 import { eq, desc, and, count, sql } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
 
-
-const arrayAgg = (column: any) => sql`ARRAY_AGG(DISTINCT ${column})`;
-
 export async function GET() {
   try {
     const session = await getSession();
@@ -25,7 +22,14 @@ export async function GET() {
         status: deliveryNotes.status,
         remarks: deliveryNotes.remarks,
         totalItems: count(deliveryNoteItems.id).as('totalItems'),
-        deliveryOrders: arrayAgg(deliveryOrders.orderNumber).as('deliveryOrders'),
+        deliveryOrders: sql`
+          (json_agg(
+            DISTINCT (json_build_object(
+              'id', ${deliveryOrders.id},
+              'orderNumber', ${deliveryOrders.orderNumber}
+            )::jsonb)
+          ))::json
+        `.as('deliveryOrders'),
       })
       .from(deliveryNotes)
       .leftJoin(
