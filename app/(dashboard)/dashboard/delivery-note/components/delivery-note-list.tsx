@@ -15,23 +15,23 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { DeliveryOrder } from "@/lib/db/schema"
+import { DeliveryNotes } from "@/lib/db/schema"
 import { Badge, BadgeProps } from "@/components/ui/badge";
 import { Trash2, Loader, Download } from 'lucide-react'
 
-export type DeliveryOrderListType = DeliveryOrder & {
-  supplierName: string
-  customerName: string
-  carInfo: string
+export type DeliveryNoteListType = DeliveryNotes & {
+  deliveryOrders: string[]
+  totalItems: number
+  // carInfo: string
 }
 
 const badgeVariants = (status: string) => {
   switch (status) {
-    case "pending":
-      return "warning" as BadgeProps["variant"]
-    case "in_progress":
+    case "draf":
+      return "outline" as BadgeProps["variant"]
+    case "printed":
       return "info" as BadgeProps["variant"]
-    case "completed":
+    case "delivered":
       return "success" as BadgeProps["variant"]
     case "canceled":
       return "destructive" as BadgeProps["variant"]
@@ -40,65 +40,67 @@ const badgeVariants = (status: string) => {
   }
 }
 
-export function DeliveryOrderList({
+export function DeliveryNoteList({
   deliveryOrders,
   handleDownloadDO,
   onDelete,
 }: {
-  deliveryOrders: DeliveryOrderListType[]
+  deliveryOrders: DeliveryNoteListType[]
   handleDownloadDO: (id: string, callback: () => void) => void
   onDelete: (id: string) => void
 }) {
-
-  const [loadingIds, setLoadingIds] = useState<string[]>([]);
-  const columns: ColumnDef<DeliveryOrderListType>[] = [
+  const [loadingIds, setLoadingIds] = useState<string[]>([])
+  const columns: ColumnDef<DeliveryNoteListType>[] = [
     {
-      accessorKey: "orderNumber",
-      header: "Order Number",
+      accessorKey: "noteNumber",
+      header: "DN Number",
       cell: ({ row }) => (
-        <Link href={`/dashboard/delivery-order/${row.original.id}`} className="underline">
-          {row.original.orderNumber}
+        <Link
+          href={`/dashboard/delivery-order/${row.original.id}`}
+          className="underline"
+        >
+          {row.original.noteNumber}
         </Link>
-      )
-    },
-    {
-      accessorKey: "supplierName",
-      header: "Supplier",
-    },
-    {
-      accessorKey: "customerName",
-      header: "Customer",
-    },
-    {
-      accessorKey: "carInfo",
-      header: "Car",
-    },
-    {
-      accessorKey: "orderDate",
-      header: "Tanggal Order",
-      cell: ({ row }) => (
-        <span>{new Date(row.original.orderDate).toLocaleDateString()}</span>
       ),
     },
     {
-      accessorKey: "deliveryDate",
-      header: "Tanggal Kirim",
-      cell: ({ row }) => (
-        <span>{new Date(row.original.deliveryDate).toLocaleDateString()}</span>
-      ),
+      accessorKey: "deliveryOrders",
+      header: "List DO Number",
+      cell: ({ row }) => {
+        for (let i = 0; i < row.original.deliveryOrders.length; i++) {
+          return (
+            <Link
+              href={`/dashboard/delivery-order/${row.original.deliveryOrders[i]}`}
+              className="underline"
+            >
+              {row.original.deliveryOrders[i]}
+            </Link>
+          )
+        }
+      },
     },
     {
-      accessorKey: "deliveryStatus",
+      accessorKey: "totalItems",
+      header: "Total DO Items",
+    },
+    {
+      accessorKey: "issueDate",
+      header: "Tanggal Buat",
+    },
+    {
+      accessorKey: "status",
       header: "Status",
       cell: ({ row }) => (
-        <Badge variant={(badgeVariants(row.original.deliveryStatus))}>{row.original.deliveryStatus}</Badge>
-      )
+        <Badge variant={badgeVariants(row.original.status)}>
+          {row.original.status}
+        </Badge>
+      ),
     },
     {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
-        const isLoading = loadingIds.includes(row.original.id);
+        const isLoading = loadingIds.includes(row.original.id)
 
         return (
           <div className="flex gap-2">
@@ -122,17 +124,18 @@ export function DeliveryOrderList({
                   <Download size={8} />
                 </div>
               )}
-              Surat Jalan
+              Cetak
             </Button>
             <Button
               variant="destructive"
+              disabled={row.original.status !== "draft"}
               onClick={() => onDelete(row.original.id)}
             >
               <Trash2 />
             </Button>
           </div>
         )
-      }
+      },
     },
   ]
 

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogHeader } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ConfirmationDialog } from "@/components/ConfirmationDialog"
 import { Driver } from "@/lib/db/schema";
 import { DriverForm } from "./components/driver-form";
 import { DriverList } from "./components/driver-list";
@@ -80,7 +80,7 @@ export default function DriversPage() {
             <Button onClick={() => setSelectedDriver(null)}>Add Driver</Button>
           </DialogTrigger>
           <DialogContent>
-             <DialogHeader>
+            <DialogHeader>
               <DialogTitle>{isEditing ? "Edit" : "Add"} Driver</DialogTitle>
               <DialogDescription>
                 {isEditing ? "Edit the details of the selected driver." : ""}
@@ -95,38 +95,27 @@ export default function DriversPage() {
         </Dialog>
       </header>
       {deleteId !== null && (
-        <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this driver? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteId(null)}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  handleDelete(deleteId);
-                }}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmationDialog
+          open={deleteId !== null}
+          title="Confirm Deletion"
+          description="Are you sure you want to delete this driver?"
+          onConfirm={() => handleDelete(deleteId)}
+          confirmLabel="Delete"
+          onCancel={() => setDeleteId(null)}
+          onOpenChange={(open) => {
+            if (!open) setDeleteId(null)
+          }}
+        />
       )}
       <DriverList
         drivers={drivers}
         onEdit={(driver) => {
-          setIsEditing(true);
-          setSelectedDriver(driver);
-          setOpen(true);
+          setIsEditing(true)
+          setSelectedDriver(driver)
+          setOpen(true)
         }}
         onDelete={(id: string) => setDeleteId(id)}
       />
     </div>
-  );
+  )
 }

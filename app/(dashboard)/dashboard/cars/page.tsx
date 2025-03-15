@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogHeader } from "@/components/ui/dialog";
 import { Car as CarType, Driver as DriverType } from "@/lib/db/schema";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ConfirmationDialog } from "@/components/ConfirmationDialog"
 import { CarForm } from "./components/car-form";
 import { CarList } from "./components/car-list";
 
@@ -130,32 +130,17 @@ export default function CarsPage() {
         </Dialog>
       </header>
       {deleteId !== null && (
-        <AlertDialog
+        <ConfirmationDialog
           open={deleteId !== null}
-          onOpenChange={() => setDeleteId(null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this car? This action cannot be
-                undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteId(null)}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  handleDelete(deleteId)
-                }}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          title="Confirm Deletion"
+          description="Are you sure you want to delete this car? This action cannot be undone."
+          onConfirm={() => handleDelete(deleteId)}
+          onCancel={() => setDeleteId(null)}
+          confirmLabel="Delete"
+          onOpenChange={(open) => {
+            if (!open) setDeleteId(null)
+          }}
+        />
       )}
       <CarList
         cars={cars}

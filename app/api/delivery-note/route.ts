@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from 'zod';
 import { db } from "@/lib/db/drizzle";
 import { deliveryNotes, deliveryNoteItems, deliveryOrders, DeliveryNoteStatus, DeliveryNoteItems } from "@/lib/db/schema";
-import { eq, sql, desc, and } from "drizzle-orm";
+import { eq, desc, and, count, sql } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
+
+
+const arrayAgg = (column: any) => sql`ARRAY_AGG(DISTINCT ${column})`;
 
 export async function GET() {
   try {
@@ -21,11 +24,20 @@ export async function GET() {
         issueDate: deliveryNotes.issueDate,
         status: deliveryNotes.status,
         remarks: deliveryNotes.remarks,
-        deliveryOrders: sql<string>`ARRAY(SELECT order_number FROM ${deliveryOrders} WHERE id IN (SELECT delivery_order_id FROM ${deliveryNoteItems} WHERE delivery_note_id = ${deliveryNotes.id}))`,
-        totalItems: sql<number>`(SELECT COUNT(*) FROM ${deliveryNoteItems} WHERE delivery_note_id = ${deliveryNotes.id})`
+        totalItems: count(deliveryNoteItems.id).as('totalItems'),
+        deliveryOrders: arrayAgg(deliveryOrders.orderNumber).as('deliveryOrders'),
       })
       .from(deliveryNotes)
+      .leftJoin(
+        deliveryNoteItems,
+        eq(deliveryNoteItems.deliveryNoteId, deliveryNotes.id)
+      )
+      .leftJoin(
+        deliveryOrders,
+        eq(deliveryOrders.id, deliveryNoteItems.deliveryOrderId)
+      )
       .where(teamId ? eq(deliveryNotes.teamId, teamId) : undefined)
+      .groupBy(deliveryNotes.id)
       .orderBy(desc(deliveryNotes.id));
 
     return NextResponse.json(deliveryNotesWithItems);
@@ -35,18 +47,18 @@ export async function GET() {
   }
 }
 
+const postItemsSchema = z.object({
+    deliveryOrderId: z.string(),
+    deliveryOrderItemId: z.string(),
+    actualQty: z.string().optional(),
+  })
+
 const postRequestSchema = z.object({
   noteNumber: z.string(),
   issueDate: z.string(),
   remarks: z.string().optional(),
-  items: z.array(
-    z.object({
-      deliveryOrderId: z.string(),
-      deliveryOrderItemId: z.string(),
-      actualQty: z.string().optional(),
-    })
-  ),
-  status: DeliveryNoteStatus,
+  items: z.array(postItemsSchema),
+  status: DeliveryNoteStatus.optional(),
 });
 
 // **POST: Buat Surat Jalan baru**
@@ -65,14 +77,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid query parameters" }, { status: 400 });
     }
 
-    const { noteNumber, issueDate, remarks, status, items } = bodyRequest;
+    const { noteNumber, issueDate, remarks, items } = bodyRequest;
+
+    const uniqueDeliveryOrderIds = [...new Set(items.map((dataItem:z.infer<typeof postItemsSchema>) => dataItem.deliveryOrderId))];
 
     const newDeliveryNote = await db.transaction(async (tx) => {
       const [insertedNote] = await tx.insert(deliveryNotes).values({
         teamId,
         noteNumber,
         issueDate: new Date(issueDate).toISOString().split('T')[0],
-        status: status,
+        status: "draft",
         remarks,
       }).returning();
 
@@ -84,6 +98,16 @@ export async function POST(request: Request) {
           actualQty: orderItem.actualQty,
         }))
       );
+
+      await tx
+        .update(deliveryOrders)
+        .set({ deliveryStatus: "in_progress" })
+        .where(
+          sql`${deliveryOrders.id} IN (${sql.join(
+            uniqueDeliveryOrderIds.map((id) => sql`${id}`),
+            ', '
+          )})`
+        );
 
       return insertedNote;
     });

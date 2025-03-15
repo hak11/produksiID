@@ -108,9 +108,7 @@ export function DeliveryNoteForm({
 
   const submitForm = (formData: any) => {
     try {
-      onSave(formData, () => {
-        window.location.reload()
-      })
+      onSave(formData)
     } catch (error) {
       console.log("🚀 ~ submitForm ~ error:", error)
     }

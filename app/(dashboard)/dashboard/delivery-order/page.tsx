@@ -3,46 +3,18 @@
 import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import toast from "react-hot-toast"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { ConfirmationDialog } from "@/components/ConfirmationDialog"
 import {
   DeliveryOrderList,
   DeliveryOrderListType,
 } from "./components/delivery-order-list"
 import Link from "next/link"
-import { generateDeliveryOrderPDF } from "@/lib/generate/letter-do"
-
 
 export default function DeliveryOrdersPage() {
   const [deliveryOrders, setDeliveryOrders] = useState<DeliveryOrderListType[]>(
     []
   )
   const [deleteId, setDeleteId] = useState<string | null>(null)
-
-
-  const handleDownloadDO = async (id: string, callback: () => void) => {
-    const detailDO = await fetch("/api/delivery-order/" + id).then((res) =>
-      res.json()
-    )
-
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    const pdfBlob = generateDeliveryOrderPDF(detailDO)
-    const blobUrl = URL.createObjectURL(pdfBlob);
-    window.open(blobUrl, '_blank');
-
-
-    if (callback) {
-      callback()
-    }
-  }
 
   const handleDelete = async (id: string) => {
     try {
@@ -79,36 +51,20 @@ export default function DeliveryOrdersPage() {
         </Link>
       </header>
       {deleteId !== null && (
-        <AlertDialog
+        <ConfirmationDialog
           open={deleteId !== null}
-          onOpenChange={() => setDeleteId(null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this delivery order? This action
-                cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteId(null)}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  handleDelete(deleteId)
-                }}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          title="Confirm Deletion"
+          description="Are you sure you want to delete this delivery order?"
+          onConfirm={() => handleDelete(deleteId)}
+          confirmLabel="Delete"
+          onCancel={() => setDeleteId(null)}
+          onOpenChange={(open) => {
+            if (!open) setDeleteId(null)
+          }}
+        />
       )}
       <DeliveryOrderList
         deliveryOrders={deliveryOrders}
-        handleDownloadDO={handleDownloadDO}
         onDelete={(id: string) => setDeleteId(id)}
       />
     </div>

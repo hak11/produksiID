@@ -11,16 +11,7 @@ import {
   DialogDescription,
   DialogHeader,
 } from "@/components/ui/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { ConfirmationDialog } from "@/components/ConfirmationDialog"
 import { Item } from "@/lib/db/schema"
 import { ItemForm } from "./components/item-form"
 import { ItemList } from "./components/item-list"
@@ -121,32 +112,16 @@ export default function ItemsPage() {
         </Dialog>
       </header>
       {deleteId !== null && (
-        <AlertDialog
+        <ConfirmationDialog
           open={deleteId !== null}
-          onOpenChange={() => setDeleteId(null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this item? This action cannot
-                be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteId(null)}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  handleDelete(deleteId)
-                }}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          title="Confirm Deletion"
+          description="Are you sure you want to delete this item? This action cannot be undone."
+          onConfirm={() => handleDelete(deleteId)}
+          onCancel={() => setDeleteId(null)}
+          onOpenChange={(open) => {
+            if (!open) setDeleteId(null)
+          }}
+        />
       )}
       <ItemList
         items={items}

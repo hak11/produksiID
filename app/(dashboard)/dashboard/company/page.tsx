@@ -12,16 +12,7 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog"
 import { Company as CompanyType } from "@/lib/db/schema"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { ConfirmationDialog } from "@/components/ConfirmationDialog"
 import { CompanyForm } from "./components/company-form"
 import { CompanyList, CompanyListType } from "./components/company-list"
 
@@ -141,32 +132,17 @@ export default function CompanysPage() {
         </Dialog>
       </header>
       {deleteId !== null && (
-        <AlertDialog
+        <ConfirmationDialog
           open={deleteId !== null}
-          onOpenChange={() => setDeleteId(null)}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this company? This action cannot
-                be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteId(null)}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  handleDelete(deleteId)
-                }}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          title="Confirm Deletion"
+          description="Are you sure you want to delete this company?"
+          onConfirm={() => handleDelete(deleteId)}
+          confirmLabel="Delete"
+          onCancel={() => setDeleteId(null)}
+          onOpenChange={(open) => {
+            if (!open) setDeleteId(null)
+          }}
+        />
       )}
       <CompanyList
         companies={companies}

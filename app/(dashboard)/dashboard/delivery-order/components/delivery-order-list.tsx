@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React from "react"
 import Link from 'next/link';
 import {
   ColumnDef,
@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { DeliveryOrder } from "@/lib/db/schema"
 import { Badge, BadgeProps } from "@/components/ui/badge";
-import { Trash2, Loader, Download } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 
 export type DeliveryOrderListType = DeliveryOrder & {
   supplierName: string
@@ -42,15 +42,12 @@ const badgeVariants = (status: string) => {
 
 export function DeliveryOrderList({
   deliveryOrders,
-  handleDownloadDO,
   onDelete,
 }: {
   deliveryOrders: DeliveryOrderListType[]
-  handleDownloadDO: (id: string, callback: () => void) => void
   onDelete: (id: string) => void
 }) {
 
-  const [loadingIds, setLoadingIds] = useState<string[]>([]);
   const columns: ColumnDef<DeliveryOrderListType>[] = [
     {
       accessorKey: "orderNumber",
@@ -98,32 +95,8 @@ export function DeliveryOrderList({
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
-        const isLoading = loadingIds.includes(row.original.id);
-
         return (
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              disabled={isLoading}
-              onClick={() => {
-                setLoadingIds((prev) => [...prev, row.original.id])
-
-                handleDownloadDO(row.original.id, () => {
-                  setLoadingIds((prev) =>
-                    prev.filter((id) => id !== row.original.id)
-                  )
-                })
-              }}
-            >
-              {isLoading ? (
-                <Loader className="animate-spin" size={16} />
-              ) : (
-                <div className="flex">
-                  <Download size={8} />
-                </div>
-              )}
-              Surat Jalan
-            </Button>
             <Button
               variant="destructive"
               onClick={() => onDelete(row.original.id)}

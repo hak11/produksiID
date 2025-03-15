@@ -6,7 +6,6 @@ import { inArray, eq } from "drizzle-orm";
 export async function POST(request: NextRequest) {
   try {
     const { doNumber } = await request.json();
-    console.log("🚀 ~ POST ~ doNumber:", doNumber)
 
     if (!Array.isArray(doNumber) || doNumber.length === 0) {
       return NextResponse.json({ error: "Valid array of Delivery Order IDs is required" }, { status: 400 });

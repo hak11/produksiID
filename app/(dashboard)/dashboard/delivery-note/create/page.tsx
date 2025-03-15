@@ -4,8 +4,10 @@ import React from "react"
 import toast from "react-hot-toast"
 import { DeliveryNoteForm } from "../components/delivery-note-form"
 import { DeliveryNotes } from "@/lib/db/schema"
+import { useRouter } from "next/navigation"
 
 export default function CreateDeliveryNotePage() {
+  const router = useRouter()
   const handleSave = async (
     deliveryNote: Partial<DeliveryNotes>,
     callback?: () => void
@@ -23,7 +25,11 @@ export default function CreateDeliveryNotePage() {
         )
       }
 
+      const data = await response.json()
+      console.log("🚀 ~ CreateDeliveryNotePage ~ data:", data)
       toast.success("Delivery note successfully created")
+
+      router.push(`/dashboard/delivery-note/${data.deliveryNote.id}`)
       if (callback) {
         callback()
       }
