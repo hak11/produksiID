@@ -61,7 +61,7 @@ export function DeliveryNoteList({
       header: "DN Number",
       cell: ({ row }) => (
         <Link
-          href={`/dashboard/delivery-order/${row.original.id}`}
+          href={`/dashboard/delivery-note/${row.original.id}`}
           className="underline"
         >
           {row.original.noteNumber}
@@ -114,19 +114,6 @@ export function DeliveryNoteList({
               disabled={isLoading}
               onClick={() => {
                 handleDownloadDO(row.original.id)
-
-                // try {
-                //   , () => {
-                //     setLoadingIds((prev) =>
-                //       prev.filter((id) => id !== row.original.id)
-                //     )
-                //   })
-                // } catch (error) {
-                //   console.log("🚀 ~ error:", error)
-                //   setLoadingIds((prev) =>
-                //     prev.filter((id) => id !== row.original.id)
-                //   )
-                // }
               }}
             >
               {isLoading ? (

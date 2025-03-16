@@ -1,5 +1,5 @@
-CREATE TYPE "public"."delivery_driver_role_enum" AS ENUM('main', 'assistant', 'backup');--> statement-breakpoint
-CREATE TYPE "public"."delivery_note_status_enum" AS ENUM('draft', 'printed', 'delivered', 'cancelled');--> statement-breakpoint
+CREATE TYPE "public"."driver_role_enum" AS ENUM('main', 'assistant', 'backup');--> statement-breakpoint
+CREATE TYPE "public"."dn_status_enum" AS ENUM('draft', 'printed', 'delivered', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."delivery_status_enum" AS ENUM('pending', 'in_progress', 'completed', 'canceled');--> statement-breakpoint
 CREATE TYPE "public"."invoice_status_enum" AS ENUM('draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."role_enum" AS ENUM('supplier', 'customer');--> statement-breakpoint
@@ -30,7 +30,7 @@ CREATE TABLE "invoices" (
 	CONSTRAINT "invoices_invoice_number_team_id_unique" UNIQUE("invoice_number","team_id")
 );
 --> statement-breakpoint
-CREATE TABLE "delivery_orders" (
+CREATE TABLE "do" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"order_date" date NOT NULL,
 	"supplier_id" uuid NOT NULL,
@@ -44,10 +44,10 @@ CREATE TABLE "delivery_orders" (
 	"team_id" uuid,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "delivery_orders_order_number_team_id_unique" UNIQUE("order_number","team_id")
+	CONSTRAINT "do_order_number_team_id_unique" UNIQUE("order_number","team_id")
 );
 --> statement-breakpoint
-CREATE TABLE "delivery_order_items" (
+CREATE TABLE "do_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"do_id" uuid NOT NULL,
 	"name" varchar DEFAULT 'space',
@@ -152,7 +152,7 @@ CREATE TABLE "drivers" (
 	CONSTRAINT "drivers_email_team_id_unique" UNIQUE("email","team_id")
 );
 --> statement-breakpoint
-CREATE TABLE "driverCarAssignments" (
+CREATE TABLE "assignments" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"car_id" uuid NOT NULL,
 	"driver_id" uuid NOT NULL,
@@ -181,68 +181,70 @@ CREATE TABLE "invitations" (
 	"status" varchar(20) DEFAULT 'pending' NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "invoice_delivery_notes" (
+CREATE TABLE "invoice_dn" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"invoice_id" uuid NOT NULL,
-	"delivery_note_id" uuid NOT NULL,
+	"dn_id" uuid NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "delivery_order_drivers" (
+CREATE TABLE "do_drivers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"delivery_order_id" uuid NOT NULL,
+	"do_id" uuid NOT NULL,
 	"driver_id" uuid NOT NULL,
-	"role" "delivery_driver_role_enum" NOT NULL,
+	"role" "driver_role_enum" NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "delivery_note_items" (
+CREATE TABLE "dn_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"delivery_note_id" uuid NOT NULL,
-	"delivery_order_id" uuid NOT NULL,
+	"dn_id" uuid NOT NULL,
+	"do_id" uuid NOT NULL,
+	"do_item_id" uuid NOT NULL,
 	"actual_qty" numeric,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "delivery_notes" (
+CREATE TABLE "dn" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"team_id" uuid NOT NULL,
 	"note_number" varchar(50) NOT NULL,
 	"issue_date" date NOT NULL,
-	"status" "delivery_note_status_enum" DEFAULT 'draft' NOT NULL,
+	"status" "dn_status_enum" DEFAULT 'draft' NOT NULL,
 	"remarks" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "delivery_notes_note_number_team_id_unique" UNIQUE("note_number","team_id")
+	CONSTRAINT "dn_note_number_team_id_unique" UNIQUE("note_number","team_id")
 );
 --> statement-breakpoint
 ALTER TABLE "items" ADD CONSTRAINT "items_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invoices" ADD CONSTRAINT "invoices_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "delivery_orders" ADD CONSTRAINT "delivery_orders_supplier_id_companies_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."companies"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "delivery_orders" ADD CONSTRAINT "delivery_orders_customer_id_companies_id_fk" FOREIGN KEY ("customer_id") REFERENCES "public"."companies"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "delivery_orders" ADD CONSTRAINT "delivery_orders_car_id_cars_id_fk" FOREIGN KEY ("car_id") REFERENCES "public"."cars"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "delivery_orders" ADD CONSTRAINT "delivery_orders_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "delivery_order_items" ADD CONSTRAINT "delivery_order_items_do_id_delivery_orders_id_fk" FOREIGN KEY ("do_id") REFERENCES "public"."delivery_orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "delivery_order_items" ADD CONSTRAINT "delivery_order_items_item_id_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "do" ADD CONSTRAINT "do_supplier_id_companies_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."companies"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "do" ADD CONSTRAINT "do_customer_id_companies_id_fk" FOREIGN KEY ("customer_id") REFERENCES "public"."companies"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "do" ADD CONSTRAINT "do_car_id_cars_id_fk" FOREIGN KEY ("car_id") REFERENCES "public"."cars"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "do" ADD CONSTRAINT "do_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "do_items" ADD CONSTRAINT "do_items_do_id_do_id_fk" FOREIGN KEY ("do_id") REFERENCES "public"."do"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "do_items" ADD CONSTRAINT "do_items_item_id_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "companies" ADD CONSTRAINT "companies_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "company_roles" ADD CONSTRAINT "company_roles_company_id_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "team_members" ADD CONSTRAINT "team_members_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "team_members" ADD CONSTRAINT "team_members_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "cars" ADD CONSTRAINT "cars_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "drivers" ADD CONSTRAINT "drivers_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "driverCarAssignments" ADD CONSTRAINT "driverCarAssignments_car_id_cars_id_fk" FOREIGN KEY ("car_id") REFERENCES "public"."cars"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "driverCarAssignments" ADD CONSTRAINT "driverCarAssignments_driver_id_drivers_id_fk" FOREIGN KEY ("driver_id") REFERENCES "public"."drivers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "driverCarAssignments" ADD CONSTRAINT "driverCarAssignments_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "assignments" ADD CONSTRAINT "assignments_car_id_cars_id_fk" FOREIGN KEY ("car_id") REFERENCES "public"."cars"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "assignments" ADD CONSTRAINT "assignments_driver_id_drivers_id_fk" FOREIGN KEY ("driver_id") REFERENCES "public"."drivers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "assignments" ADD CONSTRAINT "assignments_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitations" ADD CONSTRAINT "invitations_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitations" ADD CONSTRAINT "invitations_invited_by_users_id_fk" FOREIGN KEY ("invited_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "invoice_delivery_notes" ADD CONSTRAINT "invoice_delivery_notes_invoice_id_invoices_id_fk" FOREIGN KEY ("invoice_id") REFERENCES "public"."invoices"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "invoice_delivery_notes" ADD CONSTRAINT "invoice_delivery_notes_delivery_note_id_delivery_note_items_id_fk" FOREIGN KEY ("delivery_note_id") REFERENCES "public"."delivery_note_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "delivery_order_drivers" ADD CONSTRAINT "delivery_order_drivers_delivery_order_id_delivery_orders_id_fk" FOREIGN KEY ("delivery_order_id") REFERENCES "public"."delivery_orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "delivery_order_drivers" ADD CONSTRAINT "delivery_order_drivers_driver_id_drivers_id_fk" FOREIGN KEY ("driver_id") REFERENCES "public"."drivers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "delivery_note_items" ADD CONSTRAINT "delivery_note_items_delivery_note_id_delivery_notes_id_fk" FOREIGN KEY ("delivery_note_id") REFERENCES "public"."delivery_notes"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "delivery_note_items" ADD CONSTRAINT "delivery_note_items_delivery_order_id_delivery_orders_id_fk" FOREIGN KEY ("delivery_order_id") REFERENCES "public"."delivery_orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "delivery_notes" ADD CONSTRAINT "delivery_notes_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "invoice_dn" ADD CONSTRAINT "invoice_dn_invoice_id_invoices_id_fk" FOREIGN KEY ("invoice_id") REFERENCES "public"."invoices"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "invoice_dn" ADD CONSTRAINT "invoice_dn_dn_id_dn_items_id_fk" FOREIGN KEY ("dn_id") REFERENCES "public"."dn_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "do_drivers" ADD CONSTRAINT "do_drivers_do_id_do_id_fk" FOREIGN KEY ("do_id") REFERENCES "public"."do"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "do_drivers" ADD CONSTRAINT "do_drivers_driver_id_drivers_id_fk" FOREIGN KEY ("driver_id") REFERENCES "public"."drivers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "dn_items" ADD CONSTRAINT "dn_items_dn_id_dn_id_fk" FOREIGN KEY ("dn_id") REFERENCES "public"."dn"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "dn_items" ADD CONSTRAINT "dn_items_do_id_do_id_fk" FOREIGN KEY ("do_id") REFERENCES "public"."do"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "dn_items" ADD CONSTRAINT "dn_items_do_item_id_do_items_id_fk" FOREIGN KEY ("do_item_id") REFERENCES "public"."do_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "dn" ADD CONSTRAINT "dn_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;

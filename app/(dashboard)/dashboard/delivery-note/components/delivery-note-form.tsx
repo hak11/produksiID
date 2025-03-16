@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import {
   DeliveryNotes,
-  DeliveryNoteItems,
 } from "@/lib/db/schema"
 import {
   deliveryNoteSchema,
@@ -51,7 +50,7 @@ import {
 } from "@/components/ui/table"
 
 interface DeliveryNoteFormProps {
-  deliveryNote?: Partial<DeliveryNotes & { items: DeliveryNoteItems[] }>
+  deliveryNote?: Partial<DeliveryNotes & { dnItems: DeliveryNoteItemFormValues[] }>
   isEdit?: boolean
   onSave: (deliveryNote: DeliveryNoteFormValues, callback?: () => void) => void
   onClose?: () => void
@@ -65,6 +64,7 @@ export function DeliveryNoteForm({
 }: DeliveryNoteFormProps) {
   const { deliveryOrders, isLoading, error } = useDeliveryOrder("pending")
   const [selectedDeliveryOrders, setSelectedDeliveryOrders] = useState<string[]>([])
+  const [optionDO, setOptionDO] = useState<{ label: string; value: string }[]>([])
   const [deliveryNoteItems, setDeliveryNoteItems] = useState<DeliveryNoteItemFormValues[]>([])
   
   const form = useForm<DeliveryNoteFormValues>({
@@ -72,7 +72,7 @@ export function DeliveryNoteForm({
     defaultValues: {
       noteNumber: "",
       issueDate: format(new Date(), "yyyy-MM-dd"),
-      status: "printed",
+      status: "draft",
       remarks: "",
       items: [{ deliveryOrderId: undefined, actualQty: "0" }],
     },
@@ -87,24 +87,92 @@ export function DeliveryNoteForm({
     // formState: { errors },
   } = form
 
+  const generateOrderNoteNumber = useCallback(async () => {
+    const response = await fetch("/api/utils/last-invoice-number")
+    const { invoiceNumber } = await response.json()
+    const date = new Date()
+    const month = (date.getMonth() + 1).toString().padStart(2, "0")
+    const year = date.getFullYear().toString().slice(-2)
+    const newNumber = parseInt(invoiceNumber?.slice(5)) + 1 || 1
+    const formattedInvoiceNumber = `DN-${month}${year}${newNumber
+      .toString()
+      .padStart(4, "0")}`
+    form.setValue("noteNumber", formattedInvoiceNumber)
+  }, [form])
+
   useEffect(() => {
-    if (isEdit && deliveryNote) {
-      setValue("noteNumber", deliveryNote.noteNumber || "")
-      setValue("issueDate", deliveryNote.issueDate || "")
-      setValue("status", deliveryNote.status || "printed")
-      setValue("remarks", deliveryNote.remarks || "")
-      // setValue("items", deliveryNote.items || [])
-    } else {
+    if (!deliveryOrders) {
+      return
+    }
+
+    const optionDO = deliveryOrders.map((doItem) => ({
+      label: `(${format(new Date(doItem.deliveryDate), "dd MMM yy")}) - ${doItem.orderNumber} - From:${
+                      doItem.customerName } - To:${doItem.supplierName}`,
+      value: doItem.id,
+    }))
+
+    if (!isEdit) {
       generateOrderNoteNumber()
       reset({
         noteNumber: "",
         issueDate: format(new Date(), "yyyy-MM-dd"),
-        status: "printed",
+        status: "draft",
         remarks: "",
         items: [{ deliveryOrderId: undefined, actualQty: "0" }],
       })
+
+      setOptionDO(optionDO)
+
+      return
     }
-  }, [isEdit, deliveryNote, reset, setValue])
+    
+    if (isEdit && deliveryNote) {
+      setValue("noteNumber", deliveryNote.noteNumber || "")
+      setValue("issueDate", deliveryNote.issueDate || "")
+      setValue("status", deliveryNote.status || "draft")
+      setValue("remarks", deliveryNote.remarks || "")
+
+      const dataItemMap: DeliveryNoteItemFormValues[] = deliveryNote.dnItems?.map((item) => ({
+          name: item.name,
+          customerName: item.customerName,
+          supplierName: item.supplierName,
+          loadQty: item.loadQty,
+          deliveryOrderId: item.deliveryOrderId,
+          deliveryDate: item.deliveryDate,
+          deliveryOrderItemId: item.deliveryOrderItemId,
+          doNumber: item.doNumber,
+          actualQty: item.actualQty,
+        })) || []
+      
+      setValue("items", dataItemMap)
+      setDeliveryNoteItems(dataItemMap)
+      
+      const aditionalSelectOption = dataItemMap
+        .map((item) => ({
+          label: `(${format(new Date(item.deliveryDate), "dd MMM yy")}) - ${item.doNumber} - From:${item.customerName} - To:${item.supplierName}`,
+          value: item.deliveryOrderId,
+        }))
+        .filter(
+          (option, index, self) =>
+            index === self.findIndex((o) => o.value === option.value)
+        );
+      
+      const unionOptions = [
+          ...new Map(
+            [...aditionalSelectOption, ...optionDO].map((option) => [
+              option.value,
+              option,
+            ])
+          ).values(),
+        ];
+      
+      setOptionDO(unionOptions)
+      
+      const doNumbers: string[] = [ ...new Set(dataItemMap.map(item => item.deliveryOrderId))]
+      setSelectedDeliveryOrders(doNumbers)
+    }
+
+  }, [isEdit, deliveryOrders, deliveryNote, reset, generateOrderNoteNumber, setValue])
 
   const submitForm = (formData: any) => {
     try {
@@ -146,19 +214,6 @@ export function DeliveryNoteForm({
       setDeliveryNoteItems([])
       setSelectedDeliveryOrders([])
     }
-  }
-
-  const generateOrderNoteNumber = async () => {
-    const response = await fetch("/api/utils/last-invoice-number")
-    const { invoiceNumber } = await response.json()
-    const date = new Date()
-    const month = (date.getMonth() + 1).toString().padStart(2, "0")
-    const year = date.getFullYear().toString().slice(-2)
-    const newNumber = parseInt(invoiceNumber?.slice(5)) + 1 || 1
-    const formattedInvoiceNumber = `DN-${month}${year}${newNumber
-      .toString()
-      .padStart(4, "0")}`
-    form.setValue("noteNumber", formattedInvoiceNumber)
   }
 
   if (isLoading)
@@ -259,21 +314,15 @@ export function DeliveryNoteForm({
                 <FormItem>
                   <FormLabel>Delivery Orders (Status Pending)</FormLabel>
                   <MultiSelect
-                    options={deliveryOrders.map((deliveryOrder) => ({
-                      value: deliveryOrder.id,
-                      label: `(${format(
-                        new Date(deliveryOrder.deliveryDate),
-                        "dd MMM yy"
-                      )}) - ${deliveryOrder.orderNumber} - From:${
-                        deliveryOrder.customerName
-                      } - To:${deliveryOrder.supplierName}`,
-                    }))}
+                    options={optionDO}
+                    value={selectedDeliveryOrders}
                     onValueChange={multipleSelectDOHandler}
-                    defaultValue={selectedDeliveryOrders}
                     placeholder="Select Delivery Orders"
                     animation={500}
+                    disabled={isEdit}
                     variant="inverted"
                   />
+                  
                   <FormMessage />
                 </FormItem>
               )}
@@ -303,7 +352,7 @@ export function DeliveryNoteForm({
                   <TableCell>{deliveryNoteItem.customerName}</TableCell>
                   <TableCell>{deliveryNoteItem.loadQty}</TableCell>
                   <TableCell>{deliveryNoteItem.doNumber}</TableCell>
-                  <TableCell>_</TableCell>
+                  <TableCell>{isEdit ? deliveryNoteItem.actualQty : "-"}</TableCell>
                 </TableRow>
               )
             })}
@@ -329,7 +378,7 @@ export function DeliveryNoteForm({
             <SaveAll className="mr-2 h-4 w-4" /> Save Delivery Note
           </Button>
           <Button type="button" disabled>
-            <Download className="mr-2 h-4 w-4" /> Download DN
+            <Download className="mr-2 h-4 w-4" /> Download
           </Button>
         </div>
       </form>

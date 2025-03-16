@@ -1,5 +1,5 @@
 {
-  "id": "ae875efe-2124-470d-91dd-446f1d1741cf",
+  "id": "8f14a6e2-7d77-4ca0-86ba-7f173d8609f4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -192,8 +192,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.delivery_orders": {
-      "name": "delivery_orders",
+    "public.do": {
+      "name": "do",
       "schema": "",
       "columns": {
         "id": {
@@ -282,9 +282,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "delivery_orders_supplier_id_companies_id_fk": {
-          "name": "delivery_orders_supplier_id_companies_id_fk",
-          "tableFrom": "delivery_orders",
+        "do_supplier_id_companies_id_fk": {
+          "name": "do_supplier_id_companies_id_fk",
+          "tableFrom": "do",
           "tableTo": "companies",
           "columnsFrom": [
             "supplier_id"
@@ -295,9 +295,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "delivery_orders_customer_id_companies_id_fk": {
-          "name": "delivery_orders_customer_id_companies_id_fk",
-          "tableFrom": "delivery_orders",
+        "do_customer_id_companies_id_fk": {
+          "name": "do_customer_id_companies_id_fk",
+          "tableFrom": "do",
           "tableTo": "companies",
           "columnsFrom": [
             "customer_id"
@@ -308,9 +308,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "delivery_orders_car_id_cars_id_fk": {
-          "name": "delivery_orders_car_id_cars_id_fk",
-          "tableFrom": "delivery_orders",
+        "do_car_id_cars_id_fk": {
+          "name": "do_car_id_cars_id_fk",
+          "tableFrom": "do",
           "tableTo": "cars",
           "columnsFrom": [
             "car_id"
@@ -321,9 +321,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "delivery_orders_team_id_teams_id_fk": {
-          "name": "delivery_orders_team_id_teams_id_fk",
-          "tableFrom": "delivery_orders",
+        "do_team_id_teams_id_fk": {
+          "name": "do_team_id_teams_id_fk",
+          "tableFrom": "do",
           "tableTo": "teams",
           "columnsFrom": [
             "team_id"
@@ -337,8 +337,8 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "delivery_orders_order_number_team_id_unique": {
-          "name": "delivery_orders_order_number_team_id_unique",
+        "do_order_number_team_id_unique": {
+          "name": "do_order_number_team_id_unique",
           "nullsNotDistinct": false,
           "columns": [
             "order_number",
@@ -350,8 +350,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.delivery_order_items": {
-      "name": "delivery_order_items",
+    "public.do_items": {
+      "name": "do_items",
       "schema": "",
       "columns": {
         "id": {
@@ -415,10 +415,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "delivery_order_items_do_id_delivery_orders_id_fk": {
-          "name": "delivery_order_items_do_id_delivery_orders_id_fk",
-          "tableFrom": "delivery_order_items",
-          "tableTo": "delivery_orders",
+        "do_items_do_id_do_id_fk": {
+          "name": "do_items_do_id_do_id_fk",
+          "tableFrom": "do_items",
+          "tableTo": "do",
           "columnsFrom": [
             "do_id"
           ],
@@ -428,9 +428,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "delivery_order_items_item_id_items_id_fk": {
-          "name": "delivery_order_items_item_id_items_id_fk",
-          "tableFrom": "delivery_order_items",
+        "do_items_item_id_items_id_fk": {
+          "name": "do_items_item_id_items_id_fk",
+          "tableFrom": "do_items",
           "tableTo": "items",
           "columnsFrom": [
             "item_id"
@@ -1100,8 +1100,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.driverCarAssignments": {
-      "name": "driverCarAssignments",
+    "public.assignments": {
+      "name": "assignments",
       "schema": "",
       "columns": {
         "id": {
@@ -1153,9 +1153,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "driverCarAssignments_car_id_cars_id_fk": {
-          "name": "driverCarAssignments_car_id_cars_id_fk",
-          "tableFrom": "driverCarAssignments",
+        "assignments_car_id_cars_id_fk": {
+          "name": "assignments_car_id_cars_id_fk",
+          "tableFrom": "assignments",
           "tableTo": "cars",
           "columnsFrom": [
             "car_id"
@@ -1166,9 +1166,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "driverCarAssignments_driver_id_drivers_id_fk": {
-          "name": "driverCarAssignments_driver_id_drivers_id_fk",
-          "tableFrom": "driverCarAssignments",
+        "assignments_driver_id_drivers_id_fk": {
+          "name": "assignments_driver_id_drivers_id_fk",
+          "tableFrom": "assignments",
           "tableTo": "drivers",
           "columnsFrom": [
             "driver_id"
@@ -1179,9 +1179,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "driverCarAssignments_team_id_teams_id_fk": {
-          "name": "driverCarAssignments_team_id_teams_id_fk",
-          "tableFrom": "driverCarAssignments",
+        "assignments_team_id_teams_id_fk": {
+          "name": "assignments_team_id_teams_id_fk",
+          "tableFrom": "assignments",
           "tableTo": "teams",
           "columnsFrom": [
             "team_id"
@@ -1362,8 +1362,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.invoice_delivery_notes": {
-      "name": "invoice_delivery_notes",
+    "public.invoice_dn": {
+      "name": "invoice_dn",
       "schema": "",
       "columns": {
         "id": {
@@ -1379,8 +1379,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "delivery_note_id": {
-          "name": "delivery_note_id",
+        "dn_id": {
+          "name": "dn_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -1402,9 +1402,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "invoice_delivery_notes_invoice_id_invoices_id_fk": {
-          "name": "invoice_delivery_notes_invoice_id_invoices_id_fk",
-          "tableFrom": "invoice_delivery_notes",
+        "invoice_dn_invoice_id_invoices_id_fk": {
+          "name": "invoice_dn_invoice_id_invoices_id_fk",
+          "tableFrom": "invoice_dn",
           "tableTo": "invoices",
           "columnsFrom": [
             "invoice_id"
@@ -1415,12 +1415,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "invoice_delivery_notes_delivery_note_id_delivery_note_items_id_fk": {
-          "name": "invoice_delivery_notes_delivery_note_id_delivery_note_items_id_fk",
-          "tableFrom": "invoice_delivery_notes",
-          "tableTo": "delivery_note_items",
+        "invoice_dn_dn_id_dn_items_id_fk": {
+          "name": "invoice_dn_dn_id_dn_items_id_fk",
+          "tableFrom": "invoice_dn",
+          "tableTo": "dn_items",
           "columnsFrom": [
-            "delivery_note_id"
+            "dn_id"
           ],
           "columnsTo": [
             "id"
@@ -1435,8 +1435,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.delivery_order_drivers": {
-      "name": "delivery_order_drivers",
+    "public.do_drivers": {
+      "name": "do_drivers",
       "schema": "",
       "columns": {
         "id": {
@@ -1446,8 +1446,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "delivery_order_id": {
-          "name": "delivery_order_id",
+        "do_id": {
+          "name": "do_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -1460,7 +1460,7 @@
         },
         "role": {
           "name": "role",
-          "type": "delivery_driver_role_enum",
+          "type": "driver_role_enum",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
@@ -1482,12 +1482,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "delivery_order_drivers_delivery_order_id_delivery_orders_id_fk": {
-          "name": "delivery_order_drivers_delivery_order_id_delivery_orders_id_fk",
-          "tableFrom": "delivery_order_drivers",
-          "tableTo": "delivery_orders",
+        "do_drivers_do_id_do_id_fk": {
+          "name": "do_drivers_do_id_do_id_fk",
+          "tableFrom": "do_drivers",
+          "tableTo": "do",
           "columnsFrom": [
-            "delivery_order_id"
+            "do_id"
           ],
           "columnsTo": [
             "id"
@@ -1495,9 +1495,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "delivery_order_drivers_driver_id_drivers_id_fk": {
-          "name": "delivery_order_drivers_driver_id_drivers_id_fk",
-          "tableFrom": "delivery_order_drivers",
+        "do_drivers_driver_id_drivers_id_fk": {
+          "name": "do_drivers_driver_id_drivers_id_fk",
+          "tableFrom": "do_drivers",
           "tableTo": "drivers",
           "columnsFrom": [
             "driver_id"
@@ -1515,8 +1515,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.delivery_note_items": {
-      "name": "delivery_note_items",
+    "public.dn_items": {
+      "name": "dn_items",
       "schema": "",
       "columns": {
         "id": {
@@ -1526,14 +1526,20 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "delivery_note_id": {
-          "name": "delivery_note_id",
+        "dn_id": {
+          "name": "dn_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "delivery_order_id": {
-          "name": "delivery_order_id",
+        "do_id": {
+          "name": "do_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "do_item_id": {
+          "name": "do_item_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -1554,12 +1560,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "delivery_note_items_delivery_note_id_delivery_notes_id_fk": {
-          "name": "delivery_note_items_delivery_note_id_delivery_notes_id_fk",
-          "tableFrom": "delivery_note_items",
-          "tableTo": "delivery_notes",
+        "dn_items_dn_id_dn_id_fk": {
+          "name": "dn_items_dn_id_dn_id_fk",
+          "tableFrom": "dn_items",
+          "tableTo": "dn",
           "columnsFrom": [
-            "delivery_note_id"
+            "dn_id"
           ],
           "columnsTo": [
             "id"
@@ -1567,12 +1573,25 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "delivery_note_items_delivery_order_id_delivery_orders_id_fk": {
-          "name": "delivery_note_items_delivery_order_id_delivery_orders_id_fk",
-          "tableFrom": "delivery_note_items",
-          "tableTo": "delivery_orders",
+        "dn_items_do_id_do_id_fk": {
+          "name": "dn_items_do_id_do_id_fk",
+          "tableFrom": "dn_items",
+          "tableTo": "do",
           "columnsFrom": [
-            "delivery_order_id"
+            "do_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "dn_items_do_item_id_do_items_id_fk": {
+          "name": "dn_items_do_item_id_do_items_id_fk",
+          "tableFrom": "dn_items",
+          "tableTo": "do_items",
+          "columnsFrom": [
+            "do_item_id"
           ],
           "columnsTo": [
             "id"
@@ -1587,8 +1606,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.delivery_notes": {
-      "name": "delivery_notes",
+    "public.dn": {
+      "name": "dn",
       "schema": "",
       "columns": {
         "id": {
@@ -1618,7 +1637,7 @@
         },
         "status": {
           "name": "status",
-          "type": "delivery_note_status_enum",
+          "type": "dn_status_enum",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
@@ -1647,9 +1666,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "delivery_notes_team_id_teams_id_fk": {
-          "name": "delivery_notes_team_id_teams_id_fk",
-          "tableFrom": "delivery_notes",
+        "dn_team_id_teams_id_fk": {
+          "name": "dn_team_id_teams_id_fk",
+          "tableFrom": "dn",
           "tableTo": "teams",
           "columnsFrom": [
             "team_id"
@@ -1663,8 +1682,8 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "delivery_notes_note_number_team_id_unique": {
-          "name": "delivery_notes_note_number_team_id_unique",
+        "dn_note_number_team_id_unique": {
+          "name": "dn_note_number_team_id_unique",
           "nullsNotDistinct": false,
           "columns": [
             "note_number",
@@ -1678,8 +1697,8 @@
     }
   },
   "enums": {
-    "public.delivery_driver_role_enum": {
-      "name": "delivery_driver_role_enum",
+    "public.driver_role_enum": {
+      "name": "driver_role_enum",
       "schema": "public",
       "values": [
         "main",
@@ -1687,8 +1706,8 @@
         "backup"
       ]
     },
-    "public.delivery_note_status_enum": {
-      "name": "delivery_note_status_enum",
+    "public.dn_status_enum": {
+      "name": "dn_status_enum",
       "schema": "public",
       "values": [
         "draft",

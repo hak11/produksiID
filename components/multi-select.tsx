@@ -81,6 +81,7 @@ interface MultiSelectProps
 
   /** The default selected values when the component mounts. */
   defaultValue?: string[]
+  value?: string[]
 
   /**
    * Placeholder text to be displayed when no values are selected.
@@ -106,6 +107,7 @@ interface MultiSelectProps
    * Optional, defaults to false.
    */
   modalPopover?: boolean
+  disabled?: boolean
 
   /**
    * If true, renders the multi-select component as a child of another component.
@@ -128,7 +130,8 @@ export const MultiSelect = React.forwardRef<
     {
       options,
       onValueChange,
-      variant,
+      value,
+      disabled = false,
       defaultValue = [],
       placeholder = "Select options",
       animation = 0,
@@ -140,8 +143,25 @@ export const MultiSelect = React.forwardRef<
     },
     ref
   ) => {
-    const [selectedValues, setSelectedValues] =
-      React.useState<string[]>(defaultValue)
+    // Cek apakah komponen dikontrol oleh parent
+    const isControlled = value !== undefined
+
+    // Jika tidak dikontrol, gunakan state internal untuk menyimpan nilai
+    const [internalValues, setInternalValues] = React.useState<string[]>(defaultValue)
+
+    // Nilai terpilih yang digunakan adalah controlled value jika ada, atau state internal jika tidak
+    const selectedValues = isControlled ? value! : internalValues
+
+    // Fungsi helper untuk mengupdate nilai terpilih
+    const updateSelectedValues = (newValues: string[]) => {
+      if (isControlled) {
+        onValueChange(newValues)
+      } else {
+        setInternalValues(newValues)
+        onValueChange(newValues)
+      }
+    }
+
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false)
     const [isAnimating, setIsAnimating] = React.useState(false)
 
@@ -151,24 +171,21 @@ export const MultiSelect = React.forwardRef<
       if (event.key === "Enter") {
         setIsPopoverOpen(true)
       } else if (event.key === "Backspace" && !event.currentTarget.value) {
-        const newSelectedValues = [...selectedValues]
-        newSelectedValues.pop()
-        setSelectedValues(newSelectedValues)
-        onValueChange(newSelectedValues)
+        const newValues = [...selectedValues]
+        newValues.pop()
+        updateSelectedValues(newValues)
       }
     }
 
     const toggleOption = (option: string) => {
-      const newSelectedValues = selectedValues.includes(option)
+      const newValues = selectedValues.includes(option)
         ? selectedValues.filter((value) => value !== option)
         : [...selectedValues, option]
-      setSelectedValues(newSelectedValues)
-      onValueChange(newSelectedValues)
+      updateSelectedValues(newValues)
     }
 
     const handleClear = () => {
-      setSelectedValues([])
-      onValueChange([])
+      updateSelectedValues([])
     }
 
     const handleTogglePopover = () => {
@@ -176,9 +193,8 @@ export const MultiSelect = React.forwardRef<
     }
 
     const clearExtraOptions = () => {
-      const newSelectedValues = selectedValues.slice(0, maxCount)
-      setSelectedValues(newSelectedValues)
-      onValueChange(newSelectedValues)
+      const newValues = selectedValues.slice(0, maxCount)
+      updateSelectedValues(newValues)
     }
 
     const toggleAll = () => {
@@ -186,8 +202,7 @@ export const MultiSelect = React.forwardRef<
         handleClear()
       } else {
         const allValues = options.map((option) => option.value)
-        setSelectedValues(allValues)
-        onValueChange(allValues)
+        updateSelectedValues(allValues)
       }
     }
 
@@ -201,6 +216,8 @@ export const MultiSelect = React.forwardRef<
           <Button
             ref={ref}
             {...props}
+            disabled={disabled}
+            variant="default"
             onClick={handleTogglePopover}
             className={cn(
               "flex w-full p-1 rounded-md border min-h-10 h-auto items-center justify-between bg-inherit hover:bg-inherit [&_svg]:pointer-events-auto",
@@ -218,7 +235,7 @@ export const MultiSelect = React.forwardRef<
                         key={value}
                         className={cn(
                           isAnimating ? "animate-bounce" : "",
-                          multiSelectVariants({ variant })
+                          multiSelectVariants({ variant: "inverted" })
                         )}
                         style={{ animationDuration: `${animation}s` }}
                       >
@@ -241,7 +258,7 @@ export const MultiSelect = React.forwardRef<
                       className={cn(
                         "bg-transparent text-foreground border-foreground/1 hover:bg-transparent",
                         isAnimating ? "animate-bounce" : "",
-                        multiSelectVariants({ variant })
+                        multiSelectVariants({ variant: "inverted" })
                       )}
                       style={{ animationDuration: `${animation}s` }}
                     >

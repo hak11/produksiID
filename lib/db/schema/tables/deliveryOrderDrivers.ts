@@ -3,9 +3,9 @@ import { deliveryOrders } from './deliveryOrders';
 import { drivers } from './drivers';
 import { deliveryDriverRoleEnum } from '../enums';
 
-export const deliveryOrderDrivers = pgTable('delivery_order_drivers', {
+export const deliveryOrderDrivers = pgTable('do_drivers', {
   id: uuid('id').primaryKey().defaultRandom(),
-  deliveryOrderId: uuid('delivery_order_id')
+  deliveryOrderId: uuid('do_id')
     .references(() => deliveryOrders.id)
     .notNull(),
   driverId: uuid('driver_id')

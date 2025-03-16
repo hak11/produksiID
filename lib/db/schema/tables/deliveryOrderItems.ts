@@ -2,7 +2,7 @@ import { pgTable, numeric, timestamp, varchar,uuid } from 'drizzle-orm/pg-core';
 import { deliveryOrders } from './deliveryOrders';
 import { items } from './items';
 
-export const deliveryOrderItems = pgTable('delivery_order_items', {
+export const deliveryOrderItems = pgTable('do_items', {
   id: uuid('id').primaryKey().defaultRandom(),
   doId: uuid('do_id')
     .references(() => deliveryOrders.id)

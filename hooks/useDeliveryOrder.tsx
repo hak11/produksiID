@@ -35,7 +35,7 @@ export function useDeliveryOrder(status?: z.infer<typeof DeliveryStatus>) {
     }
 
     fetchData()
-  }, [])
+  }, [status])
 
   return { deliveryOrders, isLoading, error }
 }

@@ -40,14 +40,12 @@ interface DeliveryOrderFormProps {
   deliveryOrder?: Partial<DeliveryOrder & { items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[], deliveryDrivers: { main: string | null, assistant: string | null } }>
   isEdit?: boolean
   onSave: (deliveryOrder: DeliveryOrderFormValues, callback?: () => void) => void
-  onClose?: () => void
 }
 
 export function DeliveryOrderForm({
   deliveryOrder,
   isEdit = false,
   onSave,
-  onClose,
 }: DeliveryOrderFormProps) {
   const { suppliers, customers, cars, drivers, isLoading, items, error } = useDeliveryData()
   
@@ -671,15 +669,14 @@ export function DeliveryOrderForm({
         </div>
 
         <div className="flex justify-end gap-2">
-          {onClose && (
-            <Button variant="outline" onClick={onClose} type="button">
-              Cancel
-            </Button>
-          )}
           <div className="gap-2 flex">
-            <span>
-              <b>Note:</b> Delivery Order hanya bisa di ubah saat status pending
-            </span>
+            {
+              getValues("deliveryStatus") != "pending" && (
+                <span>
+                  <b>Note:</b> Delivery Order hanya bisa di ubah saat status pending
+                </span>
+              )
+            }
             <Button
               disabled={getValues("deliveryStatus") != "pending"}
               type="submit"

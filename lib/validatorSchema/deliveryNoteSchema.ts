@@ -5,6 +5,7 @@ export const deliveryNoteItemSchema = z.object({
   deliveryOrderId: z.string(),
   deliveryOrderItemId: z.string(),
   name: z.string(),
+  deliveryDate: z.date(),
   customerName: z.string(),
   supplierName: z.string(),
   loadQty: z.string(),

@@ -10,8 +10,6 @@ export default function CreateDeliveryOrderPage({ params }: { params: Promise<{ 
   const { id: doID } = React.use(params);
   const [deliveryOrder, setDeliveryOrder] = useState<Partial<(DeliveryOrder & { items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[] })>>({});
 
-
-
   const handleSave = async (deliveryOrder: DeliveryOrderFormValues) => {
     try {
       const response = await fetch("/api/delivery-order", {

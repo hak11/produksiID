@@ -4,7 +4,7 @@ import { cars } from './cars';
 import { teams } from './teams';
 import { deliveryStatusEnum } from '../enums';
 
-export const deliveryOrders = pgTable('delivery_orders', {
+export const deliveryOrders = pgTable('do', {
   id: uuid('id').primaryKey().defaultRandom(),
   orderDate: date('order_date').notNull(),
   supplierId: uuid('supplier_id')

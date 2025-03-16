@@ -10,13 +10,13 @@ export const deliveryStatusEnum = pgEnum('delivery_status_enum', [
 
 export const DeliveryStatus = z.enum(deliveryStatusEnum.enumValues);
 
-export const deliveryDriverRoleEnum = pgEnum('delivery_driver_role_enum', [
+export const deliveryDriverRoleEnum = pgEnum('driver_role_enum', [
   'main',      // Driver utama
   'assistant', // Driver pendamping
   'backup',    // Driver cadangan
 ]);
 
-export const deliveryNoteStatusEnum = pgEnum('delivery_note_status_enum', [
+export const deliveryNoteStatusEnum = pgEnum('dn_status_enum', [
   'draft',
   'printed',
   'delivered',

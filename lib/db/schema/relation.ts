@@ -35,7 +35,7 @@ export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
 
 
 export const invoicesRelations = relations(invoices, ({ many }) => ({
-  invoiceDeliveryNotes: many(invoiceDeliveryNotes),
+  invoiceDN: many(invoiceDeliveryNotes),
 }));
 
 export const invoiceDeliveryNotesRelations = relations(invoiceDeliveryNotes, ({ one }) => ({
@@ -43,22 +43,22 @@ export const invoiceDeliveryNotesRelations = relations(invoiceDeliveryNotes, ({ 
     fields: [invoiceDeliveryNotes.invoiceId],
     references: [invoices.id],
   }),
-  deliveryNoteItems: one(deliveryNoteItems, {
+  dnItem: one(deliveryNoteItems, {
     fields: [invoiceDeliveryNotes.deliveryNoteItemId],
     references: [deliveryNoteItems.id],
   }),
 }));
 
 export const deliveryNoteRelations = relations(deliveryNotes, ({ many }) => ({
-  deliveryNoteItems: many(deliveryNoteItems),
+  dnItems: many(deliveryNoteItems),
 }));
 
 export const deliveryNoteItemsRelations = relations(deliveryNoteItems, ({ one }) => ({
-  deliveryNote: one(deliveryNotes, {
+  dn: one(deliveryNotes, {
     fields: [deliveryNoteItems.deliveryNoteId],
     references: [deliveryNotes.id],
   }),
-  deliveryOrderItems: one(deliveryOrderItems, {
+  doItem: one(deliveryOrderItems, {
     fields: [deliveryNoteItems.deliveryOrderItemId],
     references: [deliveryOrderItems.id],
   }),
@@ -69,7 +69,7 @@ export const deliveryNoteItemsRelations = relations(deliveryNoteItems, ({ one })
 }));
 
 export const deliveryOrderItemsRelations = relations(deliveryOrderItems, ({ one }) => ({
-  deliveryOrder: one(deliveryOrders, {
+  do: one(deliveryOrders, {
     fields: [deliveryOrderItems.doId],
     references: [deliveryOrders.id],
   }),
@@ -80,7 +80,7 @@ export const companiesRelations = relations(companies, ({ many }) => ({
 }));
 
 export const companyRolesRelations = relations(companyRoles, ({ one }) => ({
-  company: one(companies, {
+  comp: one(companies, {
     fields: [companyRoles.companyId],
     references: [companies.id],
   }),
@@ -88,11 +88,11 @@ export const companyRolesRelations = relations(companyRoles, ({ one }) => ({
 
 export const deliveryOrdersRelations = relations(deliveryOrders, ({ many, one }) => ({
   drivers: many(deliveryOrderDrivers),
-  supplier: one(companies, {
+  sup: one(companies, {
     fields: [deliveryOrders.supplierId],
     references: [companies.id],
   }),
-  customer: one(companies, {
+  cus: one(companies, {
     fields: [deliveryOrders.customerId],
     references: [companies.id],
   }),
@@ -103,11 +103,11 @@ export const deliveryOrdersRelations = relations(deliveryOrders, ({ many, one })
 }));
 
 export const deliveryDriversRelations = relations(drivers, ({ many }) => ({
-  deliveryOrders: many(deliveryOrderDrivers),
+  do: many(deliveryOrderDrivers),
 }));
 
 export const deliveryOrderDriversRelations = relations(deliveryOrderDrivers, ({ one }) => ({
-  deliveryOrder: one(deliveryOrders, {
+  do: one(deliveryOrders, {
     fields: [deliveryOrderDrivers.deliveryOrderId],
     references: [deliveryOrders.id],
   }),

@@ -4,7 +4,7 @@ import { teams } from "./teams";
 import { deliveryNoteStatusEnum } from "../enums";
 import { deliveryOrderItems } from "./deliveryOrderItems";
 
-export const deliveryNotes = pgTable('delivery_notes', {
+export const deliveryNotes = pgTable('dn', {
   id: uuid('id').primaryKey().defaultRandom(),
   teamId: uuid('team_id').notNull().references(() => teams.id),
   noteNumber: varchar('note_number', { length: 50 }).notNull(),
@@ -17,11 +17,11 @@ export const deliveryNotes = pgTable('delivery_notes', {
   uniqueNoteNumber: unique().on(table.noteNumber, table.teamId),
 }));
 
-export const deliveryNoteItems = pgTable('delivery_note_items', {
+export const deliveryNoteItems = pgTable('dn_items', {
   id: uuid('id').primaryKey().defaultRandom(),
-  deliveryNoteId: uuid('delivery_note_id').notNull().references(() => deliveryNotes.id),
-  deliveryOrderId: uuid('delivery_order_id').notNull().references(() => deliveryOrders.id),
-  deliveryOrderItemId: uuid('delivery_order_item_id').notNull().references(() => deliveryOrderItems.id),
+  deliveryNoteId: uuid('dn_id').notNull().references(() => deliveryNotes.id),
+  deliveryOrderId: uuid('do_id').notNull().references(() => deliveryOrders.id),
+  deliveryOrderItemId: uuid('do_item_id').notNull().references(() => deliveryOrderItems.id),
   actualQty: numeric('actual_qty'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });

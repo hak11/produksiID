@@ -3,7 +3,7 @@ import { cars } from './cars';
 import { teams } from './teams';
 import { drivers } from './drivers';
 
-export const driverCarAssignments = pgTable('driverCarAssignments', {
+export const driverCarAssignments = pgTable('assignments', {
   id: uuid('id').primaryKey().defaultRandom(),
   carId: uuid('car_id')
     .notNull()
