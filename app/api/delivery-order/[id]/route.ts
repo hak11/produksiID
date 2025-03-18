@@ -8,7 +8,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const { id: doID } = params;
     if (!doID) {
       return NextResponse.json(
-        { error: "Delivery note ID is required." },
+        { error: "Delivery Order ID is required." },
         { status: 400 }
       );
     }

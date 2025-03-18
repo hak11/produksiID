@@ -8,7 +8,19 @@ import { type DeliveryOrderFormValues } from "@/lib/validatorSchema/deliveryOrde
 
 export default function CreateDeliveryOrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: doID } = React.use(params);
-  const [deliveryOrder, setDeliveryOrder] = useState<Partial<(DeliveryOrder & { items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[] })>>({});
+  const [deliveryOrder, setDeliveryOrder] = useState<
+    Partial<
+      DeliveryOrder & {
+        items: (DeliveryOrderItem & {
+          loadQty: number
+          loadPerPrice: number
+          totalLoadPrice: number
+          loadPerPriceStr: string
+          totalLoadPriceStr: string
+        })[]
+      }
+    >
+  >({})
 
   const handleSave = async (deliveryOrder: DeliveryOrderFormValues) => {
     try {

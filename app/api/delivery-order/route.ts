@@ -75,9 +75,16 @@ export async function GET(request: NextRequest) {
 
 // Create a new delivery order
 export async function POST(request: Request) {
+  const session = await getSession()
+  if (!session || session.team_id === null) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const teamId = session.team_id
   try {
     const { items, deliveryDrivers,  ...deliveryOrderData } = await request.json();
 
+    deliveryOrderData.teamId = teamId
     if (!deliveryOrderData) {
       return NextResponse.json(
         { error: "Delivery order data is required." },

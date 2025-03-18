@@ -3,10 +3,15 @@
 import React from "react"
 import toast from "react-hot-toast"
 import { DeliveryOrderForm } from "../components/delivery-order-form"
-import { DeliveryOrder } from "@/lib/db/schema"
+import { useRouter } from "next/navigation"
+import { DeliveryOrderFormValues } from "@/lib/validatorSchema/deliveryOrderSchema"
 
 export default function CreateDeliveryOrderPage() {
-  const handleSave = async (deliveryOrder: Partial<DeliveryOrder>, callback?: () => void) => {
+  const router = useRouter()
+  const handleSave = async (
+    deliveryOrder: Partial<DeliveryOrderFormValues>,
+    // callback?: () => void
+  ) => {
     try {
       const response = await fetch("/api/delivery-order", {
         method: "POST",
@@ -15,13 +20,17 @@ export default function CreateDeliveryOrderPage() {
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to create delivery order: ${response.statusText}`)
+        throw new Error(
+          `Failed to create delivery order: ${response.statusText}`
+        )
       }
 
-      toast.success("Delivery order successfully created")
-      if (callback) {
-        callback()
-      }
+      const data = await response.json()
+      toast.success(
+        `Delivery note successfully ${deliveryOrder.id ? "updated" : "created"}`
+      )
+
+      router.push(`/dashboard/delivery-order/${data.deliveryOrder.id}`)
     } catch (error) {
       console.error(error)
       toast.error("An error occurred while saving the delivery order")

@@ -7,7 +7,7 @@ import { format } from "date-fns"
 import { CalendarIcon, Plus, Trash, SaveAll, Loader } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { DeliveryOrder, DeliveryOrderItem } from "@/lib/db/schema"
-import { deliveryOrderSchema, type DeliveryOrderFormValues } from "@/lib/validatorSchema/deliveryOrderSchema"
+import { deliveryOrderSchema, DeliveryOrderFormValues} from "@/lib/validatorSchema/deliveryOrderSchema"
 import { useDeliveryData } from "@/hooks/useDeliveryData"
 
 import {
@@ -37,9 +37,45 @@ import {
 import { formatCurrency } from "@/lib/utils"
 
 interface DeliveryOrderFormProps {
-  deliveryOrder?: Partial<DeliveryOrder & { items: (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string })[], deliveryDrivers: { main: string | null, assistant: string | null } }>
+  deliveryOrder?: Partial<
+    DeliveryOrder & {
+      items: (DeliveryOrderItem & {
+        loadQty: number
+        loadPerPrice: number
+        totalLoadPrice: number
+        loadPerPriceStr: string
+        totalLoadPriceStr: string
+      })[]
+      deliveryDrivers: { main: string | null; assistant: string | null }
+    }
+  >
   isEdit?: boolean
-  onSave: (deliveryOrder: DeliveryOrderFormValues, callback?: () => void) => void
+  onSave: (deliveryOrder: DeliveryOrderFormValues) => void
+}
+
+const defaultValue = {
+  orderNumber: "",
+  supplierId: undefined,
+  customerId: undefined,
+  carId: undefined,
+  orderDate: new Date(),
+  deliveryDate: undefined,
+  deliveryStatus: "pending",
+  deliveryAddress: "",
+  deliveryDrivers: {
+    main: undefined,
+    assistant: undefined,
+  },
+  items: [
+    {
+      loadQty: 1,
+      loadPerPrice: 0,
+      totalLoadPrice: 0,
+      loadPerPriceStr: "Rp 0",
+      totalLoadPriceStr: "Rp 0",
+      itemId: undefined,
+    },
+  ],
 }
 
 export function DeliveryOrderForm({
@@ -48,36 +84,13 @@ export function DeliveryOrderForm({
   onSave,
 }: DeliveryOrderFormProps) {
   const { suppliers, customers, cars, drivers, isLoading, items, error } = useDeliveryData()
+    
   
-  const form =
-    useForm<DeliveryOrderFormValues>({
-      resolver: zodResolver(deliveryOrderSchema),
-      defaultValues: {
-        orderNumber: "",
-        supplierId: undefined,
-        customerId: undefined,
-        carId: undefined,
-        orderDate: new Date().toString(),
-        deliveryDate: "",
-        deliveryStatus: "pending",
-        deliveryAddress: "",
-        deliveryDrivers: {
-          main: undefined,
-          assistant: undefined,
-        },
-        items: [
-          {
-            id: undefined,
-            loadQty: "1",
-            loadPerPrice: "0",
-            totalLoadPrice: "0",
-            loadPerPriceStr: "Rp 0",
-            totalLoadPriceStr: "Rp 0",
-            itemId: undefined
-          },
-        ],
-      },
-    })
+  
+  const form = useForm<DeliveryOrderFormValues>({
+    resolver: zodResolver(deliveryOrderSchema),
+    defaultValues: { ...defaultValue, deliveryStatus: "pending"},
+  })
 
   const {
     control,
@@ -98,9 +111,11 @@ export function DeliveryOrderForm({
       if (deliveryOrder.items && deliveryOrder.items.length > 0) {
         const updatedItems = (deliveryOrder.items || []).map((item) => ({
           ...item,
-          loadPerPriceStr: formatCurrency(item.loadPerPrice) || "Rp 0",
-          totalLoadPriceStr: formatCurrency(item.totalLoadPrice) || "Rp 0",
-        }));
+          loadPerPriceStr:
+            formatCurrency(parseFloat(item.loadPerPrice)) || "Rp 0",
+          totalLoadPriceStr:
+            formatCurrency(parseFloat(item.totalLoadPrice)) || "Rp 0",
+        }))
 
         deliveryOrder.items = updatedItems || []
       }
@@ -109,45 +124,38 @@ export function DeliveryOrderForm({
       setValue("supplierId", deliveryOrder.supplierId || "")
       setValue("customerId", deliveryOrder.customerId || "")
       setValue("carId", deliveryOrder.carId || "")
-      setValue("orderDate", deliveryOrder.orderDate || "")
-      setValue("deliveryDate", deliveryOrder.deliveryDate || "")
+      if (deliveryOrder.deliveryDate) {
+        setValue("deliveryDate", new Date(deliveryOrder.deliveryDate))
+      }
+      if (deliveryOrder.orderDate) {
+        setValue("orderDate", new Date(deliveryOrder.orderDate))
+      }
       setValue("deliveryStatus", deliveryOrder.deliveryStatus || "pending")
       setValue("deliveryAddress", deliveryOrder.deliveryAddress || "")
-      setValue("items", deliveryOrder.items || [])
+      setValue(
+        "items",
+        deliveryOrder.items || [
+          {
+            loadQty: 1,
+            loadPerPrice: 0,
+            totalLoadPrice: 0,
+            loadPerPriceStr: "Rp 0",
+            totalLoadPriceStr: "Rp 0",
+            itemId: "",
+          },
+        ]
+      )
       setValue("deliveryDrivers.main", deliveryOrder.deliveryDrivers?.main || "")
       setValue("deliveryDrivers.assistant", deliveryOrder.deliveryDrivers?.assistant || "")
     } else {
-      reset({
-        orderNumber: "",
-        supplierId: undefined,
-        customerId: undefined,
-        carId: undefined,
-        orderDate: format(new Date(), "yyyy-MM-dd"),
-        deliveryDate: "",
-        deliveryStatus: "pending",
-        deliveryAddress: "",
-        deliveryDrivers: {
-          main: undefined,
-          assistant: undefined,
-        },
-        items: [
-          {
-            id: undefined,
-            loadQty: "1",
-            loadPerPrice: "0",
-            totalLoadPrice: "0",
-            loadPerPriceStr: "Rp 0",
-            totalLoadPriceStr: "Rp 0",
-            itemId: undefined,
-          },
-        ],
-      })
+      reset({ ...defaultValue, deliveryStatus: "pending" })
     }
   }, [isEdit, deliveryOrder, reset, setValue])
 
   const handleItemChange = (index: number, field: keyof (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string }), value: string) => {
     if (field === "loadQty" || field === "loadPerPrice") {
-      const numericValue = value.replace(/[^\d]/g, "")
+      const numericValue = value ?parseFloat(value.replace(/[^\d]/g, "")) : 0
+      console.log("🚀 ~ handleItemChange ~ numericValue:", numericValue)
       
       if (field === "loadQty") {
         setValue(`items.${index}.loadQty`, numericValue)
@@ -157,12 +165,14 @@ export function DeliveryOrderForm({
         setValue(`items.${index}.loadPerPriceStr`, formattedValue)
       }
 
-      const qty = parseFloat(getValues(`items.${index}.loadQty`)) || 0
-      const price = parseFloat(getValues(`items.${index}.loadPerPrice`)) || 0
-      const total = (qty * price).toString()
+      const qty = getValues(`items.${index}.loadQty`) || 0
+      const price = getValues(`items.${index}.loadPerPrice`) || 0
+      const total = (qty * price)
 
-      setValue(`items.${index}.totalLoadPrice`, total)
-      setValue(`items.${index}.totalLoadPriceStr`, formatCurrency(total))
+      if (total > 0) {
+        setValue(`items.${index}.totalLoadPrice`, total)
+        setValue(`items.${index}.totalLoadPriceStr`, formatCurrency(total))
+      }
     }
 
     if (field === "itemId") {
@@ -175,9 +185,7 @@ export function DeliveryOrderForm({
 
   const submitForm = (formData: any) => {
     try {
-      onSave(formData, () => {
-        window.location.reload()
-      })
+      onSave(formData)
     } catch (error) {
       console.log("🚀 ~ submitForm ~ error:", error)
     }
@@ -304,7 +312,7 @@ export function DeliveryOrderForm({
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {field.value
-                            ? format(new Date(field.value), "PPP")
+                            ? format(field.value, "PPP")
                             : "Pilih Tanggal Kirim"}
                         </Button>
                       </FormControl>
@@ -312,12 +320,8 @@ export function DeliveryOrderForm({
                     <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
-                        selected={
-                          field.value ? new Date(field.value) : undefined
-                        }
-                        onSelect={(date) =>
-                          field.onChange(date ? format(date, "yyyy-MM-dd") : "")
-                        }
+                        selected={field.value}
+                        onSelect={(date) => field.onChange(date)}
                         initialFocus
                       />
                     </PopoverContent>
@@ -582,7 +586,7 @@ export function DeliveryOrderForm({
                               <FormControl>
                                 <Input
                                   {...field}
-                                  type="number"
+                                  type="string"
                                   value={field.value}
                                   className="w-24"
                                   onChange={(e) =>
@@ -651,10 +655,9 @@ export function DeliveryOrderForm({
                 type="button"
                 onClick={() =>
                   append({
-                    id: "",
-                    loadQty: "0",
-                    loadPerPrice: "0",
-                    totalLoadPrice: "0",
+                    loadQty: 1,
+                    loadPerPrice: 0,
+                    totalLoadPrice: 0,
                     loadPerPriceStr: "Rp 0",
                     totalLoadPriceStr: "Rp 0",
                     itemId: "",
@@ -670,13 +673,12 @@ export function DeliveryOrderForm({
 
         <div className="flex justify-end gap-2">
           <div className="gap-2 flex">
-            {
-              getValues("deliveryStatus") != "pending" && (
-                <span>
-                  <b>Note:</b> Delivery Order hanya bisa di ubah saat status pending
-                </span>
-              )
-            }
+            {getValues("deliveryStatus") != "pending" && (
+              <span>
+                <b>Note:</b> Delivery Order hanya bisa di ubah saat status
+                pending
+              </span>
+            )}
             <Button
               disabled={getValues("deliveryStatus") != "pending"}
               type="submit"

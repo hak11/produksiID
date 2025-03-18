@@ -5,13 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const formatCurrency = (value: string) => {
-  const number = parseFloat(value.replace(/[^\d]/g, "")) || 0
+export const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
-    minimumFractionDigits: 0
-  }).format(number)
+    minimumFractionDigits: 0,
+  }).format(value)
 }
 
 export const generatNumberByDB = async (url: string, key: string, frontPrefix: string = "", padStart: number = 2 ) => {
