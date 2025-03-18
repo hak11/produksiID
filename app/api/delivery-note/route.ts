@@ -2,8 +2,39 @@ import { NextResponse } from "next/server";
 import { z } from 'zod';
 import { db } from "@/lib/db/drizzle";
 import { deliveryNotes, deliveryNoteItems, deliveryOrders, DeliveryNoteStatus, DeliveryNoteItems } from "@/lib/db/schema";
-import { eq, desc, and, count, sql } from "drizzle-orm";
+import { eq, desc, count, sql } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
+
+const postItemsSchema = z.object({
+  deliveryOrderId: z.string(),
+  deliveryOrderItemId: z.string(),
+  actualQty: z.string().optional(),
+})
+
+const postRequestSchema = z.object({
+  noteNumber: z.string(),
+  issueDate: z.preprocess((arg) => {
+    if (typeof arg === "string" || arg instanceof Date) {
+      return new Date(arg)
+    }
+  }, z.date()),
+  remarks: z.string().optional(),
+  items: z.array(postItemsSchema),
+  status: DeliveryNoteStatus.optional(),
+})
+
+const updateRequestSchema = z.object({
+  id: z.string(),
+  noteNumber: z.string(),
+  issueDate: z.preprocess((arg) => {
+    if (typeof arg === "string" || arg instanceof Date) {
+      return new Date(arg)
+    }
+  }, z.date()),
+  remarks: z.string().optional(),
+  items: z.array(postItemsSchema),
+  status: DeliveryNoteStatus.optional(),
+})
 
 export async function GET() {
   try {
@@ -51,19 +82,8 @@ export async function GET() {
   }
 }
 
-const postItemsSchema = z.object({
-    deliveryOrderId: z.string(),
-    deliveryOrderItemId: z.string(),
-    actualQty: z.string().optional(),
-  })
 
-const postRequestSchema = z.object({
-  noteNumber: z.string(),
-  issueDate: z.string(),
-  remarks: z.string().optional(),
-  items: z.array(postItemsSchema),
-  status: DeliveryNoteStatus.optional(),
-});
+
 
 // **POST: Buat Surat Jalan baru**
 export async function POST(request: Request) {
@@ -123,44 +143,92 @@ export async function POST(request: Request) {
   }
 }
 
-// **PUT: Update status atau jumlah aktual (`actualQty`)**
-export async function PUT(request: Request) {
-  try {
-    const { id, status, deliveryOrderItems } = await request.json();
 
-    if (!id) {
-      return NextResponse.json({ error: "Delivery Note ID is required." }, { status: 400 });
+export async function PUT(request: Request) {
+  const session = await getSession()
+
+  const teamId = session?.team_id
+
+  if (!session || teamId === null) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  try {
+    const bodyRequest = await request.json()
+    const parsedQuery = updateRequestSchema.safeParse(bodyRequest)
+
+    if (!parsedQuery.success) {
+      console.log("🚀 ~ PUT ~ parsedQuery:", parsedQuery.error)
+      return NextResponse.json(
+        { error: "Invalid query parameters" },
+        { status: 400 }
+      )
     }
 
+    const { id, noteNumber, issueDate, remarks, items, status } = bodyRequest
+
+    const uniqueDeliveryOrderIds = [
+      ...new Set(
+        items.map(
+          (item: z.infer<typeof postItemsSchema>) => item.deliveryOrderId
+        )
+      ),
+    ]
+
     const updatedDeliveryNote = await db.transaction(async (tx) => {
-      if (status) {
-        await tx.update(deliveryNotes).set({ status, updatedAt: new Date() }).where(eq(deliveryNotes.id, id));
-      }
+      await tx
+        .update(deliveryNotes)
+        .set({
+          noteNumber,
+          issueDate: new Date(issueDate).toISOString().split("T")[0],
+          remarks,
+          status,
+        })
+        .where(eq(deliveryNotes.id, id))
 
-      if (deliveryOrderItems && deliveryOrderItems.length > 0) {
-        for (const { deliveryOrderId, actualQty } of deliveryOrderItems) {
-          await tx.update(deliveryNoteItems)
-          .set({ actualQty })
-          .where(
-            and(
-              eq(deliveryNoteItems.deliveryOrderId, deliveryOrderId),
-              eq(deliveryNoteItems.deliveryNoteId, id)
-            )
-          )
-        }
-      }
+      await tx
+        .delete(deliveryNoteItems)
+        .where(eq(deliveryNoteItems.deliveryNoteId, id))
 
-      return await tx.select().from(deliveryNotes).where(eq(deliveryNotes.id, id)).limit(1);
-    });
+      await tx.insert(deliveryNoteItems).values(
+        items.map((orderItem: DeliveryNoteItems) => ({
+          deliveryNoteId: id,
+          deliveryOrderId: orderItem.deliveryOrderId,
+          deliveryOrderItemId: orderItem.deliveryOrderItemId,
+          actualQty: orderItem.actualQty,
+        }))
+      )
 
-    return NextResponse.json({ message: "Delivery note updated successfully.", deliveryNote: updatedDeliveryNote });
+      await tx
+        .update(deliveryOrders)
+        .set({ deliveryStatus: "in_progress" })
+        .where(
+          sql`${deliveryOrders.id} IN (${sql.join(
+            uniqueDeliveryOrderIds.map((id) => sql`${id}`),
+            ", "
+          )})`
+        )
+
+      const [updatedNote] = await tx
+        .select()
+        .from(deliveryNotes)
+        .where(eq(deliveryNotes.id, id))
+      return updatedNote
+    })
+
+    return NextResponse.json({
+      message: "Delivery note updated successfully.",
+      deliveryNote: updatedDeliveryNote,
+    })
   } catch (error) {
-    console.error("🚀 ~ PUT ~ error:", error);
-    return NextResponse.json({ error: "Failed to update delivery note." }, { status: 500 });
+    console.error("🚀 ~ PUT ~ error:", error)
+    return NextResponse.json(
+      { error: "Failed to update delivery note." },
+      { status: 500 }
+    )
   }
 }
 
-// **DELETE: Hapus Surat Jalan dan item terkait**
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);

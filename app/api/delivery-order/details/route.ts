@@ -49,8 +49,6 @@ export async function POST(request: NextRequest) {
     const supplierIds = [...new Set(doDetails.map(detail => detail.supplierId))];
     const customerIds = [...new Set(doDetails.map(detail => detail.customerId))];
 
-    // const carIds = [...new Set(doDetails.map(detail => detail.carId))];
-
     const suppliers = await db
       .select()
       .from(companies)
@@ -61,37 +59,34 @@ export async function POST(request: NextRequest) {
       .from(companies)
       .where(inArray(companies.id, customerIds));
 
-
-    // const dataCars = await db
-    //   .select()
-    //   .from(cars)
-    //   .where(inArray(cars.id, carIds));
-
-    // const doDrivers = await db
-    //   .select()
-    //   .from(deliveryOrderDrivers)
-    //   .where(inArray(deliveryOrderDrivers.deliveryOrderId, doIdsFound));
-
     const dataResponse = doDetails.map(doDetail => {
-      const doItemsFiltered = doItems.filter(item => item.doId === doDetail.id);
+      const doItemsFiltered = doItems
+        .filter((item) => item.doId === doDetail.id)
+        .map((item) => ({
+          ...item,
+          loadQty:
+            typeof item.loadQty === "string"
+              ? parseFloat(item.loadQty)
+              : item.loadQty,
+          loadPerPrice:
+            typeof item.loadPerPrice === "string"
+              ? parseFloat(item.loadPerPrice)
+              : item.loadPerPrice,
+          totalLoadPrice:
+            typeof item.totalLoadPrice === "string"
+              ? parseFloat(item.totalLoadPrice)
+              : item.totalLoadPrice,
+          deliveryDate: doDetail.deliveryDate,
+        }))
       const supplierFiltered = suppliers.find(s => s.id === doDetail.supplierId) || {};
       const customerFiltered = customers.find(c => c.id === doDetail.customerId) || {};
-      // const carFiltered = dataCars.find(c => c.id === doDetail.carId) || {};
-      // const doDriversFiltered = doDrivers.filter(d => d.deliveryOrderId === doDetail.id);
-
-      // const doDriverReduce = doDriversFiltered.reduce((acc, curr) => {
-      //   acc[curr.role] = curr.driverId;
-      //   return acc;
-      // }, {} as Record<string, string>);
-
-      return {
-        ...doDetail,
-        items: doItemsFiltered,
-        supplier: supplierFiltered,
-        customer: customerFiltered,
-        // car: carFiltered,
-        // deliveryDrivers: doDriverReduce,
-      };
+        console.log("🚀 ~ POST ~ doItemsFiltered:", doItemsFiltered)
+        return {
+          ...doDetail,
+          items: doItemsFiltered,
+          supplier: supplierFiltered,
+          customer: customerFiltered,
+        }
     });
 
     return NextResponse.json(

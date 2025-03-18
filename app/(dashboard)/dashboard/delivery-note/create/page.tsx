@@ -3,30 +3,38 @@
 import React from "react"
 import toast from "react-hot-toast"
 import { DeliveryNoteForm } from "../components/delivery-note-form"
-import { DeliveryNotes } from "@/lib/db/schema"
 import { useRouter } from "next/navigation"
+import {
+  DeliveryNoteFormValues,
+} from "@/lib/validatorSchema/deliveryNoteSchema"
 
 export default function CreateDeliveryNotePage() {
   const router = useRouter()
   const handleSave = async (
-    deliveryNote: Partial<DeliveryNotes>,
+    deliveryNote: Partial<DeliveryNoteFormValues>,
     callback?: () => void
   ) => {
     try {
+      const method = deliveryNote.id ? "PUT" : "POST"
+
       const response = await fetch("/api/delivery-note", {
-        method: "POST",
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(deliveryNote),
       })
 
       if (!response.ok) {
         throw new Error(
-          `Failed to create delivery note: ${response.statusText}`
+          `Failed to ${deliveryNote.id ? "update" : "create"} delivery note: ${
+            response.statusText
+          }`
         )
       }
 
       const data = await response.json()
-      toast.success("Delivery note successfully created")
+      toast.success(
+        `Delivery note successfully ${deliveryNote.id ? "updated" : "created"}`
+      )
 
       router.push(`/dashboard/delivery-note/${data.deliveryNote.id}`)
       if (callback) {

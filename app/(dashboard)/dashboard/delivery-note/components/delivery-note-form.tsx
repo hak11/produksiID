@@ -71,10 +71,10 @@ export function DeliveryNoteForm({
     resolver: zodResolver(deliveryNoteSchema),
     defaultValues: {
       noteNumber: "",
-      issueDate: format(new Date(), "yyyy-MM-dd"),
+      issueDate: new Date(),
       status: "draft",
       remarks: "",
-      items: [{ deliveryOrderId: undefined, actualQty: "0" }],
+      items: [{ deliveryOrderId: undefined, actualQty: 0 }],
     },
   })
 
@@ -82,10 +82,11 @@ export function DeliveryNoteForm({
     control,
     setValue,
     reset,
-    // getValues,
+    getValues,
     handleSubmit,
-    // formState: { errors },
+    formState: { errors },
   } = form
+  console.log("🚀 ~ errors:", errors)
 
   const generateOrderNoteNumber = useCallback(async () => {
     const response = await fetch("/api/utils/last-invoice-number")
@@ -115,10 +116,10 @@ export function DeliveryNoteForm({
       generateOrderNoteNumber()
       reset({
         noteNumber: "",
-        issueDate: format(new Date(), "yyyy-MM-dd"),
+        issueDate: new Date(),
         status: "draft",
         remarks: "",
-        items: [{ deliveryOrderId: undefined, actualQty: "0" }],
+        items: [{ deliveryOrderId: undefined, actualQty: 0 }],
       })
 
       setOptionDO(optionDO)
@@ -128,7 +129,7 @@ export function DeliveryNoteForm({
     
     if (isEdit && deliveryNote) {
       setValue("noteNumber", deliveryNote.noteNumber || "")
-      setValue("issueDate", deliveryNote.issueDate || "")
+      setValue("issueDate", deliveryNote.issueDate ? new Date(deliveryNote.issueDate) : new Date())
       setValue("status", deliveryNote.status || "draft")
       setValue("remarks", deliveryNote.remarks || "")
 
@@ -149,7 +150,7 @@ export function DeliveryNoteForm({
       
       const aditionalSelectOption = dataItemMap
         .map((item) => ({
-          label: `(${format(new Date(item.deliveryDate), "dd MMM yy")}) - ${item.doNumber} - From:${item.customerName} - To:${item.supplierName}`,
+          label: `(${format(item.deliveryDate ? new Date(item.deliveryDate) : new Date(), "dd MMM yy")}) - ${item.doNumber} - From:${item.customerName} - To:${item.supplierName}`,
           value: item.deliveryOrderId,
         }))
         .filter(
@@ -260,7 +261,7 @@ export function DeliveryNoteForm({
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {field.value
-                          ? format(new Date(field.value), "PPP")
+                          ? format(field.value, "PPP")
                           : "Select Date"}
                       </Button>
                     </FormControl>
@@ -268,9 +269,9 @@ export function DeliveryNoteForm({
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
-                      selected={field.value ? new Date(field.value) : undefined}
+                      selected={field.value ? field.value : undefined}
                       onSelect={(date) =>
-                        field.onChange(date ? format(date, "yyyy-MM-dd") : "")
+                        field.onChange(date)
                       }
                       initialFocus
                     />
@@ -287,7 +288,11 @@ export function DeliveryNoteForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  disabled={!isEdit}
+                  value={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Status" />
@@ -319,10 +324,10 @@ export function DeliveryNoteForm({
                     onValueChange={multipleSelectDOHandler}
                     placeholder="Select Delivery Orders"
                     animation={500}
-                    disabled={isEdit}
+                    disabled={isEdit && getValues("status") !== "draft"}
                     variant="inverted"
                   />
-                  
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -352,7 +357,9 @@ export function DeliveryNoteForm({
                   <TableCell>{deliveryNoteItem.customerName}</TableCell>
                   <TableCell>{deliveryNoteItem.loadQty}</TableCell>
                   <TableCell>{deliveryNoteItem.doNumber}</TableCell>
-                  <TableCell>{isEdit ? deliveryNoteItem.actualQty : "-"}</TableCell>
+                  <TableCell>
+                    {isEdit ? deliveryNoteItem.actualQty : "-"}
+                  </TableCell>
                 </TableRow>
               )
             })}
@@ -375,7 +382,8 @@ export function DeliveryNoteForm({
 
         <div className="flex justify-end gap-4">
           <Button type="submit">
-            <SaveAll className="mr-2 h-4 w-4" /> Save Delivery Note
+            <SaveAll className="mr-2 h-4 w-4" /> {isEdit ? "Update" : "Create"}{" "}
+            Delivery Note
           </Button>
           <Button type="button" disabled>
             <Download className="mr-2 h-4 w-4" /> Download
