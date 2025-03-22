@@ -37,7 +37,7 @@ export function ItemList({
     {
       accessorKey: "price",
       header: "Price",
-      cell: ({ row }) => formatCurrency(row.original.price),
+      cell: ({ row }) => formatCurrency(parseFloat(row.original.price)),
     },
     {
       accessorKey: "unit",

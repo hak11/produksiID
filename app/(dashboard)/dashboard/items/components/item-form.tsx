@@ -46,7 +46,7 @@ export function ItemForm({
         name: item.name || "",
         price: item.price?.toString() || "0",
         unit: item.unit || "",
-        priceStr: item.price ? formatCurrency(item.price) : "Rp 0",
+        priceStr: item.price ? formatCurrency(parseFloat(item.price)) : "Rp 0",
       })
     }
   }, [item, form])
@@ -55,7 +55,7 @@ export function ItemForm({
     try {
       const numericValue = value.replace(/[^\d]/g, "")
       form.setValue("price", numericValue)
-      const formattedValue = formatCurrency(value)
+      const formattedValue = formatCurrency(parseFloat(numericValue))
       form.setValue("priceStr", formattedValue)
     } catch (error) {
       console.log("🚀 ~ handleChangePrice ~ error:", error)
