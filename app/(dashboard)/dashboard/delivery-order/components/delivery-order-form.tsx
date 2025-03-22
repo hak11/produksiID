@@ -155,7 +155,6 @@ export function DeliveryOrderForm({
   const handleItemChange = (index: number, field: keyof (DeliveryOrderItem & { loadPerPriceStr: string, totalLoadPriceStr: string }), value: string) => {
     if (field === "loadQty" || field === "loadPerPrice") {
       const numericValue = value ?parseFloat(value.replace(/[^\d]/g, "")) : 0
-      console.log("🚀 ~ handleItemChange ~ numericValue:", numericValue)
       
       if (field === "loadQty") {
         setValue(`items.${index}.loadQty`, numericValue)
@@ -271,7 +270,7 @@ export function DeliveryOrderForm({
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {field.value
-                            ? format(new Date(field.value), "PPP")
+                            ? format(field.value, "PPP")
                             : "Pilih Tanggal Order"}
                         </Button>
                       </FormControl>
@@ -280,10 +279,10 @@ export function DeliveryOrderForm({
                       <Calendar
                         mode="single"
                         selected={
-                          field.value ? new Date(field.value) : undefined
+                          field.value ? field.value : undefined
                         }
                         onSelect={(date) =>
-                          field.onChange(date ? format(date, "yyyy-MM-dd") : "")
+                          field.onChange(date ? date : undefined)
                         }
                         initialFocus
                       />

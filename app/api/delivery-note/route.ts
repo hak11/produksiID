@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from 'zod';
 import { db } from "@/lib/db/drizzle";
 import { deliveryNotes, deliveryNoteItems, deliveryOrders, DeliveryNoteStatus, DeliveryNoteItems } from "@/lib/db/schema";
-import { eq, desc, count, sql } from "drizzle-orm";
+import { eq, desc, count, sql, inArray } from "drizzle-orm"
 import { getSession } from "@/lib/auth/session";
 
 const postItemsSchema = z.object({
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
 
     const { noteNumber, issueDate, remarks, items } = bodyRequest;
 
-    const uniqueDeliveryOrderIds = [...new Set(items.map((dataItem:z.infer<typeof postItemsSchema>) => dataItem.deliveryOrderId))];
+    const uniqueDeliveryOrderIds: string[] = [...new Set<string>(items.map((dataItem:z.infer<typeof postItemsSchema>) => dataItem.deliveryOrderId))];
 
     const newDeliveryNote = await db.transaction(async (tx) => {
       const [insertedNote] = await tx.insert(deliveryNotes).values({
@@ -126,12 +126,7 @@ export async function POST(request: Request) {
       await tx
         .update(deliveryOrders)
         .set({ deliveryStatus: "in_progress" })
-        .where(
-          sql`${deliveryOrders.id} IN (${sql.join(
-            uniqueDeliveryOrderIds.map((id) => sql`${id}`),
-            ', '
-          )})`
-        );
+        .where(inArray(deliveryOrders.id, uniqueDeliveryOrderIds))
 
       return insertedNote;
     });

@@ -9,7 +9,7 @@ import {
 } from "./components/delivery-note-list"
 import { ConfirmationDialog } from "@/components/ConfirmationDialog"
 import Link from "next/link"
-import { generateDeliveryOrderPDF } from "@/lib/generate/letter-do"
+import { generateDeliveryNotePDF } from "@/lib/generate/letter-dn"
 
 export default function DeliveryOrdersPage() {
   const [deliveryOrders, setDeliveryOrders] = useState<DeliveryNoteListType[]>(
@@ -21,20 +21,19 @@ export default function DeliveryOrdersPage() {
   const [downloadId, setDownloadId] = useState<string | null>(null)
 
 
-  const handleDownloadDO = async (id: string) => {
+  const handleDownloadDN = async (id: string) => {
     setLoadingIds((prev) => [...prev, id])
     try {
-      const detailDO = await fetch("/api/delivery-note/" + id).then((res) =>
+      const detailDN = await fetch("/api/delivery-note/" + id).then((res) =>
         res.json()
       )
-      console.log("🚀 ~ handleDownloadDO ~ detailDO:", detailDO)
 
-      if (!detailDO) {
+      if (!detailDN) {
         throw new Error("Delivery note not found")
       }
 
       await new Promise((resolve) => setTimeout(resolve, 5000));
-      const pdfBlob = generateDeliveryOrderPDF(detailDO)
+      const pdfBlob = generateDeliveryNotePDF(detailDN)
       const blobUrl = URL.createObjectURL(pdfBlob);
       window.open(blobUrl, '_blank');
     } catch (error) {
@@ -95,7 +94,7 @@ export default function DeliveryOrdersPage() {
           open={downloadId !== null}
           title="Confirm Download"
           description="This DN will change status to print after you click download, are you sure for?"
-          onConfirm={() => handleDownloadDO(downloadId)}
+          onConfirm={() => handleDownloadDN(downloadId)}
           confirmLabel="Download DN"
           onCancel={() => setDownloadId(null)}
           onOpenChange={(open) => {

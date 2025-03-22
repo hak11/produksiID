@@ -6,7 +6,7 @@ import { desc } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const deliveryOrdersWithDetails = await db
+    const deliveryNotesDetails = await db
       .select({
         orderNumber: deliveryNotes.noteNumber,
       })
@@ -14,7 +14,7 @@ export async function GET() {
       .orderBy(desc(deliveryNotes.id))
       .limit(1);
 
-    return NextResponse.json(deliveryOrdersWithDetails[0]);
+    return NextResponse.json(deliveryNotesDetails[0])
   } catch (error) {
     console.error("🚀 ~ GET ~ error:", error);
     return NextResponse.json({ error: "Failed to fetch delivery orders" }, { status: 500 });

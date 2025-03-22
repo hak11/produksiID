@@ -48,6 +48,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { ConfirmationDialog } from "@/components/ConfirmationDialog"
+import { generateDeliveryNotePDF } from "@/lib/generate/letter-dn"
 
 interface DeliveryNoteFormProps {
   deliveryNote?: Partial<DeliveryNotes & { dnItems: DeliveryNoteItemFormValues[] }>
@@ -66,6 +68,8 @@ export function DeliveryNoteForm({
   const [selectedDeliveryOrders, setSelectedDeliveryOrders] = useState<string[]>([])
   const [optionDO, setOptionDO] = useState<{ label: string; value: string }[]>([])
   const [deliveryNoteItems, setDeliveryNoteItems] = useState<DeliveryNoteItemFormValues[]>([])
+  const [downloadTrigger, setDownloadTrigger] = useState<boolean | null>(false)
+  const [loadingDownload, setLoadingDownload] = useState<boolean | null>(false)
   
   const form = useForm<DeliveryNoteFormValues>({
     resolver: zodResolver(deliveryNoteSchema),
@@ -88,17 +92,38 @@ export function DeliveryNoteForm({
   } = form
   console.log("🚀 ~ errors:", errors)
 
+  const handleDownloadDN = async (id: string) => {
+    setLoadingDownload(true)
+    try {
+      const detailDN = await fetch("/api/delivery-note/" + id).then((res) =>
+        res.json()
+      )
+
+      if (!detailDN) {
+        throw new Error("Delivery note not found")
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      const pdfBlob = generateDeliveryNotePDF(detailDN)
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      window.open(blobUrl, '_blank');
+    } catch (error) {
+      console.log("🚀 ~ handleDownloadDO ~ error:", error)
+      setLoadingDownload(false)
+    }
+  }
+
   const generateOrderNoteNumber = useCallback(async () => {
-    const response = await fetch("/api/utils/last-invoice-number")
-    const { invoiceNumber } = await response.json()
+    const response = await fetch("/api/utils/last-orderNote-number")
+    const { orderNumber } = await response.json()
     const date = new Date()
     const month = (date.getMonth() + 1).toString().padStart(2, "0")
     const year = date.getFullYear().toString().slice(-2)
-    const newNumber = parseInt(invoiceNumber?.slice(5)) + 1 || 1
-    const formattedInvoiceNumber = `DN-${month}${year}${newNumber
+    const newNumber = parseInt(orderNumber?.slice(5)) + 1 || 1
+    const formattedOrderNoteNumber = `DN-${month}${year}${newNumber
       .toString()
       .padStart(4, "0")}`
-    form.setValue("noteNumber", formattedInvoiceNumber)
+    form.setValue("noteNumber", formattedOrderNoteNumber)
   }, [form])
 
   useEffect(() => {
@@ -108,7 +133,7 @@ export function DeliveryNoteForm({
 
     const optionDO = deliveryOrders.map((doItem) => ({
       label: `(${format(new Date(doItem.deliveryDate), "dd MMM yy")}) - ${doItem.orderNumber} - From:${
-                      doItem.customerName } - To:${doItem.supplierName}`,
+                      doItem.supplierName } - To:${doItem.customerName}`,
       value: doItem.id,
     }))
 
@@ -128,6 +153,7 @@ export function DeliveryNoteForm({
     }
     
     if (isEdit && deliveryNote) {
+      setValue("id", deliveryNote.id)
       setValue("noteNumber", deliveryNote.noteNumber || "")
       setValue("issueDate", deliveryNote.issueDate ? new Date(deliveryNote.issueDate) : new Date())
       setValue("status", deliveryNote.status || "draft")
@@ -150,7 +176,7 @@ export function DeliveryNoteForm({
       
       const aditionalSelectOption = dataItemMap
         .map((item) => ({
-          label: `(${format(item.deliveryDate ? new Date(item.deliveryDate) : new Date(), "dd MMM yy")}) - ${item.doNumber} - From:${item.customerName} - To:${item.supplierName}`,
+          label: `(${format(item.deliveryDate ? new Date(item.deliveryDate) : new Date(), "dd MMM yy")}) - ${item.doNumber} - From:${item.supplierName} - To:${item.customerName}`,
           value: item.deliveryOrderId,
         }))
         .filter(
@@ -270,9 +296,7 @@ export function DeliveryNoteForm({
                     <Calendar
                       mode="single"
                       selected={field.value ? field.value : undefined}
-                      onSelect={(date) =>
-                        field.onChange(date)
-                      }
+                      onSelect={(date) => field.onChange(date)}
                       initialFocus
                     />
                   </PopoverContent>
@@ -385,11 +409,36 @@ export function DeliveryNoteForm({
             <SaveAll className="mr-2 h-4 w-4" /> {isEdit ? "Update" : "Create"}{" "}
             Delivery Note
           </Button>
-          <Button type="button" disabled>
-            <Download className="mr-2 h-4 w-4" /> Download
+          <Button
+            type="button"
+            variant={"outline"}
+            disabled={!loadingDownload ? !isEdit : true}
+            onClick={() => setDownloadTrigger(true)}
+          >
+            {loadingDownload ? (
+              <Loader className="animate-spin" size={16} />
+            ) : (
+              <div className="flex">
+                <Download className="mr-2 h-4 w-4" />
+              </div>
+            )}
+             Download
           </Button>
         </div>
       </form>
+      {downloadTrigger && (
+        <ConfirmationDialog
+          open={downloadTrigger}
+          title="Confirm Download"
+          description="This DN will change status to print after you click download, are you sure for?"
+          onConfirm={() => handleDownloadDN(getValues("id")!)}
+          confirmLabel="Download DN"
+          onCancel={() => setDownloadTrigger(false)}
+          onOpenChange={(open) => {
+            if (!open) setDownloadTrigger(false)
+          }}
+        />
+      )}
     </Form>
   )
 }

@@ -80,7 +80,6 @@ export async function POST(request: NextRequest) {
         }))
       const supplierFiltered = suppliers.find(s => s.id === doDetail.supplierId) || {};
       const customerFiltered = customers.find(c => c.id === doDetail.customerId) || {};
-        console.log("🚀 ~ POST ~ doItemsFiltered:", doItemsFiltered)
         return {
           ...doDetail,
           items: doItemsFiltered,
