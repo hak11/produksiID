@@ -41,6 +41,7 @@ interface DeliveryOrderFormProps {
     DeliveryOrder & {
       items: (DeliveryOrderItem & {
         loadQty: number
+        name?: string
         loadPerPrice: number
         totalLoadPrice: number
         loadPerPriceStr: string
@@ -51,6 +52,16 @@ interface DeliveryOrderFormProps {
   >
   isEdit?: boolean
   onSave: (deliveryOrder: DeliveryOrderFormValues) => void
+}
+
+const defaultItemValue = {
+  loadQty: 1,
+  loadPerPrice: 0,
+  totalLoadPrice: 0,
+  loadPerPriceStr: "Rp 0",
+  totalLoadPriceStr: "Rp 0",
+  itemId: "",
+  name: "",
 }
 
 const defaultValue = {
@@ -66,16 +77,7 @@ const defaultValue = {
     main: undefined,
     assistant: undefined,
   },
-  items: [
-    {
-      loadQty: 1,
-      loadPerPrice: 0,
-      totalLoadPrice: 0,
-      loadPerPriceStr: "Rp 0",
-      totalLoadPriceStr: "Rp 0",
-      itemId: undefined,
-    },
-  ],
+  items: [defaultItemValue],
 }
 
 export function DeliveryOrderForm({
@@ -134,16 +136,7 @@ export function DeliveryOrderForm({
       setValue("deliveryAddress", deliveryOrder.deliveryAddress || "")
       setValue(
         "items",
-        deliveryOrder.items || [
-          {
-            loadQty: 1,
-            loadPerPrice: 0,
-            totalLoadPrice: 0,
-            loadPerPriceStr: "Rp 0",
-            totalLoadPriceStr: "Rp 0",
-            itemId: "",
-          },
-        ]
+        deliveryOrder.items || [defaultItemValue]
       )
       setValue("deliveryDrivers.main", deliveryOrder.deliveryDrivers?.main || "")
       setValue("deliveryDrivers.assistant", deliveryOrder.deliveryDrivers?.assistant || "")
@@ -522,7 +515,10 @@ export function DeliveryOrderForm({
                       Items
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Load Quantity
+                      Name
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Qty
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Load Per Price (Rp)
@@ -579,6 +575,25 @@ export function DeliveryOrderForm({
                       <td className="px-4 py-4">
                         <FormField
                           control={control}
+                          name={`items.${index}.name`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  type="string"
+                                  value={field.value}
+                                  placeholder="Nama (Optional)"
+                                  className="w-44"
+                                />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </td>
+                      <td className="px-4 py-4 w-12">
+                        <FormField
+                          control={control}
                           name={`items.${index}.loadQty`}
                           render={({ field }) => (
                             <FormItem>
@@ -587,7 +602,7 @@ export function DeliveryOrderForm({
                                   {...field}
                                   type="string"
                                   value={field.value}
-                                  className="w-24"
+                                  className="w-12"
                                   onChange={(e) =>
                                     handleItemChange(
                                       index,
@@ -653,14 +668,7 @@ export function DeliveryOrderForm({
               <Button
                 type="button"
                 onClick={() =>
-                  append({
-                    loadQty: 1,
-                    loadPerPrice: 0,
-                    totalLoadPrice: 0,
-                    loadPerPriceStr: "Rp 0",
-                    totalLoadPriceStr: "Rp 0",
-                    itemId: "",
-                  })
+                  append(defaultItemValue)
                 }
                 className="ml-6"
               >

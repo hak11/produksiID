@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { db } from "@/lib/db/drizzle";
 import { deliveryOrders, deliveryOrderItems, companies, cars, deliveryOrderDrivers, DeliveryStatus } from "@/lib/db/schema";
 import { eq, sql, desc, or, and } from "drizzle-orm";
+import {
+  deliveryOrderSchema,
+} from "@/lib/validatorSchema/deliveryOrderSchema"
 import { getSession } from "@/lib/auth/session"
 
 const querySchema = z.object({
@@ -81,8 +84,20 @@ export async function POST(request: Request) {
   }
 
   const teamId = session.team_id
+
+  const bodyRequest = await request.json()
+  const parsedQuery = deliveryOrderSchema.safeParse(bodyRequest)
+
+  if (!parsedQuery.success) {
+    console.log("🚀 ~ POST ~ parsedQuery:", parsedQuery.error)
+    return NextResponse.json(
+      { error: "Invalid query parameters" },
+      { status: 400 }
+    )
+  }
+
   try {
-    const { items, deliveryDrivers,  ...deliveryOrderData } = await request.json();
+    const { items, deliveryDrivers,  ...deliveryOrderData } = bodyRequest
 
     deliveryOrderData.teamId = teamId
     if (!deliveryOrderData) {

@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest, { params }: any) {
   try {
-    const { id: doID } = params
+    const { id: doID } = await params
     if (!doID) {
       return NextResponse.json(
         { error: "Delivery Order ID is required." },

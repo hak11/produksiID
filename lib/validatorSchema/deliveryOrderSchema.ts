@@ -8,6 +8,7 @@ export const deliveryOrderItemSchema = z.object({
   loadPerPriceStr: z.string(),
   totalLoadPriceStr: z.string(),
   itemId: z.string(),
+  name: z.string().optional(),
 })
 
 export const deliveryOrderSchema = z.object({
@@ -16,9 +17,19 @@ export const deliveryOrderSchema = z.object({
   supplierId: z.string(),
   customerId: z.string(),
   carId: z.string(),
-  orderDate: z.date(),
-  deliveryDate: z.date(),
-  deliveryStatus: z.enum(["pending", "in_progress", "completed", "canceled"]).default("pending"),
+  orderDate: z.preprocess((arg) => {
+    if (typeof arg === "string" || arg instanceof Date) {
+      return new Date(arg)
+    }
+  }, z.date()),
+  deliveryDate: z.preprocess((arg) => {
+    if (typeof arg === "string" || arg instanceof Date) {
+      return new Date(arg)
+    }
+  }, z.date()),
+  deliveryStatus: z
+    .enum(["pending", "in_progress", "completed", "canceled"])
+    .default("pending"),
   deliveryAddress: z.string(),
   customerName: z.string(),
   supplierName: z.string(),
@@ -26,7 +37,7 @@ export const deliveryOrderSchema = z.object({
     main: z.string(),
     assistant: z.string(),
   }),
-  items: z.array(deliveryOrderItemSchema)
+  items: z.array(deliveryOrderItemSchema),
 })
 
 export type DeliveryOrderFormValues = z.infer<typeof deliveryOrderSchema>
