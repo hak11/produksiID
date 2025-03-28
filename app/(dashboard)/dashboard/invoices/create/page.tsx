@@ -4,7 +4,7 @@ import React from "react"
 import { useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 import { InvoiceForm } from "../components/invoice-form"
-import { Invoice } from "@/lib/db/schema"
+import type { Invoice } from "@/lib/db/schema"
 
 export default function CreateInvoicePage() {
   const router = useRouter()

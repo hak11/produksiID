@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Driver } from "@/lib/db/schema";
+import type { Driver } from "@/lib/db/schema";
 import { Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils";
 import { format } from 'date-fns';

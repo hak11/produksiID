@@ -14,7 +14,8 @@ import {
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Company as CompanyType, roleEnum } from "@/lib/db/schema"
+import type { Company as CompanyType } from "@/lib/db/schema"
+import { roleEnum } from "@/lib/db/schema"
 
 const availableRoles = ["supplier", "customer"]
 

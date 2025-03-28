@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Car as CarType, Driver as DriverType } from "@/lib/db/schema";
+import type { Car as CarType, Driver as DriverType } from "@/lib/db/schema";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from 'date-fns';

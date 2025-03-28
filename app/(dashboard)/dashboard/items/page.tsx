@@ -12,7 +12,7 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog"
 import { ConfirmationDialog } from "@/components/ConfirmationDialog"
-import { Item } from "@/lib/db/schema"
+import type { Item } from "@/lib/db/schema"
 import { ItemForm } from "./components/item-form"
 import { ItemList } from "./components/item-list"
 

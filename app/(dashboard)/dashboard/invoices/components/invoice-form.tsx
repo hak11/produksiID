@@ -8,7 +8,7 @@ import { CalendarIcon, SaveAll } from 'lucide-react'
 import { MultiSelect } from "@/components/multi-select"
 import { cn } from "@/lib/utils"
 import { Textarea } from "@/components/ui/textarea"
-import {
+import type {
   Invoice,
   Company,
   InvoicesDetailType,

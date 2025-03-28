@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogHeader } from "@/components/ui/dialog";
-import { Car as CarType, Driver as DriverType } from "@/lib/db/schema";
+import type { Car as CarType, Driver as DriverType } from "@/lib/db/schema";
 import { ConfirmationDialog } from "@/components/ConfirmationDialog"
 import { CarForm } from "./components/car-form";
 import { CarList } from "./components/car-list";

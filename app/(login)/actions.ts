@@ -1,7 +1,8 @@
 'use server';
 
 import { z } from 'zod';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, sql, gte } from "drizzle-orm"
+import { v4 as uuidv4 } from "uuid"
 import { db } from '@/lib/db/drizzle';
 import {
   User,
@@ -16,7 +17,7 @@ import {
   type NewCompany,
   type NewActivityLog,
   ActivityType,
-  invitations,
+  teamInvitations as invitations,
 } from '@/lib/db/schema';
 import { comparePasswords, hashPassword, setSession } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
@@ -27,6 +28,8 @@ import {
   validatedAction,
   validatedActionWithUser,
 } from '@/lib/auth/middleware';
+import { generateSlug } from "@/lib/utils"
+import { addDays } from "date-fns"
 
 function createCheckoutSession({ team, priceId }: any) {
 console.log("🚀 ~ createCheckoutSession ~ priceId:", priceId)
@@ -188,19 +191,14 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
         and(
           eq(invitations.id, inviteId),
           eq(invitations.email, email),
-          eq(invitations.status, 'pending'),
-        ),
+          gte(invitations.expiresAt, new Date())
+        )
       )
-      .limit(1);
+      .limit(1)
 
     if (invitation) {
       teamId = invitation.teamId;
       userRole = invitation.role as 'admin' | 'member';
-
-      await db
-        .update(invitations)
-        .set({ status: 'accepted' })
-        .where(eq(invitations.id, invitation.id));
 
       await logActivity(teamId, createdUser.id, ActivityType.ACCEPT_INVITATION);
 
@@ -216,6 +214,7 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
     // Create a new team if there's no invitation
     const newTeam: NewTeam = {
       name: `${companyName}'s Team`,
+      slug: generateSlug(`${companyName}'s Team`),
     };
 
     [createdTeam] = await db.insert(teams).values(newTeam).returning();
@@ -450,7 +449,7 @@ export const inviteTeamMember = validatedActionWithUser(
         and(
           eq(invitations.email, email),
           eq(invitations.teamId, userWithTeam.teamId),
-          eq(invitations.status, 'pending'),
+          gte(invitations.expiresAt, new Date()),
         ),
       )
       .limit(1);
@@ -464,9 +463,10 @@ export const inviteTeamMember = validatedActionWithUser(
       teamId: userWithTeam.teamId,
       email,
       role,
-      invitedBy: user.id,
-      status: 'pending',
-    });
+      invitedById: user.id,
+      token: uuidv4(),
+      expiresAt: addDays(new Date(), 1),
+    })
 
     await logActivity(
       userWithTeam.teamId,

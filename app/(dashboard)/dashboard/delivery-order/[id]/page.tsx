@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import { DeliveryOrderForm } from "../components/delivery-order-form"
-import { DeliveryOrder, DeliveryOrderItem } from "@/lib/db/schema"
+import type { DeliveryOrder, DeliveryOrderItem } from "@/lib/db/schema"
 import { type DeliveryOrderFormValues } from "@/lib/validatorSchema/deliveryOrderSchema"
 
 export default function CreateDeliveryOrderPage({ params }: { params: Promise<{ id: string }> }) {
@@ -13,6 +13,7 @@ export default function CreateDeliveryOrderPage({ params }: { params: Promise<{ 
       DeliveryOrder & {
         items: (DeliveryOrderItem & {
           loadQty: number
+          name?: string
           loadPerPrice: number
           totalLoadPrice: number
           loadPerPriceStr: string

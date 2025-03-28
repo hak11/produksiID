@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
 import { CalendarIcon, Plus, Trash, SaveAll, Loader } from 'lucide-react'
 import { cn } from "@/lib/utils"
-import { DeliveryOrder, DeliveryOrderItem } from "@/lib/db/schema"
+import type { DeliveryOrder, DeliveryOrderItem } from "@/lib/db/schema"
 import { deliveryOrderSchema, DeliveryOrderFormValues} from "@/lib/validatorSchema/deliveryOrderSchema"
 import { useDeliveryData } from "@/hooks/useDeliveryData"
 

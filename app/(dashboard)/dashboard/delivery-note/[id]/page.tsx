@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 import { DeliveryNoteForm } from "../components/delivery-note-form"
-import { DeliveryNotes, DeliveryNoteItems } from "@/lib/db/schema"
+import type { DeliveryNotes, DeliveryNoteItems } from "@/lib/db/schema"
 import { type DeliveryNoteFormValues } from "@/lib/validatorSchema/deliveryNoteSchema"
 
 export default function CreateDeliveryNotePage({ params }: { params: Promise<{ id: string }> }) {

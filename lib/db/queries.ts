@@ -107,7 +107,7 @@ export async function getTeamForUser(userId: string) {
         with: {
           team: {
             with: {
-              teamMembers: {
+              members: {
                 with: {
                   user: {
                     columns: {
@@ -123,7 +123,7 @@ export async function getTeamForUser(userId: string) {
         },
       },
     },
-  });
+  })
 
   return result?.teamMembers[0]?.team || null;
 }

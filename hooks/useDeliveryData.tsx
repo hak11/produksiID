@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Company, Car, Driver, Item } from "@/lib/db/schema"
+import type { Company, Car, Driver, Item } from "@/lib/db/schema"
 
 export function useDeliveryData() {
   const [suppliers, setSuppliers] = useState<Company[]>([])

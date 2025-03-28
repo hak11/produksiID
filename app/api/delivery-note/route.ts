@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from 'zod';
 import { db } from "@/lib/db/drizzle";
-import { deliveryNotes, deliveryNoteItems, deliveryOrders, DeliveryNoteStatus, DeliveryNoteItems } from "@/lib/db/schema";
+import { deliveryNotes, deliveryNoteItems, deliveryOrders, DeliveryNoteStatus } from "@/lib/db/schema";
+import type { DeliveryNoteItems } from "@/lib/db/schema";
 import { eq, desc, count, sql, inArray } from "drizzle-orm"
 import { getSession } from "@/lib/auth/session";
 

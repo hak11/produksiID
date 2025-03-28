@@ -1,11 +1,9 @@
 import { relations } from 'drizzle-orm';
 import { users } from './tables/users';
-import { teams } from './tables/teams';
+import { teams, teamInvitations, teamMembers } from "./tables/teams"
 import { cars } from './tables/cars';
 import { drivers } from './tables/drivers';
-import { teamMembers } from './tables/teamMembers';
 import { activityLogs } from './tables/activityLogs';
-import { invitations } from './tables/invitations';
 import { deliveryOrders } from './tables/deliveryOrders';
 import { deliveryNoteItems, deliveryNotes } from './tables/deliveryNotes';
 import { invoiceDeliveryNotes } from './tables/invoiceDeliveryNotes';
@@ -16,11 +14,15 @@ import { companies } from './tables/companies';
 import { companyRoles } from './tables/companyRoles';
 import { driverCarAssignments } from './tables/driverCarAssignments';
 
-export const teamsRelations = relations(teams, ({ many }) => ({
-  teamMembers: many(teamMembers),
+export const teamsRelations = relations(teams, ({ one, many }) => ({
+  members: many(teamMembers),
   activityLogs: many(activityLogs),
-  invitations: many(invitations),
-}));
+  invitations: many(teamInvitations),
+  creator: one(users, {
+    fields: [teams.createdById],
+    references: [users.id],
+  }),
+}))
 
 export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
   user: one(users, {
@@ -31,7 +33,27 @@ export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
     fields: [teamMembers.teamId],
     references: [teams.id],
   }),
-}));
+  invitedBy: one(users, {
+    fields: [teamMembers.invitedById],
+    references: [users.id],
+  }),
+}))
+
+export const usersRelations = relations(users, ({ many }) => ({
+  teamMembers: many(teamMembers),
+  invitationsSent: many(teamInvitations),
+}))
+
+export const invitationsRelations = relations(teamInvitations, ({ one }) => ({
+  team: one(teams, {
+    fields: [teamInvitations.teamId],
+    references: [teams.id],
+  }),
+  invitedBy: one(users, {
+    fields: [teamInvitations.invitedById],
+    references: [users.id],
+  }),
+}))
 
 
 export const invoicesRelations = relations(invoices, ({ many }) => ({
@@ -135,24 +157,6 @@ export const driverCarAssignmentsRelations = relations(driverCarAssignments, ({ 
     references: [cars.id],
   })
 }));
-
-
-export const usersRelations = relations(users, ({ many }) => ({
-  teamMembers: many(teamMembers),
-  invitationsSent: many(invitations),
-}));
-
-export const invitationsRelations = relations(invitations, ({ one }) => ({
-  team: one(teams, {
-    fields: [invitations.teamId],
-    references: [teams.id],
-  }),
-  invitedBy: one(users, {
-    fields: [invitations.invitedBy],
-    references: [users.id],
-  }),
-}));
-
 
 export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
   team: one(teams, {

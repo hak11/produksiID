@@ -3,7 +3,7 @@ CREATE TYPE "public"."dn_status_enum" AS ENUM('draft', 'printed', 'delivered', '
 CREATE TYPE "public"."delivery_status_enum" AS ENUM('pending', 'in_progress', 'completed', 'canceled');--> statement-breakpoint
 CREATE TYPE "public"."invoice_status_enum" AS ENUM('draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."role_enum" AS ENUM('supplier', 'customer');--> statement-breakpoint
-CREATE TYPE "public"."role_team_enum" AS ENUM('admin', 'member');--> statement-breakpoint
+CREATE TYPE "public"."role_team_enum" AS ENUM('admin', 'member', 'owner');--> statement-breakpoint
 CREATE TABLE "items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(50) NOT NULL,
@@ -88,6 +88,7 @@ CREATE TABLE "users" (
 	"phone" varchar(15),
 	"email" varchar(255) NOT NULL,
 	"password_hash" text NOT NULL,
+	"image" text,
 	"role" "role_team_enum" DEFAULT 'member' NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
@@ -96,26 +97,48 @@ CREATE TABLE "users" (
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
+CREATE TABLE "team_invitations" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"team_id" uuid NOT NULL,
+	"email" text NOT NULL,
+	"role" "role_team_enum" DEFAULT 'member' NOT NULL,
+	"token" text NOT NULL,
+	"expires_at" timestamp NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"invited_by_id" uuid,
+	"is_accepted" boolean DEFAULT false NOT NULL,
+	CONSTRAINT "team_invitations_token_unique" UNIQUE("token")
+);
+--> statement-breakpoint
+CREATE TABLE "team_members" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"team_id" uuid NOT NULL,
+	"user_id" uuid NOT NULL,
+	"role" "role_team_enum" DEFAULT 'member' NOT NULL,
+	"joined_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"invited_by_id" uuid,
+	"is_active" boolean DEFAULT true NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "teams" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(100) NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"description" text,
+	"slug" text NOT NULL,
+	"logo" text,
 	"stripe_customer_id" text,
 	"stripe_subscription_id" text,
 	"stripe_product_id" text,
 	"plan_name" varchar(50),
 	"subscription_status" varchar(20),
+	"is_active" boolean DEFAULT true NOT NULL,
+	"created_by_id" uuid,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "teams_slug_unique" UNIQUE("slug"),
 	CONSTRAINT "teams_stripe_customer_id_unique" UNIQUE("stripe_customer_id"),
 	CONSTRAINT "teams_stripe_subscription_id_unique" UNIQUE("stripe_subscription_id")
-);
---> statement-breakpoint
-CREATE TABLE "team_members" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"user_id" uuid NOT NULL,
-	"team_id" uuid NOT NULL,
-	"role" "role_team_enum" DEFAULT 'member' NOT NULL,
-	"joined_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "cars" (
@@ -171,16 +194,6 @@ CREATE TABLE "activity_logs" (
 	"ip_address" varchar(45)
 );
 --> statement-breakpoint
-CREATE TABLE "invitations" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"team_id" uuid NOT NULL,
-	"email" varchar(255) NOT NULL,
-	"role" varchar(50) NOT NULL,
-	"invited_by" uuid NOT NULL,
-	"invited_at" timestamp DEFAULT now() NOT NULL,
-	"status" varchar(20) DEFAULT 'pending' NOT NULL
-);
---> statement-breakpoint
 CREATE TABLE "invoice_dn" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"invoice_id" uuid NOT NULL,
@@ -229,8 +242,12 @@ ALTER TABLE "do_items" ADD CONSTRAINT "do_items_do_id_do_id_fk" FOREIGN KEY ("do
 ALTER TABLE "do_items" ADD CONSTRAINT "do_items_item_id_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "companies" ADD CONSTRAINT "companies_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "company_roles" ADD CONSTRAINT "company_roles_company_id_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "team_members" ADD CONSTRAINT "team_members_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "team_members" ADD CONSTRAINT "team_members_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "team_invitations" ADD CONSTRAINT "team_invitations_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "team_invitations" ADD CONSTRAINT "team_invitations_invited_by_id_users_id_fk" FOREIGN KEY ("invited_by_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "team_members" ADD CONSTRAINT "team_members_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "team_members" ADD CONSTRAINT "team_members_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "team_members" ADD CONSTRAINT "team_members_invited_by_id_users_id_fk" FOREIGN KEY ("invited_by_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "teams" ADD CONSTRAINT "teams_created_by_id_users_id_fk" FOREIGN KEY ("created_by_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "cars" ADD CONSTRAINT "cars_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "drivers" ADD CONSTRAINT "drivers_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "assignments" ADD CONSTRAINT "assignments_car_id_cars_id_fk" FOREIGN KEY ("car_id") REFERENCES "public"."cars"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -238,8 +255,6 @@ ALTER TABLE "assignments" ADD CONSTRAINT "assignments_driver_id_drivers_id_fk" F
 ALTER TABLE "assignments" ADD CONSTRAINT "assignments_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "invitations" ADD CONSTRAINT "invitations_team_id_teams_id_fk" FOREIGN KEY ("team_id") REFERENCES "public"."teams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "invitations" ADD CONSTRAINT "invitations_invited_by_users_id_fk" FOREIGN KEY ("invited_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invoice_dn" ADD CONSTRAINT "invoice_dn_invoice_id_invoices_id_fk" FOREIGN KEY ("invoice_id") REFERENCES "public"."invoices"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invoice_dn" ADD CONSTRAINT "invoice_dn_dn_id_dn_items_id_fk" FOREIGN KEY ("dn_id") REFERENCES "public"."dn_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "do_drivers" ADD CONSTRAINT "do_drivers_do_id_do_id_fk" FOREIGN KEY ("do_id") REFERENCES "public"."do"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

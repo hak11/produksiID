@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogHeader } from "@/components/ui/dialog";
 import { ConfirmationDialog } from "@/components/ConfirmationDialog"
-import { Driver } from "@/lib/db/schema";
+import type { Driver } from "@/lib/db/schema";
 import { DriverForm } from "./components/driver-form";
 import { DriverList } from "./components/driver-list";
 

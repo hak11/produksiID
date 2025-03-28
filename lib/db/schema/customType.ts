@@ -5,7 +5,7 @@ import { Company } from "./tables/companies";
 import { Car } from "./tables/cars";
 import { Driver } from "./tables/drivers";
 import { Team } from "./tables/teams";
-import { TeamMember } from "./tables/teamMembers";
+import { TeamMember } from "./tables/teams";
 import { User } from "./tables/users";
 
 export type DeliveryOrderDetailType = DeliveryOrder & {
@@ -27,7 +27,7 @@ export type DetailDOType = DeliveryOrder & {
 }
 
 export type TeamDataWithMembers = Team & {
-  teamMembers: (TeamMember & {
+  members: (TeamMember & {
     user: Pick<User, 'id' | 'name' | 'email'>;
   })[];
 };

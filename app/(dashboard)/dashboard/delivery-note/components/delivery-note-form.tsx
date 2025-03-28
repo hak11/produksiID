@@ -7,7 +7,7 @@ import { format } from "date-fns"
 import { CalendarIcon, SaveAll, Download, Loader } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
-import {
+import type {
   DeliveryNotes,
 } from "@/lib/db/schema"
 import {

@@ -18,10 +18,10 @@ export async function comparePasswords(
 }
 
 type SessionData = {
-  user: { id: string };
-  team_id: string;
-  expires: string;
-};
+  user: { id: string; email: string }
+  team_id: string
+  expires: string
+}
 
 export async function signToken(payload: SessionData) {
   return await new SignJWT(payload)
@@ -47,7 +47,7 @@ export async function getSession() {
 export async function setSession(user: NewUser, team_id: string) {
   const expiresInOneDay = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const session: SessionData = {
-    user: { id: user.id! },
+    user: { id: user.id!, email: user.email! },
     team_id: team_id,
     expires: expiresInOneDay.toISOString(),
   };

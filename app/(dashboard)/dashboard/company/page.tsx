@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogHeader,
 } from "@/components/ui/dialog"
-import { Company as CompanyType } from "@/lib/db/schema"
+import type { Company as CompanyType } from "@/lib/db/schema"
 import { ConfirmationDialog } from "@/components/ConfirmationDialog"
 import { CompanyForm } from "./components/company-form"
 import { CompanyList, CompanyListType } from "./components/company-list"

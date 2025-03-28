@@ -27,7 +27,7 @@ export const DeliveryNoteStatus = z.enum(deliveryNoteStatusEnum.enumValues);
 
 export const roleEnum = pgEnum('role_enum', ['supplier', 'customer']);
 
-export const roleTeamEnum = pgEnum('role_team_enum', ['admin', 'member']);
+export const roleTeamEnum = pgEnum("role_team_enum", ["admin", "member", "owner"])
 
 export const invoiceStatusEnum = pgEnum('invoice_status_enum', [
   'draft',

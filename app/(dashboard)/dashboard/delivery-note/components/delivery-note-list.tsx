@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { DeliveryNotes } from "@/lib/db/schema"
+import type { DeliveryNotes } from "@/lib/db/schema"
 import { Badge, BadgeProps } from "@/components/ui/badge";
 import { Trash2, Loader, Download } from 'lucide-react'
 

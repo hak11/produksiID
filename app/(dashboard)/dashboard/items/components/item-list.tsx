@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Trash2, Edit } from "lucide-react"
-import { Item } from "@/lib/db/schema"
+import type { Item } from "@/lib/db/schema"
 import { formatCurrency } from "@/lib/utils"
 
 export function ItemList({

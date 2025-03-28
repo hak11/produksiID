@@ -1,17 +1,38 @@
 import { db } from './drizzle';
-import { users, teams, teamMembers, cars, drivers, driverCarAssignments, companies, companyRoles, invoices, invoiceDeliveryNotes, invoiceStatusEnum,
-  roleEnum, deliveryOrders, deliveryOrderItems, deliveryOrderDrivers, deliveryStatusEnum, deliveryDriverRoleEnum, items,
-  deliveryNoteStatusEnum, deliveryNotes, deliveryNoteItems
-} from './schema';
+import {
+  users,
+  teams,
+  teamMembers,
+  cars,
+  drivers,
+  driverCarAssignments,
+  companies,
+  companyRoles,
+  invoices,
+  invoiceDeliveryNotes,
+  invoiceStatusEnum,
+  roleEnum,
+  deliveryOrders,
+  deliveryOrderItems,
+  deliveryOrderDrivers,
+  deliveryStatusEnum,
+  deliveryDriverRoleEnum,
+  items,
+  deliveryNoteStatusEnum,
+  deliveryNotes,
+  deliveryNoteItems,
+  teamInvitations,
+} from "./schema"
 import { hashPassword } from '@/lib/auth/session';
 
 async function seed() {
-  const emailAdmin = 'admin@test.com';
-  const passwordAdmin = 'admin123';
-  const emailMember = 'member@test.com';
-  const passwordMember = 'member123';
-  const passwordAdminHash = await hashPassword(passwordAdmin);
-  const passwordmemberHash = await hashPassword(passwordMember);
+  const emailAdmin = "admin@test.com"
+  const passwordAdmin = "admin123"
+  const emailMember = "member@test.com"
+  const passwordMember = "member123"
+  const passwordAdminHash = await hashPassword(passwordAdmin)
+  const passwordmemberHash = await hashPassword(passwordMember)
+  const demoPassword = await hashPassword("password123") 
 
   const insertedUsers = await db
     .insert(users)
@@ -27,37 +48,117 @@ async function seed() {
         role: "member",
       },
     ])
-    .returning({ id: users.id });
+    .returning({ id: users.id })
 
-  const [userAdmin, userMember] = insertedUsers || [];
+  const userIds = []
+  for (let i = 0; i < 5; i++) {
+    const [user] = await db
+      .insert(users)
+      .values({
+        name: `User ${i + 1}`,
+        email: `user${i + 1}@example.com`,
+        passwordHash: demoPassword,
+        role: i === 0 ? "admin" : "member",
+      })
+      .returning({ id: users.id })
+    userIds.push(user.id)
+  }
 
-  console.log('Initial users created:', userAdmin?.id, userMember?.id);
+  const [userAdmin, userMember] = insertedUsers || []
+
+  console.log("Initial users created:", userAdmin?.id, userMember?.id)
 
   const [team] = await db
     .insert(teams)
     .values({
-      name: 'Test Team',
+      name: "Test Team",
+      slug: "test-team",
     })
-    .returning({ id: teams.id });
+    .returning({ id: teams.id })
 
-  if (!team) throw new Error("Team creation failed!");
+  if (!team) throw new Error("Team creation failed!")
 
   await db.insert(teamMembers).values([
     {
       teamId: team.id,
       userId: userAdmin?.id,
-      role: 'admin',
+      role: "admin",
     },
     {
       teamId: team.id,
       userId: userMember?.id,
-      role: 'member',
-    }
-  ]);
+      role: "member",
+    },
+  ])
 
-   // Insert Companies (10 perusahaan)
-    const insertedCompanies = await db.insert(companies).values([
-      // 3 Perusahaan sebagai Supplier saja
+   const teamIds = []
+   for (let i = 0; i < 3; i++) {
+     const [team] = await db
+       .insert(teams)
+       .values({
+         name: `Team ${i + 1}`,
+         description: `This is team ${i + 1} description`,
+         slug: `team-${i + 1}`,
+         createdById: userIds[0],
+       })
+       .returning({ id: teams.id })
+
+     teamIds.push(team.id)
+
+     await db.insert(teamMembers).values({
+       teamId: team.id,
+       userId: userIds[0],
+       role: "owner",
+     })
+   }
+
+   for (let i = 1; i < Math.min(userIds.length, 5); i++) {
+     if (i < 3) {
+       await db.insert(teamMembers).values({
+         teamId: teamIds[0],
+         userId: userIds[i],
+         role: "admin",
+         invitedById: userIds[0],
+       })
+     }
+
+     if (i < 4) {
+       await db.insert(teamMembers).values({
+         teamId: teamIds[1],
+         userId: userIds[i],
+         role: "member",
+         invitedById: userIds[0],
+       })
+     }
+   }
+
+   const tomorrow = new Date()
+   tomorrow.setDate(tomorrow.getDate() + 1)
+
+   await db.insert(teamInvitations).values([
+     {
+       teamId: teamIds[0],
+       email: "pending1@example.com",
+       role: "member",
+       token: "invitation-token-1",
+       expiresAt: tomorrow,
+       invitedById: userIds[0],
+     },
+     {
+       teamId: teamIds[1],
+       email: "pending2@example.com",
+       role: "admin",
+       token: "invitation-token-2",
+       expiresAt: tomorrow,
+       invitedById: userIds[0],
+     },
+   ])
+
+   console.log("✅ Added team seed data")
+
+  const insertedCompanies = await db
+    .insert(companies)
+    .values([
       {
         name: "PT Bahan Bangunan Jaya",
         address: "Jl. Raya Bogor No. 123",
@@ -162,104 +263,113 @@ async function seed() {
         registeredDate: "2023-10-20",
         teamId: team.id,
       },
-    ]).returning({ id: companies.id });
+    ])
+    .returning({ id: companies.id })
 
-    const supplierCompanies = insertedCompanies.slice(0, 3).concat(insertedCompanies.slice(6, 10)); // 3 supplier + 4 both
-    const customerCompanies = insertedCompanies.slice(3, 6).concat(insertedCompanies.slice(6, 10)); // 3 customer + 4 both
+  const supplierCompanies = insertedCompanies
+    .slice(0, 3)
+    .concat(insertedCompanies.slice(6, 10)) // 3 supplier + 4 both
+  const customerCompanies = insertedCompanies
+    .slice(3, 6)
+    .concat(insertedCompanies.slice(6, 10)) // 3 customer + 4 both
 
-    console.log("Companies data seeded successfully.");
+  console.log("✅ Companies data seeded successfully.")
 
-    // Insert Company Roles
-    const companyRolesData = [
-      // Supplier Only (3 perusahaan pertama)
-      { companyId: insertedCompanies[0].id, role: roleEnum.enumValues[0] },
-      { companyId: insertedCompanies[1].id, role: roleEnum.enumValues[0] },
-      { companyId: insertedCompanies[2].id, role: roleEnum.enumValues[0] },
+  // Insert Company Roles
+  const companyRolesData = [
+    // Supplier Only (3 perusahaan pertama)
+    { companyId: insertedCompanies[0].id, role: roleEnum.enumValues[0] },
+    { companyId: insertedCompanies[1].id, role: roleEnum.enumValues[0] },
+    { companyId: insertedCompanies[2].id, role: roleEnum.enumValues[0] },
 
-      // Customer Only (3 perusahaan berikutnya)
-      { companyId: insertedCompanies[3].id, role: roleEnum.enumValues[1] },
-      { companyId: insertedCompanies[4].id, role: roleEnum.enumValues[1] },
-      { companyId: insertedCompanies[5].id, role: roleEnum.enumValues[1] },
+    // Customer Only (3 perusahaan berikutnya)
+    { companyId: insertedCompanies[3].id, role: roleEnum.enumValues[1] },
+    { companyId: insertedCompanies[4].id, role: roleEnum.enumValues[1] },
+    { companyId: insertedCompanies[5].id, role: roleEnum.enumValues[1] },
 
-      // Supplier & Customer (4 perusahaan terakhir)
-      { companyId: insertedCompanies[6].id, role: roleEnum.enumValues[0] },
-      { companyId: insertedCompanies[6].id, role: roleEnum.enumValues[1] },
-      { companyId: insertedCompanies[7].id, role: roleEnum.enumValues[0] },
-      { companyId: insertedCompanies[7].id, role: roleEnum.enumValues[1] },
-      { companyId: insertedCompanies[8].id, role: roleEnum.enumValues[0] },
-      { companyId: insertedCompanies[8].id, role: roleEnum.enumValues[1] },
-      { companyId: insertedCompanies[9].id, role: roleEnum.enumValues[0] },
-      { companyId: insertedCompanies[9].id, role: roleEnum.enumValues[1] },
-    ];
+    // Supplier & Customer (4 perusahaan terakhir)
+    { companyId: insertedCompanies[6].id, role: roleEnum.enumValues[0] },
+    { companyId: insertedCompanies[6].id, role: roleEnum.enumValues[1] },
+    { companyId: insertedCompanies[7].id, role: roleEnum.enumValues[0] },
+    { companyId: insertedCompanies[7].id, role: roleEnum.enumValues[1] },
+    { companyId: insertedCompanies[8].id, role: roleEnum.enumValues[0] },
+    { companyId: insertedCompanies[8].id, role: roleEnum.enumValues[1] },
+    { companyId: insertedCompanies[9].id, role: roleEnum.enumValues[0] },
+    { companyId: insertedCompanies[9].id, role: roleEnum.enumValues[1] },
+  ]
 
-    await db.insert(companyRoles).values(companyRolesData);
+  await db.insert(companyRoles).values(companyRolesData)
 
-    console.log("Company roles seeded successfully.");
+  console.log("✅ Company roles seeded successfully.")
 
+  // Insert Cars (5 data mobil)
+  const insertedCars = await db
+    .insert(cars)
+    .values([
+      {
+        brand: "Hino",
+        model: "Dutro 300",
+        year: 2018,
+        licensePlate: "B 8765 JKL",
+        vin: "MI567890123456789",
+        color: "Grey",
+        status: "available",
+        lastMaintenanceDate: "2024-01-25",
+        teamId: team.id,
+      },
+      {
+        brand: "Suzuki",
+        model: "Carry",
+        year: 2022,
+        licensePlate: "B 1122 MNO",
+        vin: "NI234567890123456",
+        color: "Red",
+        status: "available",
+        lastMaintenanceDate: "2024-02-20",
+        teamId: team.id,
+      },
+      {
+        brand: "Toyota",
+        model: "Avanza",
+        year: 2020,
+        licensePlate: "B 1234 ABC",
+        vin: "JT123456789012345",
+        color: "White",
+        status: "available",
+        lastMaintenanceDate: "2024-01-15",
+        teamId: team.id,
+      },
+      {
+        brand: "Honda",
+        model: "Civic",
+        year: 2021,
+        licensePlate: "B 5678 DEF",
+        vin: "HC987654321098765",
+        color: "Black",
+        status: "available",
+        lastMaintenanceDate: "2024-02-10",
+        teamId: team.id,
+      },
+      {
+        brand: "Suzuki",
+        model: "Ertiga",
+        year: 2019,
+        licensePlate: "B 4321 GHI",
+        vin: "SU123456789876543",
+        color: "Silver",
+        status: "in_maintenance",
+        lastMaintenanceDate: "2024-03-01",
+        teamId: team.id,
+      },
+    ])
+    .returning({ id: cars.id })
 
-   // Insert Cars (5 data mobil)
-  const insertedCars = await db.insert(cars).values([
-    {
-      brand: "Hino",
-      model: "Dutro 300",
-      year: 2018,
-      licensePlate: "B 8765 JKL",
-      vin: "MI567890123456789",
-      color: "Grey",
-      status: "available",
-      lastMaintenanceDate: "2024-01-25",
-      teamId: team.id,
-    },
-    {
-      brand: "Suzuki",
-      model: "Carry",
-      year: 2022,
-      licensePlate: "B 1122 MNO",
-      vin: "NI234567890123456",
-      color: "Red",
-      status: "available",
-      lastMaintenanceDate: "2024-02-20",
-      teamId: team.id,
-    },
-    {
-      brand: "Toyota",
-      model: "Avanza",
-      year: 2020,
-      licensePlate: "B 1234 ABC",
-      vin: "JT123456789012345",
-      color: "White",
-      status: "available",
-      lastMaintenanceDate: "2024-01-15",
-      teamId: team.id,
-    },
-    {
-      brand: "Honda",
-      model: "Civic",
-      year: 2021,
-      licensePlate: "B 5678 DEF",
-      vin: "HC987654321098765",
-      color: "Black",
-      status: "available",
-      lastMaintenanceDate: "2024-02-10",
-      teamId: team.id,
-    },
-    {
-      brand: "Suzuki",
-      model: "Ertiga",
-      year: 2019,
-      licensePlate: "B 4321 GHI",
-      vin: "SU123456789876543",
-      color: "Silver",
-      status: "in_maintenance",
-      lastMaintenanceDate: "2024-03-01",
-      teamId: team.id,
-    },
-  ]).returning({ id: cars.id });
-
-  console.log("Cars data seeded successfully.");
+  console.log("✅ Cars data seeded successfully.")
 
   // Insert Drivers (5 data driver)
-  const insertedDrivers = await db.insert(drivers).values([
+  const insertedDrivers = await db
+    .insert(drivers)
+    .values([
       {
         name: "Andi Saputra",
         licenseNumber: "10001234567",
@@ -315,22 +425,25 @@ async function seed() {
         status: "on_leave",
         teamId: team.id,
       },
-    ]).returning({ id: drivers.id, status: drivers.status });
-  
-    console.log("Drivers data seeded successfully.");
+    ])
+    .returning({ id: drivers.id, status: drivers.status })
 
-    const driverCarAssignmentsData = insertedDrivers.map((driver, index) => ({
-      carId: insertedCars[index % insertedCars.length].id,
-      driverId: driver.id,
-      status: driver.status,
-      teamId: team.id,
-    }));
+  console.log("✅ Drivers data seeded successfully.")
 
-    await db.insert(driverCarAssignments).values(driverCarAssignmentsData);
+  const driverCarAssignmentsData = insertedDrivers.map((driver, index) => ({
+    carId: insertedCars[index % insertedCars.length].id,
+    driverId: driver.id,
+    status: driver.status,
+    teamId: team.id,
+  }))
 
-    console.log("Driver-Car Assignments seeded successfully.");
+  await db.insert(driverCarAssignments).values(driverCarAssignmentsData)
 
-     const insertedOrders = await db.insert(deliveryOrders).values([
+  console.log("✅ Driver-Car Assignments seeded successfully.")
+
+  const insertedOrders = await db
+    .insert(deliveryOrders)
+    .values([
       {
         orderDate: "2024-03-01",
         supplierId: supplierCompanies[0].id,
@@ -353,10 +466,13 @@ async function seed() {
         deliveryAddress: "Jl. Tujuan 2",
         teamId: team.id,
       },
-    ]).returning({ id: deliveryOrders.id, orderDate: deliveryOrders.orderDate });
+    ])
+    .returning({ id: deliveryOrders.id, orderDate: deliveryOrders.orderDate })
 
-    console.log("Delivery orders seeded successfully.");
-     const insertedItems = await db.insert(items).values([
+  console.log("✅ Delivery orders seeded successfully.")
+  const insertedItems = await db
+    .insert(items)
+    .values([
       {
         name: "space-Ctn",
         price: `${200000}`,
@@ -369,101 +485,145 @@ async function seed() {
         unit: "Kg",
         teamId: team.id,
       },
-    ]).returning({ id: items.id, price: items.price });
+    ])
+    .returning({ id: items.id, price: items.price })
 
-    console.log("items seeded successfully.");
+  console.log("✅ items seeded successfully.")
 
-    const insertDeliveryOrderItems = await db.insert(deliveryOrderItems).values(
-      [
-        { 
-          doId: insertedOrders[0].id, 
-          name: "Barang A", 
-          loadQty: `${100}`, 
-          loadPerPrice: insertedItems[0].price, 
-          totalLoadPrice: `${200000 * 100}`,
-          itemId: insertedItems[0].id
-        },
-        { 
-          doId: insertedOrders[1].id, 
-          name: "Barang B", 
-          loadQty: `${50}`, 
-          loadPerPrice: insertedItems[1].price, 
-          totalLoadPrice: `${300000 * 50}`,
-          itemId: insertedItems[1].id
-        },
-        { 
-          doId: insertedOrders[1].id, 
-          name: "Barang C", 
-          loadQty: `${20}`, 
-          loadPerPrice: insertedItems[0].price, 
-          totalLoadPrice: `${200000 * 20}`,
-          itemId: insertedItems[0].id
-        },
-      ]
-    ).returning({ id: deliveryOrderItems.id, doId: deliveryOrderItems.doId, loadPerPrice: deliveryOrderItems.loadPerPrice, totalLoadPrice: deliveryOrderItems.totalLoadPrice  });
-
-    await db.insert(deliveryOrderDrivers).values([
-      { deliveryOrderId: insertedOrders[0].id, driverId: insertedDrivers[0].id, role: deliveryDriverRoleEnum.enumValues[0] },
-      { deliveryOrderId: insertedOrders[0].id, driverId: insertedDrivers[1].id, role: deliveryDriverRoleEnum.enumValues[1] },
-      { deliveryOrderId: insertedOrders[1].id, driverId: insertedDrivers[3].id, role: deliveryDriverRoleEnum.enumValues[0] },
-      { deliveryOrderId: insertedOrders[1].id, driverId: insertedDrivers[1].id, role: deliveryDriverRoleEnum.enumValues[1] },
-    ]);
-
-     const deliveryNotesData = [
+  const insertDeliveryOrderItems = await db
+    .insert(deliveryOrderItems)
+    .values([
       {
-        teamId: team.id,
-        noteNumber: `DN-03250001`,
-        issueDate: new Date().toISOString().split('T')[0],
-        status: deliveryNoteStatusEnum.enumValues[0], // 'draft'
-        remarks: `Surat Jalan untuk beberapa pesanan`,
-      }
-    ];
-
-    // Insert delivery notes
-    const insertedNotes = await db.insert(deliveryNotes).values(deliveryNotesData).returning({ id: deliveryNotes.id });
-
-    console.log(`Inserted ${insertedNotes.length} delivery notes.`);
-
-    const deliveryNoteOrdersData = [
-      { 
-        deliveryNoteId: insertedNotes[0].id, 
-        deliveryOrderId: insertedOrders[1].id,
-        deliveryOrderItemId: insertDeliveryOrderItems[1].id,
-        actualQty: `${50}`
+        doId: insertedOrders[0].id,
+        name: "Barang A",
+        loadQty: `${100}`,
+        loadPerPrice: insertedItems[0].price,
+        totalLoadPrice: `${200000 * 100}`,
+        itemId: insertedItems[0].id,
       },
-      { 
-        deliveryNoteId: insertedNotes[0].id, 
-        deliveryOrderId: insertedOrders[1].id,
-        deliveryOrderItemId: insertDeliveryOrderItems[2].id,
-        actualQty: `${15}` 
-      }
-    ];
-
-    const insertedDeliveryNoteItems = await db.insert(deliveryNoteItems).values(deliveryNoteOrdersData).returning({ id: deliveryNoteItems.id, deliveryOrderId: deliveryNoteItems.id, actualQty: deliveryNoteItems.actualQty });
-
-    console.log("Inserted Delivery Note Orders relationships.");
-
-    const invoiceData = [
       {
-        teamId: team.id,
-        invoiceNumber: `INV-0001`,
-        invoiceDate: new Date().toISOString().split('T')[0],
-        dueDate: new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: invoiceStatusEnum.enumValues[0], // 'draft'
-        totalAmount: `${(50 * 200000) + (15 * 300000)}`,
-      }
-    ];
+        doId: insertedOrders[1].id,
+        name: "Barang B",
+        loadQty: `${50}`,
+        loadPerPrice: insertedItems[1].price,
+        totalLoadPrice: `${300000 * 50}`,
+        itemId: insertedItems[1].id,
+      },
+      {
+        doId: insertedOrders[1].id,
+        name: "Barang C",
+        loadQty: `${20}`,
+        loadPerPrice: insertedItems[0].price,
+        totalLoadPrice: `${200000 * 20}`,
+        itemId: insertedItems[0].id,
+      },
+    ])
+    .returning({
+      id: deliveryOrderItems.id,
+      doId: deliveryOrderItems.doId,
+      loadPerPrice: deliveryOrderItems.loadPerPrice,
+      totalLoadPrice: deliveryOrderItems.totalLoadPrice,
+    })
 
-    const insertedInvoices = await db.insert(invoices).values(invoiceData).returning({ id: invoices.id, invoiceNumber: invoices.invoiceNumber });
+  await db.insert(deliveryOrderDrivers).values([
+    {
+      deliveryOrderId: insertedOrders[0].id,
+      driverId: insertedDrivers[0].id,
+      role: deliveryDriverRoleEnum.enumValues[0],
+    },
+    {
+      deliveryOrderId: insertedOrders[0].id,
+      driverId: insertedDrivers[1].id,
+      role: deliveryDriverRoleEnum.enumValues[1],
+    },
+    {
+      deliveryOrderId: insertedOrders[1].id,
+      driverId: insertedDrivers[3].id,
+      role: deliveryDriverRoleEnum.enumValues[0],
+    },
+    {
+      deliveryOrderId: insertedOrders[1].id,
+      driverId: insertedDrivers[1].id,
+      role: deliveryDriverRoleEnum.enumValues[1],
+    },
+  ])
 
-    const invoiceDeliveryNoteData = [
-      { invoiceId: insertedInvoices[0].id, deliveryNoteItemId: insertedDeliveryNoteItems[0].id },
-      { invoiceId: insertedInvoices[0].id, deliveryNoteItemId: insertedDeliveryNoteItems[1].id },
-    ];
-    
-    await db.insert(invoiceDeliveryNotes).values(invoiceDeliveryNoteData);
+  const deliveryNotesData = [
+    {
+      teamId: team.id,
+      noteNumber: `DN-03250001`,
+      issueDate: new Date().toISOString().split("T")[0],
+      status: deliveryNoteStatusEnum.enumValues[0], // 'draft'
+      remarks: `Surat Jalan untuk beberapa pesanan`,
+    },
+  ]
 
-    console.log("Invoice-Delivery Orders seeded successfully.");
+  // Insert delivery notes
+  const insertedNotes = await db
+    .insert(deliveryNotes)
+    .values(deliveryNotesData)
+    .returning({ id: deliveryNotes.id })
+
+  console.log(`✅ Inserted ${insertedNotes.length} delivery notes.`)
+
+  const deliveryNoteOrdersData = [
+    {
+      deliveryNoteId: insertedNotes[0].id,
+      deliveryOrderId: insertedOrders[1].id,
+      deliveryOrderItemId: insertDeliveryOrderItems[1].id,
+      actualQty: `${50}`,
+    },
+    {
+      deliveryNoteId: insertedNotes[0].id,
+      deliveryOrderId: insertedOrders[1].id,
+      deliveryOrderItemId: insertDeliveryOrderItems[2].id,
+      actualQty: `${15}`,
+    },
+  ]
+
+  const insertedDeliveryNoteItems = await db
+    .insert(deliveryNoteItems)
+    .values(deliveryNoteOrdersData)
+    .returning({
+      id: deliveryNoteItems.id,
+      deliveryOrderId: deliveryNoteItems.id,
+      actualQty: deliveryNoteItems.actualQty,
+    })
+
+  console.log("✅ Inserted Delivery Note Orders relationships.")
+
+  const invoiceData = [
+    {
+      teamId: team.id,
+      invoiceNumber: `INV-0001`,
+      invoiceDate: new Date().toISOString().split("T")[0],
+      dueDate: new Date(new Date().getTime() + 14 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+      status: invoiceStatusEnum.enumValues[0], // 'draft'
+      totalAmount: `${50 * 200000 + 15 * 300000}`,
+    },
+  ]
+
+  const insertedInvoices = await db
+    .insert(invoices)
+    .values(invoiceData)
+    .returning({ id: invoices.id, invoiceNumber: invoices.invoiceNumber })
+
+  const invoiceDeliveryNoteData = [
+    {
+      invoiceId: insertedInvoices[0].id,
+      deliveryNoteItemId: insertedDeliveryNoteItems[0].id,
+    },
+    {
+      invoiceId: insertedInvoices[0].id,
+      deliveryNoteItemId: insertedDeliveryNoteItems[1].id,
+    },
+  ]
+
+  await db.insert(invoiceDeliveryNotes).values(invoiceDeliveryNoteData)
+
+  console.log("✅ Invoice-Delivery Orders seeded successfully.")
 }
 
 seed()
@@ -472,6 +632,6 @@ seed()
     process.exit(1);
   })
   .finally(() => {
-    console.log('Seed process finished. Exiting...');
+    console.log("✅ Seed process finished. Exiting...")
     process.exit(0);
   });

@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { useEffect, useState } from "react"
-import { DeliveryOrder, DeliveryStatus } from "@/lib/db/schema"
+import type { DeliveryOrder, DeliveryStatus } from "@/lib/db/schema"
 
 export type DeliveryOrderListType = DeliveryOrder & {
   supplierName: string
