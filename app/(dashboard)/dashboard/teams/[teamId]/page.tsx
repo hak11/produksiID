@@ -7,6 +7,7 @@ import { TeamSettings } from "../components/team-settings"
 import { getSession } from "@/lib/auth/session"
 import type { Team, TeamMember, User } from "@/lib/db/schema"
 import type { roleTeamEnum } from "@/lib/db/schema/enums"
+import { serverFetch } from "@/lib/fetch"
 
 interface TeamWithMembersAndUsers extends Team {
   members: (TeamMember & { user: User })[]
@@ -16,8 +17,8 @@ interface TeamWithMembersAndUsers extends Team {
 async function getTeamDetails(
   teamId: string
 ): Promise<TeamWithMembersAndUsers> {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL}/api/teams/${teamId}`,
+  const response = await serverFetch(
+    `${process.env.BASE_URL}/api/teams/${teamId}`,
     {
       cache: "no-store",
     }

@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const {token} = await params
+    const { token } = await params
 
     // Get the invitation
     const invitation = await db.query.teamInvitations.findFirst({
@@ -38,16 +38,15 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ token: string }> }
+  { params }: { params: { token: string } }
 ) {
   try {
     const session = await getSession()
-
-    if (!session?.user) {
+    if (!session || !session.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { token } = await params
+    const token = params.token
 
     // Get the invitation
     const invitation = await db.query.teamInvitations.findFirst({
@@ -78,7 +77,7 @@ export async function POST(
     }
 
     // Check if the user's email matches the invitation email
-    if (session.user.email !== invitation.email) {
+    if (invitation.email && session.user.email !== invitation.email) {
       return NextResponse.json(
         { error: "This invitation is for a different email address" },
         { status: 403 }

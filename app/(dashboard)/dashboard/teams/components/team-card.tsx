@@ -18,7 +18,7 @@ interface TeamCardProps {
 
 export function TeamCard({ team, userRole }: TeamCardProps) {
   return (
-    <Link href={`/teams/${team.id}`}>
+    <Link href={`/dashboard/teams/${team.id}`}>
       <Card className="h-full transition-all hover:shadow-md">
         <CardHeader className="flex flex-row items-center gap-4">
           <Avatar className="h-12 w-12">

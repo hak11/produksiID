@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { redirect } from "next/navigation"
+import Link from "next/link"
 import {
   Card,
   CardContent,
@@ -9,8 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { AcceptInvitation } from "../../components/accept-invitation"
-import { getSession } from "@/lib/auth/session"
+import { InvitationDetails } from "../components/invitation-details"
+import { serverFetch } from "@/lib/fetch"
 import type { TeamInvitation, Team } from "@/lib/db/schema"
 
 interface InvitationWithTeam extends TeamInvitation {
@@ -21,8 +21,8 @@ async function getInvitation(
   token: string
 ): Promise<InvitationWithTeam | null> {
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/teams/invitations/${token}`,
+    const response = await serverFetch(
+      `${process.env.BASE_URL}/api/invitations/${token}`,
       {
         cache: "no-store",
       }
@@ -39,23 +39,19 @@ async function getInvitation(
   }
 }
 
+
 export default async function InvitationPage({
   params,
 }: {
   params: Promise<{ token: string }>
 }) {
   const { token } = await params
-  const session = await getSession()
-
-  if (!session?.user) {
-    redirect(`/login?callbackUrl=/teams/invite/${token}`)
-  }
-
   const invitation = await getInvitation(token)
 
   if (!invitation) {
     return (
-      <div className="container max-w-md py-10">
+    <div className="flex items-center justify-center min-h-screen py-10">
+      <div className="container max-w-md">
         <Card>
           <CardHeader>
             <CardTitle>Invalid Invitation</CardTitle>
@@ -65,18 +61,19 @@ export default async function InvitationPage({
           </CardHeader>
           <CardFooter>
             <Button asChild className="w-full">
-              <a href="/teams">Go to Teams</a>
+              <Link href="/">Go to Homepage</Link>
             </Button>
           </CardFooter>
         </Card>
       </div>
+    </div>
     )
   }
 
-  // Check if invitation has expired
   if (new Date() > invitation.expiresAt) {
     return (
-      <div className="container max-w-md py-10">
+    <div className="flex items-center justify-center min-h-screen py-10">
+      <div className="container max-w-md">
         <Card>
           <CardHeader>
             <CardTitle>Invitation Expired</CardTitle>
@@ -87,18 +84,19 @@ export default async function InvitationPage({
           </CardHeader>
           <CardFooter>
             <Button asChild className="w-full">
-              <a href="/teams">Go to Teams</a>
+              <Link href="/">Go to Homepage</Link>
             </Button>
           </CardFooter>
         </Card>
       </div>
+    </div>
     )
   }
 
-  // Check if invitation has already been accepted
   if (invitation.isAccepted) {
     return (
-      <div className="container max-w-md py-10">
+    <div className="flex items-center justify-center min-h-screen py-10">
+      <div className="container max-w-md">
         <Card>
           <CardHeader>
             <CardTitle>Invitation Already Accepted</CardTitle>
@@ -108,61 +106,36 @@ export default async function InvitationPage({
           </CardHeader>
           <CardFooter>
             <Button asChild className="w-full">
-              <a href={`/teams/${invitation.teamId}`}>Go to Team</a>
+              <Link href="/login">Login to Access Team</Link>
             </Button>
           </CardFooter>
         </Card>
       </div>
-    )
-  }
-
-  // Check if the user's email matches the invitation email
-  if (session.user.email !== invitation.email) {
-    return (
-      <div className="container max-w-md py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Email Mismatch</CardTitle>
-            <CardDescription>
-              This invitation was sent to {invitation.email}, but you are logged
-              in as {session.user.email}.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>
-              Please log in with the correct email address to accept this
-              invitation.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button asChild className="w-full">
-              <a href="/login">Switch Account</a>
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
+    </div>
     )
   }
 
   return (
-    <div className="container max-w-md py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Team Invitation</CardTitle>
-          <CardDescription>
-            Youve been invited to join {invitation.team.name}.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4">
-            Youve been invited to join this team as a{" "}
-            <strong>{invitation.role}</strong>.
-          </p>
-          <Suspense fallback={<div>Loading...</div>}>
-            <AcceptInvitation token={token} teamId={invitation.teamId} />
-          </Suspense>
-        </CardContent>
-      </Card>
+    <div className="flex items-center justify-center min-h-screen py-10">
+      <div className="container max-w-md">
+        <Card>
+          <CardHeader>
+            <CardTitle>Team Invitation</CardTitle>
+            <CardDescription>
+              Youve been invited to join {invitation.team.name}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4">
+              Youve been invited to join this team as a{" "}
+              <strong>{invitation.role}</strong>.
+            </p>
+            <Suspense fallback={<div>Loading...</div>}>
+              <InvitationDetails invitation={invitation} token={token} />
+            </Suspense>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

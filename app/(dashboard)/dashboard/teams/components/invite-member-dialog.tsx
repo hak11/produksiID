@@ -31,13 +31,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import toast from "react-hot-toast"
-// import type { roleTeamEnum } from "@/lib/db/schema/enums"
-
-// Define a type for the roles we allow for invitations (excluding owner)
-// type InvitationRole = Extract<
-//   (typeof roleTeamEnum.enumValues)[number],
-//   "admin" | "member"
-// >
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -59,6 +52,7 @@ export function InviteMemberDialog({
 }: InviteMemberDialogProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [inviteLink, setInviteLink] = useState<string | null>(null)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -85,24 +79,38 @@ export function InviteMemberDialog({
         throw new Error(error.error || "Failed to invite member")
       }
 
-      toast({
-        title: "Invitation sent",
-        description: `An invitation has been sent to ${values.email}.`,
-      })
+      const data = await response.json()
 
-      form.reset()
-      onOpenChange(false)
-      router.refresh()
+      // If we have an invitation token, show the invite link
+      if (data.token) {
+        setInviteLink(`${window.location.origin}/invite/${data.token}`)
+      } else {
+        toast.success(`An invitation has been sent to ${values.email}.`)
+        form.reset()
+        onOpenChange(false)
+        router.refresh()
+      }
     } catch (error) {
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to invite member",
-        variant: "destructive",
-      })
+      toast.error(
+        error instanceof Error ? error.message : "Failed to invite member"
+      )
     } finally {
       setIsLoading(false)
     }
+  }
+
+  function handleCopyLink() {
+    if (inviteLink) {
+      navigator.clipboard.writeText(inviteLink)
+      toast.success("Invitation link copied to clipboard")
+    }
+  }
+
+  function handleClose() {
+    setInviteLink(null)
+    form.reset()
+    onOpenChange(false)
+    router.refresh()
   }
 
   return (
@@ -116,61 +124,78 @@ export function InviteMemberDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter email address" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="member">Member</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+        {inviteLink ? (
+          <div className="space-y-4">
+            <p className="text-sm">
+              Share this invitation link with your team member:
+            </p>
+            <div className="flex items-center gap-2">
+              <Input value={inviteLink} readOnly className="flex-1" />
+              <Button onClick={handleCopyLink} size="sm">
+                Copy
+              </Button>
+            </div>
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Sending..." : "Send Invitation"}
-              </Button>
+              <Button onClick={handleClose}>Done</Button>
             </DialogFooter>
-          </form>
-        </Form>
+          </div>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter email address" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="member">Member</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Sending..." : "Send Invitation"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        )}
       </DialogContent>
     </Dialog>
   )

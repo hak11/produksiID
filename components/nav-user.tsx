@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   Bell,
   ChevronsUpDown,
+  Users,
   // CreditCard,
   LogOut,
   // Sparkles,
@@ -103,6 +104,10 @@ export function NavUser() {
                 <CreditCard />
                 Billing
               </DropdownMenuItem> */}
+              <DropdownMenuItem onClick={() => router.push("/dashboard/teams")}>
+                <Users />
+                Teams
+              </DropdownMenuItem>
               <DropdownMenuItem>
                 <Bell />
                 Notifications
