@@ -37,6 +37,7 @@ function drawHeader(
     totalPages: number
     leftMargin: number
     pdfWidth: number
+    teamData: any
   }
 ) {
   // Baris 1: Judul dan info perusahaan
@@ -45,20 +46,31 @@ function drawHeader(
   doc.text("DELIVERY NOTE", options.leftMargin, 10)
   doc.setFontSize(8)
   doc.setFont("helvetica", "normal")
-  doc.text("PT Contoh Perusahaan", options.pdfWidth - options.leftMargin, 10, {
-    align: "right",
-  })
-  doc.text("Telp: 08xx-xxxx-xxxx", options.pdfWidth - options.leftMargin, 14, {
+  doc.text(options.teamData.name, options.pdfWidth - options.leftMargin, 10, {
     align: "right",
   })
   doc.text(
-    "Alamat: Jl. Contoh No. 123",
+    `Telp: ${options.teamData.contact_phone} | Email: ${options.teamData.contact_email}`,
+    options.pdfWidth - options.leftMargin,
+    14,
+    {
+      align: "right",
+    }
+  )
+  doc.text(
+    `Alamat: ${options.teamData.contact_address}`,
     options.pdfWidth - options.leftMargin,
     18,
     { align: "right" }
   )
 
   // Baris 2: Delivery Note No dan Issue Date (sejajar)
+  let pagePrefix = ''
+
+  if (options.totalPages > 1) {
+    pagePrefix = `(${options.currentPage + 1}/${options.totalPages + 1})`;
+  }
+  
   const headerYRow2 = 26
   // Delivery Note No:
   const dnTitle = "Delivery Note No: "
@@ -67,9 +79,7 @@ function drawHeader(
   const dnTitleWidth = doc.getTextWidth(dnTitle)
   doc.setFont("helvetica", "bold")
   doc.text(
-    `${options.noteNumber} (${options.currentPage+1}/${
-      options.totalPages+1
-    })`,
+    `${options.noteNumber} ${pagePrefix}`,
     options.leftMargin + dnTitleWidth,
     headerYRow2
   )
@@ -142,7 +152,7 @@ function drawSignature(
   )
 }
 
-export function generateDeliveryNotePDF(data: DeliveryNoteData): Blob {
+export function generateDeliveryNotePDF(data: DeliveryNoteData, teamData: any): Blob {
   /**
    * Kertas A5 landscape: 210 x 148 mm
    * Margin: 10 mm di setiap sisi → area konten efektif = 210 - 20 = 190 mm
@@ -234,6 +244,7 @@ export function generateDeliveryNotePDF(data: DeliveryNoteData): Blob {
           totalPages: totalPages,
           leftMargin: leftMargin,
           pdfWidth: pdfWidth,
+          teamData: teamData,
         })
         // Gambar area tanda tangan di bagian bawah setiap halaman
         drawSignature(pdf, leftMargin, pdfWidth, pdfHeight)

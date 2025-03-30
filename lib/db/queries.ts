@@ -24,8 +24,19 @@ export async function getUser() {
   }
 
   const user = await db
-    .select()
+    .select(
+      {
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        teamId: teamMembers.teamId,
+        phone: users.phone,
+        image: users.image,
+      },
+    )
     .from(users)
+    .leftJoin(teamMembers, eq(users.id, teamMembers.userId))
     .where(and(eq(users.id, sessionData.user.id), isNull(users.deletedAt)))
     .limit(1);
 
@@ -125,5 +136,5 @@ export async function getTeamForUser(userId: string) {
     },
   })
 
-  return result?.teamMembers[0]?.team || null;
+  return result?.teamMembers[0]?.team || null
 }

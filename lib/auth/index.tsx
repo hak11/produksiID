@@ -8,12 +8,14 @@ import {
   useEffect,
 } from 'react';
 import { use } from 'react';
-import { User } from '@/lib/db/schema';
+import type { User } from '@/lib/db/schema';
+
+export type UserWithTeamId = User & { teamId?: string };
 
 export type UserContextType = {
-  user: User | null;
-  setUser: (user: User | null) => void;
-};
+  user: UserWithTeamId | null
+  setUser: (user: UserWithTeamId | null) => void
+}
 
 const UserContext = createContext<UserContextType | null>(null);
 

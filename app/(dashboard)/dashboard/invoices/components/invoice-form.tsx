@@ -56,10 +56,11 @@ import { formatCurrency } from "@/lib/utils"
 
 interface InvoiceFormProps {
   invoice?: Partial<Invoice>
+  isEdit?: boolean
   onSave: (invoice: InvoicesDetailType, callback?: () => void) => void
 }
 
-export function InvoiceForm({ invoice, onSave }: InvoiceFormProps) {
+export function InvoiceForm({ invoice, isEdit = false,onSave }: InvoiceFormProps) {
   console.log("🚀 ~ invoice:", invoice)
   const [companies, setCompanies] = useState<Company[]>([])
   const [invoiceItems, setInvoiceItems] = useState<DoInvoiceItemFormValues[]>([])
@@ -309,30 +310,32 @@ export function InvoiceForm({ invoice, onSave }: InvoiceFormProps) {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Status" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="sent">Sent</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="overdue">Overdue</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {isEdit && (
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="sent">Sent</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="overdue">Overdue</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
 
         <MultiSelect
@@ -342,9 +345,10 @@ export function InvoiceForm({ invoice, onSave }: InvoiceFormProps) {
             } - ${field.customerName} - ${field.supplierName}`,
             value: field.orderNumber,
           }))}
+          disabled={form.getValues("companyId") ? false : true}
           onValueChange={multipleSelectDOHandler}
           defaultValue={selectedDeliveryOrders}
-          placeholder="Select Delivery Orders"
+          placeholder={form.getValues("companyId") ? "Select Delivery Orders" : "Select Company first"}
           animation={500}
           variant="inverted"
         />

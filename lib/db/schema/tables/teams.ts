@@ -21,6 +21,10 @@ export const teams = pgTable("teams", {
   planName: varchar("plan_name", { length: 50 }),
   subscriptionStatus: varchar("subscription_status", { length: 20 }),
   isActive: boolean("is_active").default(true).notNull(),
+  contact_pic_name: varchar("contact_pic_name", { length: 100 }),
+  contact_address: text("contact_address"),
+  contact_email: varchar("contact_email", { length: 255 }),
+  contact_phone: varchar("contact_phone", { length: 20 }),
   createdById: uuid("created_by_id").references(() => users.id, {
     onDelete: "set null",
   }),

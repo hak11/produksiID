@@ -6,13 +6,13 @@ import type { DeliveryNoteItems } from "@/lib/db/schema";
 import { eq, desc, count, sql, inArray } from "drizzle-orm"
 import { getSession } from "@/lib/auth/session";
 
-const postItemsSchema = z.object({
+export const postItemsSchema = z.object({
   deliveryOrderId: z.string(),
   deliveryOrderItemId: z.string(),
   actualQty: z.string().optional(),
 })
 
-const postRequestSchema = z.object({
+export const postRequestSchema = z.object({
   noteNumber: z.string(),
   issueDate: z.preprocess((arg) => {
     if (typeof arg === "string" || arg instanceof Date) {

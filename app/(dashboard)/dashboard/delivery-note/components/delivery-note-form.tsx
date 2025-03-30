@@ -50,6 +50,8 @@ import {
 } from "@/components/ui/table"
 import { ConfirmationDialog } from "@/components/ConfirmationDialog"
 import { generateDeliveryNotePDF } from "@/lib/generate/letter-dn"
+import { toast } from "react-hot-toast"
+import { useUser, UserContextType } from "@/lib/auth"
 
 interface DeliveryNoteFormProps {
   deliveryNote?: Partial<DeliveryNotes & { dnItems: DeliveryNoteItemFormValues[] }>
@@ -70,6 +72,7 @@ export function DeliveryNoteForm({
   const [deliveryNoteItems, setDeliveryNoteItems] = useState<DeliveryNoteItemFormValues[]>([])
   const [downloadTrigger, setDownloadTrigger] = useState<boolean | null>(false)
   const [loadingDownload, setLoadingDownload] = useState<boolean | null>(false)
+  const { user } = useUser() as UserContextType
   
   const form = useForm<DeliveryNoteFormValues>({
     resolver: zodResolver(deliveryNoteSchema),
@@ -88,13 +91,20 @@ export function DeliveryNoteForm({
     reset,
     getValues,
     handleSubmit,
-    formState: { errors },
+    // formState: { errors },
   } = form
-  console.log("🚀 ~ errors:", errors)
 
   const handleDownloadDN = async (id: string) => {
     setLoadingDownload(true)
     try {
+      const detailTeam = await fetch(`/api/teams/${user?.teamId}/contact`).then(
+        (res) => res.json()
+      )
+
+      if (!detailTeam) {
+        throw new Error("Team not found")
+      }
+
       const detailDN = await fetch("/api/delivery-note/" + id).then((res) =>
         res.json()
       )
@@ -103,12 +113,22 @@ export function DeliveryNoteForm({
         throw new Error("Delivery note not found")
       }
 
+      await fetch("/api/delivery-note/" + id, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "printed" }),
+      })
+
+      setValue("status", "printed")
+
       await new Promise((resolve) => setTimeout(resolve, 5000));
-      const pdfBlob = generateDeliveryNotePDF(detailDN)
+      const pdfBlob = generateDeliveryNotePDF(detailDN, detailTeam)
       const blobUrl = URL.createObjectURL(pdfBlob);
       window.open(blobUrl, '_blank');
     } catch (error) {
       console.log("🚀 ~ handleDownloadDO ~ error:", error)
+      toast.error("An error occurred while downloading the delivery note")
+    } finally {
       setLoadingDownload(false)
     }
   }

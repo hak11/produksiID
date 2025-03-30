@@ -5,7 +5,6 @@ import { and, eq, sql, gte } from "drizzle-orm"
 import { v4 as uuidv4 } from "uuid"
 import { db } from '@/lib/db/drizzle';
 import {
-  User,
   users,
   companies,
   teams,
@@ -23,13 +22,14 @@ import { comparePasswords, hashPassword, setSession } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 // import { createCheckoutSession } from '@/lib/payments/stripe';
-import { getUser, getUserWithTeam } from '@/lib/db/queries';
+import { getUserWithTeam } from '@/lib/db/queries';
 import {
   validatedAction,
   validatedActionWithUser,
 } from '@/lib/auth/middleware';
 import { generateSlug } from "@/lib/utils"
 import { addDays } from "date-fns"
+import { getSession } from '@/lib/auth/session';
 
 function createCheckoutSession({ team, priceId }: any) {
 console.log("🚀 ~ createCheckoutSession ~ priceId:", priceId)
@@ -258,7 +258,7 @@ export const signUp = validatedAction(signUpSchema, async (data) => {
 });
 
 export async function signOut() {
-  const user = (await getUser()) as User;
+  const { user }: any = await getSession()
   const userWithTeam = await getUserWithTeam(user.id);
   await logActivity(userWithTeam?.teamId, user.id, ActivityType.SIGN_OUT);
   (await cookies()).delete('session');
