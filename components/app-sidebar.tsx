@@ -226,7 +226,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <Link className="flex items-center ml-auto" href="/dashboard">
           <Image
-            src="/logo-produksi.png"
+            src="/logo-logio.png"
             alt="Logo"
             priority={false}
             style={{ marginLeft: "-18px" }}
@@ -236,7 +236,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Link>
         {/* <Link href="/" className="flex items-center">
           <Image
-            src="/logo-produksi.png"
+            src="/logo-logio.png"
             alt="Logo"
             priority={false}
             style={{ marginLeft: "-18px" }}

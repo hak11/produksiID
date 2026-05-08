@@ -24,11 +24,11 @@ export default function HomePage() {
                 <h1 className="text-4xl font-bold text-gray-900 tracking-tight sm:text-5xl md:text-4xl">
                   Optimalkan Bisnis Manufaktur dan Logistik Anda
                   <span className="block md:text-5xl text-red-400">
-                    Kendalikan produksi untuk efisiensi
+                    Kelola logistik dengan efisiensi
                   </span>
                 </h1>
                 <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-xl lg:text-lg xl:text-xl">
-                  Produksi.id adalah aplikasi all-in-one yang dirancang untuk
+                  Logio.id adalah aplikasi all-in-one yang dirancang untuk
                   mengelola proses produksi dan logistik secara efisien. Dari
                   perencanaan hingga pelaporan, kami membantu bisnis Anda
                   menghemat waktu, mengurangi biaya, dan meningkatkan
@@ -36,14 +36,14 @@ export default function HomePage() {
                 </p>
                 <div className="flex gap-4 mt-8 md:mx-auto md:text-left">
                   <div>
-                    <a href="https://wa.me/6281281056838=text=Saya%20tertarik%20dengan%20Produksi.id" target="_blank">
+                    <a href="https://wa.me/6281281056838=text=Saya%20tertarik%20dengan%20Logio.id" target="_blank">
                       <Button className="bg-white hover:bg-gray-100 text-black border border-gray-200 rounded-full text-lg px-8 py-4 inline-flex items-center justify-center">
                         Coba Gratis Sekarang
                       </Button>
                     </a>
                   </div>
                   <div>
-                    <a href="https://wa.me/6281281056838?text=Saya%mau%20lihat%20demo" target="_blank">
+                    <a href="https://wa.me/6281281056838?text=Saya%20mau%20lihat%20demo" target="_blank">
                       <Button className="bg-white hover:bg-gray-100 text-black border border-gray-200 rounded-full text-lg px-8 py-4 inline-flex items-center justify-center">
                         Lihat Demo Aplikasi
                         <ArrowRight className="ml-2 h-5 w-5" />
