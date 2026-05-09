@@ -226,22 +226,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <Link className="flex items-center ml-auto" href="/dashboard">
           <Image
-            src="/logo-logio.png"
-            alt="Logo"
+            src="/logo-logio.svg"
+            alt="Logio"
             priority={false}
             style={{ marginLeft: "-18px" }}
-            width={200}
-            height={40}
+            width={160}
+            height={44}
           />
         </Link>
         {/* <Link href="/" className="flex items-center">
           <Image
-            src="/logo-logio.png"
-            alt="Logo"
+            src="/logo-logio.svg"
+            alt="Logio"
             priority={false}
             style={{ marginLeft: "-18px" }}
-            width={200}
-            height={40}
+            width={160}
+            height={44}
           />
         </Link> */}
       </SidebarHeader>

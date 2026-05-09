@@ -27,11 +27,11 @@ export default function Login() {
         <div className="flex justify-center">
           <Link href="/">
             <Image
-              src="/logo-logio.png"
-              alt="Logo"
+              src="/logo-logio.svg"
+              alt="Logio"
               style={{ marginLeft: "-18px" }}
-              width={200}
-              height={40}
+              width={160}
+              height={44}
             />
           </Link>
         </div>
