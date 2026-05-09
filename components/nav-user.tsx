@@ -36,13 +36,29 @@ import { useRouter } from "next/navigation"
 
 export function NavUser() {
   const { isMobile } = useSidebar()
-  const { user, setUser } = useUser() as UserContextType
+  const { user, setUser, loading } = useUser() as UserContextType
   const router = useRouter()
 
   async function handleSignOut() {
     setUser(null)
     await signOut()
     router.push("/")
+  }
+
+  if (loading) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" className="animate-pulse">
+            <div className="h-8 w-8 rounded-lg bg-gray-200" />
+            <div className="grid flex-1 gap-1">
+              <div className="h-4 w-20 bg-gray-200 rounded" />
+              <div className="h-3 w-28 bg-gray-200 rounded" />
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
   }
 
   if (!user) {
