@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { TeamDataWithMembers, User } from '@/lib/db/schema';
-import { getTeamForUser, getUser } from '@/lib/db/queries';
+import type { User, TeamDataWithMembers } from '@/lib/supabase/types';
+import { getTeamForUser, getUser } from '@/lib/supabase/queries';
 import { redirect } from 'next/navigation';
 
 export type ActionState = {
   error?: string;
   success?: string;
-  [key: string]: any; // This allows for additional properties
+  [key: string]: any;
 };
 
 type ValidatedActionFunction<S extends z.ZodType<any, any>, T> = (
@@ -49,7 +49,7 @@ export function validatedActionWithUser<S extends z.ZodType<any, any>, T>(
       return { error: result.error.errors[0].message } as T;
     }
 
-    return action(result.data, formData, user);
+    return action(result.data, formData, user as User);
   };
 }
 
@@ -70,6 +70,6 @@ export function withTeam<T>(action: ActionWithTeamFunction<T>) {
       throw new Error('Team not found');
     }
 
-    return action(formData, team);
+    return action(formData, team as TeamDataWithMembers);
   };
 }

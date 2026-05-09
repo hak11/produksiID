@@ -8,7 +8,7 @@ import {
   useEffect,
 } from 'react';
 import { use } from 'react';
-import type { User } from '@/lib/db/schema';
+import type { User } from '@/lib/supabase/types';
 
 export type UserWithTeamId = User & { teamId?: string };
 

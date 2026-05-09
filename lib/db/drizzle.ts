@@ -1,16 +1,14 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from './schema';
-import dotenv from 'dotenv';
+// This file is kept for backward compatibility
+// The application now uses Supabase client directly
+// See lib/supabase/client.ts and lib/supabase/server.ts
 
-dotenv.config();
+import { createClient } from '@/lib/supabase/server';
 
-if (!process.env.POSTGRES_URL) {
-  throw new Error('POSTGRES_URL environment variable is not set');
+// Export a function to get Supabase client for backward compatibility
+export async function getSupabaseClient() {
+  return await createClient();
 }
 
-export const client = postgres(process.env.POSTGRES_URL);
-export const db = drizzle(client, { 
-  schema,
-  logger: false
- });
+// Placeholder db object - not used, but kept for compatibility
+// All database operations should use Supabase client directly
+export const db = null as any;

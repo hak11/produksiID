@@ -1,61 +1,49 @@
-import { compare, hash } from 'bcryptjs';
-import { SignJWT, jwtVerify } from 'jose';
-import { cookies } from 'next/headers';
-import { NewUser } from '@/lib/db/schema';
+// This file is kept for backward compatibility
+// The application now uses Supabase Auth directly
+// See lib/supabase/auth-actions.ts
 
-const key = new TextEncoder().encode(process.env.AUTH_SECRET);
-const SALT_ROUNDS = 10;
+import { createClient } from '@/lib/supabase/server';
 
+export async function getSession() {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) return null;
+  
+  return {
+    user: {
+      id: session.user.id,
+      email: session.user.email,
+    },
+    expires: session.expires_at ? new Date(session.expires_at * 1000).toISOString() : '',
+  };
+}
+
+export async function getUser() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
+
+// These functions are no longer used with Supabase Auth
+// Kept for backward compatibility but should not be called
 export async function hashPassword(password: string) {
-  return hash(password, SALT_ROUNDS);
+  throw new Error('hashPassword is not used with Supabase Auth');
 }
 
-export async function comparePasswords(
-  plainTextPassword: string,
-  hashedPassword: string
-) {
-  return compare(plainTextPassword, hashedPassword);
+export async function comparePasswords(plainTextPassword: string, hashedPassword: string) {
+  throw new Error('comparePasswords is not used with Supabase Auth');
 }
 
-type SessionData = {
-  user: { id: string; email: string }
-  team_id: string
-  expires: string
-}
-
-export async function signToken(payload: SessionData) {
-  return await new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('1 day from now')
-    .sign(key);
+export async function signToken(payload: any) {
+  throw new Error('signToken is not used with Supabase Auth');
 }
 
 export async function verifyToken(input: string) {
-  const { payload } = await jwtVerify(input, key, {
-    algorithms: ['HS256'],
-  });
-  return payload as SessionData;
+  throw new Error('verifyToken is not used with Supabase Auth');
 }
 
-export async function getSession() {
-  const session = (await cookies()).get('session')?.value;
-  if (!session) return null;
-  return await verifyToken(session);
-}
-
-export async function setSession(user: NewUser, team_id: string) {
-  const expiresInOneDay = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  const session: SessionData = {
-    user: { id: user.id!, email: user.email! },
-    team_id: team_id,
-    expires: expiresInOneDay.toISOString(),
-  };
-  const encryptedSession = await signToken(session);
-  (await cookies()).set('session', encryptedSession, {
-    expires: expiresInOneDay,
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-  });
+export async function setSession(user: any, teamId: string) {
+  // Session is managed by Supabase Auth automatically
+  console.warn('setSession is not used with Supabase Auth - session is managed automatically');
 }
