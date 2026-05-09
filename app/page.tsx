@@ -14,9 +14,9 @@ import Footer from "@/components/Footer"
 
 export default function HomePage() {
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <main>
+      <main className="flex-1">
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="lg:grid lg:grid-cols-12 lg:gap-8">
@@ -195,6 +195,6 @@ export default function HomePage() {
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   )
 }

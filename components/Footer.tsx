@@ -3,7 +3,7 @@
 
 export default function Footer() {
   return (
-    <footer className="bg-[#0B1120] text-white">
+    <footer className="bg-gray-900 text-white mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <p className="text-sm mb-2 md:mb-0">
           &copy;{new Date().getFullYear()} logio.id@0.1.1 - All rights
