@@ -6,9 +6,11 @@ import {
   ReactNode,
   useState,
   useEffect,
+  useCallback,
+  useMemo,
 } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { User } from '@supabase/supabase-js';
+import type { User, Session } from '@supabase/supabase-js';
 
 export type UserWithTeamId = {
   id: string;
@@ -39,46 +41,70 @@ export function useUser(): UserContextType {
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserWithTeamId | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  
+  const supabase = useMemo(() => createClient(), []);
+
+  const fetchUserData = useCallback(async (authUser: User) => {
+    try {
+      // Get profile data
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      // Get team membership
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('team_id, role')
+        .eq('user_id', authUser.id)
+        .single();
+
+      return {
+        id: authUser.id,
+        email: authUser.email,
+        name: profile?.name || authUser.user_metadata?.name,
+        role: teamMember?.role || profile?.role || 'member',
+        teamId: teamMember?.team_id,
+        phone: authUser.user_metadata?.phone,
+        image: authUser.user_metadata?.avatar_url,
+      };
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      return {
+        id: authUser.id,
+        email: authUser.email,
+        name: authUser.user_metadata?.name,
+        role: 'member',
+      };
+    }
+  }, [supabase]);
 
   useEffect(() => {
-    // Get initial session
+    let mounted = true;
+
+    // Get initial session using getSession (faster than getUser for initial load)
     const getInitialSession = async () => {
       try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (authUser) {
-          // Get profile data
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', authUser.id)
-            .single();
-
-          // Get team membership
-          const { data: teamMember } = await supabase
-            .from('team_members')
-            .select('team_id, role')
-            .eq('user_id', authUser.id)
-            .single();
-
-          setUser({
-            id: authUser.id,
-            email: authUser.email,
-            name: profile?.name || authUser.user_metadata?.name,
-            role: profile?.role || 'member',
-            teamId: teamMember?.team_id,
-            phone: authUser.user_metadata?.phone,
-            image: authUser.user_metadata?.avatar_url,
-          });
-        } else {
+        if (session?.user && mounted) {
+          const userData = await fetchUserData(session.user);
+          if (mounted) {
+            setUser(userData);
+          }
+        } else if (mounted) {
           setUser(null);
         }
       } catch (error) {
-        console.error('[v0] Error getting initial session:', error);
-        setUser(null);
+        console.error('Error getting initial session:', error);
+        if (mounted) {
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -87,45 +113,35 @@ export function UserProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[v0] Auth state changed:', event);
+        if (!mounted) return;
         
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Get profile data
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          // Get team membership
-          const { data: teamMember } = await supabase
-            .from('team_members')
-            .select('team_id, role')
-            .eq('user_id', session.user.id)
-            .single();
-
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            name: profile?.name || session.user.user_metadata?.name,
-            role: profile?.role || 'member',
-            teamId: teamMember?.team_id,
-            phone: session.user.user_metadata?.phone,
-            image: session.user.user_metadata?.avatar_url,
-          });
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+          if (session?.user) {
+            const userData = await fetchUserData(session.user);
+            if (mounted) {
+              setUser(userData);
+              setLoading(false);
+            }
+          }
         } else if (event === 'SIGNED_OUT') {
-          setUser(null);
+          if (mounted) {
+            setUser(null);
+            setLoading(false);
+          }
         }
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, fetchUserData]);
+
+  const value = useMemo(() => ({ user, setUser, loading }), [user, loading]);
 
   return (
-    <UserContext.Provider value={{ user, setUser, loading }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );
